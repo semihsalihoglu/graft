@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Graft</title>
+		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+		<link rel="stylesheet" href="app.css">
+		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+		<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		<script src="app.js"></script>
+
+		<script type="text/javascript">
+			var editor;
+			var expanded = false;
+			var originalHeight;
+
+			$(document).ready(function(){
+					$("#node-attr-id").keyup(function(event){
+						if(event.keyCode===13){
+							$("#btn-node-attr-save").click();
+						}
+					});
+
+					$("#btn-adj-list-get").click(function(){
+						var adjList = editor.getAdjList();
+						var pom = document.createElement('a');
+						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(adjList));
+						pom.setAttribute('download', "adj.txt");
+						pom.click();
+					});
+
+					$("#btn-edge-list-get").click(function(){
+						var edgeList = editor.getEdgeList();
+						var pom = document.createElement('a');
+						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(edgeList));
+						pom.setAttribute('download', "edge.txt");
+						pom.click();
+					});
+
+					$("#btn-node-list-get").click(function(){
+						var nodeList = editor.getNodeList();
+						var pom = document.createElement('a');
+						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(nodeList));
+						pom.setAttribute('download', "node.txt");
+						pom.click();
+					 });
+
+					function dblnode(data){
+						$("#node-attr-id").attr("value", data.node.id);
+						$("#node-attr-id").attr("placeholder", data.node.id);
+						$("#node-attr-attrs").attr("value", data.node.attrs);
+						$("#node-attr-group-error").hide();
+
+						$("#node-attr").dialog({
+								modal : true,
+								width: 200,
+								resizable:false,
+								title:"Node (ID: " + data.node.id + ")" ,
+								position: [data.event.pageX, data.event.pageY],
+								closeOnEscape:true,
+								hide : {effect : "fade", duration:100},
+								close: function(){
+									var index = editor.nodes.indexOf(data.node.id);
+								}
+							});
+
+							$(".ui-widget-overlay").click(function(){ $("#node-attr").dialog("close"); });
+							$("#btn-node-attr-cancel").click(function(){ 
+										$("#node-attr").dialog("close");
+									});
+
+							$("#btn-node-attr-save").unbind("click");
+							$("#btn-node-attr-save").click(function(){ 
+									var new_id = $("#node-attr-id").val();
+									var new_attrs = $("#node-attr-attrs").val().split(",");
+
+									if(editor.getNodeIndex(new_id)>=0 && new_id!=data.node.id){
+										$("#node-attr-group-error").show();
+										return;
+									}
+			
+									var index = editor.getNodeIndex(data.node.id);
+									editor.nodes[index].id = new_id;
+									editor.nodes[index].attrs = new_attrs;
+									editor.restart();
+									$("#node-attr").dialog("close");
+							});
+						}
+
+						editor = new Editor({
+							"container":"#editor-container",
+							"dblnode" : dblnode
+						});
+
+						originalHeight = $("#editor-container").height();
+
+						// undirected behaviour 
+						$(".graph-type").change(function(event){
+							editor.undirected = event.target.value === "undirected" ? true : false;
+							editor.restart();
+						});
+
+						// btn attr-view 
+						$("#btn-attr-view").click(function(){
+							$("#attr-view-content").empty();
+							$("#attr-view-content").append("<tr><th>Node ID</th><th>Attributes</th></tr><tr>");
+
+							// attribute view 
+							for(var i=0;i<editor.nodes.length;i++)
+							{
+								$("#attr-view-content").append("<tr></tr>");	
+							}
+
+							var rows = d3.select("#attr-view-content").selectAll("tr")
+								.filter(function(d,i) { return i!=0; })
+								.data(editor.nodes);
+
+							rows.append("td").text(function(d){ return d.id; });
+							rows.append("td").append("textarea")
+								.attr("class", "form-control") 
+								.attr("rows","1")
+								.text(function(d){ return d.attrs.join(); }); 
+
+							// show the dialog
+							$("#attr-view").dialog({
+								modal:true, 
+								title:"Node Attributes View", 
+								closeText:"close", 
+								maxHeight:600,
+								closeOnEscape:true,
+								hide : {effect : "fade", duration:100}
+							});
+
+							$(".ui-widget-overlay").click(function(){ $("#attr-view").dialog("close"); });
+						});
+
+						$("#btn-attr-view-save").unbind("click");
+						$("#btn-attr-view-save").click(function(){
+								var rows = $("#attr-view-content textarea");
+							
+								for(var i=0;i<rows.length;i++)
+								{
+									if(rows[i]!=""){
+										editor.nodes[i].attrs = rows[i].value.split(",");
+									}
+								}
+						
+								editor.restart();
+								$("#attr-view").dialog("close");
+							});
+
+						$("#btn-attr-view-cancel").unbind("click");
+						$("#btn-attr-view-cancel").click(function() {
+							$("#attr-view").dialog("close");
+						});
+
+						$("#btn-expand").click(function(){
+								if(!expanded){
+									$("#editor-container").animate({
+										height:750},
+										1500,
+										function(){
+											editor.restart();
+										});
+									}
+								else{
+									$("#editor-container").animate({
+										height:originalHeight},
+										1500,
+										function(){
+											editor.restart();
+										});
+									}
+									expanded=!expanded;
+							});
+					});
+		</script>
+	</head>
+  
+	<body>
+		<!--Node-attr modal-->
+		<div id="node-attr" style="display:none">
+			<div role="form">
+				<div class="form-group">
+					<label for="node-attr-id">Node ID:</label>
+					<input type="text" class="form-control" id="node-attr-id" placeholder="" />
+				</div>
+				<div class="form-group">
+					<label for="node-attr-attrs">Attributes:</label>
+					<textarea class="form-control" rows="3" id="node-attr-attrs"></textarea>
+				</div>
+				<div class="form-group">
+					<button type="button" class="btn btn-primary btn-sm editable-submit" id="btn-node-attr-save"><i class="glyphicon glyphicon-ok"></i></button>
+					<button type="button" class="btn btn-default btn-sm editable-cancel" id="btn-node-attr-cancel"><i class="glyphicon glyphicon-remove"></i></button>
+				</div>
+				<div class="form-group has-error" id="node-attr-group-error" style="display:none">
+					<label class="control-label" id="node-attr-error">Node ID must be unique</label>
+				</div>
+			</div>
+		</div><!--Modal ends-->
+
+		<div id="attr-view" style="display:none">
+			<div id="attr-view-container">
+				<table>
+					<tbody id="attr-view-content">
+					</tbody>
+				</table>	
+			</div>
+			<form role="form">
+				<div class="form-group">
+					<button type="button" class="btn btn-primary btn-sm editable-submit" id="btn-attr-view-save"><i class="glyphicon glyphicon-ok"></i></button>
+					<button type="button" class="btn btn-default btn-sm editable-cancel" id="btn-attr-view-cancel"><i class="glyphicon glyphicon-remove"></i></button>
+				</div>
+			</form>
+		</div>
+
+		<div class="container bs-docs-container">
+			<h1>Graft <small>In-browser graph editor</small></h1>
+		</div>
+
+		<div id="editor-container"></div>
+
+		<!--Container begins-->
+		<div class="container bs-docs-container">
+			<div class="row"> <!--Row begins-->
+				<div class="col-md-6">
+					<form role="form">
+						<div class="radio-inline">
+							<label>
+								<input type="radio" name="options" id="options_directed" class="graph-type" value="directed" checked>
+									Directed Graph
+							</label>
+						</div>
+						<div class="radio-inline">
+							<label>
+								<input type="radio" name="options" id="options_undirected" class="graph-type" value="undirected">
+									Undirected Graph
+							</label>
+						</div>
+					</form>
+					<form class="form-inline" role="form" action="#">
+						<button type="button" class="btn btn-primary btn-danger form-control" id="btn-attr-view">Attribute view</button>
+						<button type="button" class="btn btn-default form-control" id="btn-expand">
+							<span class="glyphicon glyphicon-zoom-in"></span> Resize
+						</button>
+					</form>
+				</div>
+				<div class="col-md-6">
+						<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
+						<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
+						<button type="button" class="btn btn-warning" id="btn-node-list-get">Download Node List</button>
+				</div>
+			</div><!--Row ends-->
+			<hr style="border-top:1px solid black;" />
+			<p class="lead">
+					<mark>Click</mark> in the open space to <strong><mark>add a node</mark></strong>, drag from one node to another to <strong>add an edge</strong>. <br>
+					<mark>Ctrl-drag</mark> a node to <strong><mark>move</mark></strong> the graph layout. <br>
+					<mark>Click</mark> a node or an edge to <strong><mark>select</mark></strong> it.<br>
+					<mark>Double-click</mark> a node to open the <strong><mark>node editor</mark></strong>.<br>
+					<mark>Click</mark> on the Attributes View to open an editable list of <strong><mark>node attributes</mark></strong>.</p>
+
+			<p class="lead">
+					When a node is selected: <strong>R</strong> toggles reflexivity, <strong>Delete</strong> removes the node. <br>
+					When an edge is selected: <strong>L</strong>(eft), <strong>R</strong>(ight), <strong>B</strong>(oth) change direction, <strong>Delete</strong> removes the edge.</p>
+		</div><!--Container ends-->
+
+		<!--Footer-->
+		<div id="footer">
+			<div class="container">
+				<p class="muted credit">
+					Based on <a href="http://bl.ocks.org/rkirsling/5001347" target="_blank">Directed Graph Editor</a> by rkirsling. 
+				<span style="float:right">Code on <a href="https://github.com/vikeshkhanna/graph-editor" target="_blank">GitHub</a></span>
+				</p>
+			</div>
+		</div><!--Footer-->
+	</body>
+</html>
