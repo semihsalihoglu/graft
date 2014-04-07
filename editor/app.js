@@ -1,12 +1,12 @@
 /*
- * Graph Editor is based on Directed Graph Editor by rkirsling http://bl.ocks.org/rkirsling/5001347
+ * Graph Editor is based on Directed Graph Editor by rkirsling http://bl.ocks.org/rkirsling/5001347.
  */
 
 /*
  * Editor is a class that encapsulates the graph editing window
  * @param {container, [undirected]} options - Initialize editor with these options. See @desc below.
- * @desc {options.container} - HTML element that contains the editor svg
- * @desc {options.undirected} - Indicate whether the graph is directed/undirected
+ * @desc {options.container} - HTML element that contains the editor svg.
+ * @desc {options.undirected} - Indicate whether the graph is directed/undirected.
  * @constructor
  */
 function Editor(options) {
@@ -71,16 +71,16 @@ Editor.prototype.initElements = function() {
 
    // Defines end arrow marker for graph links.
     this.svg.append('svg:defs')
-                .append('svg:marker')
-                    .attr('id', 'end-arrow')
-                    .attr('viewBox', '0 -5 10 10')
-                    .attr('refX', 6)
-                    .attr('markerWidth', 3)
-                    .attr('markerHeight', 3)
-                    .attr('orient', 'auto')
-                    .append('svg:path')
-                        .attr('d', 'M0,-5L10,0L0,5')
-                        .attr('fill', '#000');
+                 .append('svg:marker')
+                     .attr('id', 'end-arrow')
+                     .attr('viewBox', '0 -5 10 10')
+                     .attr('refX', 6)
+                     .attr('markerWidth', 3)
+                     .attr('markerHeight', 3)
+                     .attr('orient', 'auto')
+                     .append('svg:path')
+                         .attr('d', 'M0,-5L10,0L0,5')
+                         .attr('fill', '#000');
 
     // Defines start arrow marker for graph links.
     this.svg.append('svg:defs')
@@ -107,7 +107,7 @@ Editor.prototype.initEvents = function() {
     this.mousedown_node = null;
     this.mouseup_node = null;
 
-    // Binds mouse down/up/move events on main SVG to appropriate methods. 
+    // Binds mouse down/up/move events on main SVG to appropriate methods.
     // Used to create new nodes, create edges and dragging the graph.
     this.svg.on('mousedown', this.mousedown.bind(this))
             .on('mousemove', this.mousemove.bind(this))
@@ -124,12 +124,12 @@ Editor.prototype.initEvents = function() {
  */
 Editor.prototype.initForce = function() {
     this.force = d3.layout.force()
-                            .nodes(this.nodes)
-                            .links(this.links)
-                            .size([this.width, this.height])
-                            .linkDistance(150)
-                            .charge( -500 )
-                            .on('tick', this.tick.bind(this))
+                              .nodes(this.nodes)
+                              .links(this.links)
+                              .size([this.width, this.height])
+                              .linkDistance(150)
+                              .charge( -500 )
+                              .on('tick', this.tick.bind(this))
 }
 
 /*
@@ -145,8 +145,8 @@ Editor.prototype.init = function() {
 
     // Line displayed when dragging an edge off a node
     this.drag_line = this.svg.append('svg:path')
-                                .attr('class', 'link dragline hidden')
-                                .attr('d', 'M0,0L0,0');
+                                 .attr('class', 'link dragline hidden')
+                                 .attr('d', 'M0,0L0,0');
 
     // Handles to link and node element groups.
     this.path = this.svg.append('svg:g').selectAll('path'),
@@ -216,59 +216,66 @@ function getPadding(node) {
 }
 
 /*
- * Updates existing links and adds new links
+ * Updates existing links and adds new links.
  */
 Editor.prototype.restartLinks = function() {
     // path (link) group
     this.path = this.path.data(this.links);
 
-    // update existing links
+    // Update existing links
     this.path.classed('selected', (function(d) {
         return d === this.selected_link;
     }).bind(this))
-            .style('marker-start', (function(d) {
-                return d.left && !this.undirected ? 'url(#start-arrow)' : '';
-            }).bind(this))
-            .style('marker-end', (function(d) {
-                return d.right && !this.undirected ? 'url(#end-arrow)' : '';
-            }).bind(this));
+             .style('marker-start', (function(d) {
+                 return d.left && !this.undirected ? 'url(#start-arrow)' : '';
+             }).bind(this))
+             .style('marker-end', (function(d) {
+                 return d.right && !this.undirected ? 'url(#end-arrow)' : '';
+             }).bind(this));
 
-    // add new links
+    // Add new links.
+    // For each link in the bound data but not in elements group, enter()
+    // selection calls everything that follows once.
+    // Note that links are stored as source, target where source < target.
+    // If the link is from source -> target, it's a 'right' link.
+    // If the link is from target -> source, it's a 'left' link.
+    // A right link has end marker at the target side.
+    // A left link has a start marker at the source side.
     this.path.enter()
-                .append('svg:path')
-                    .attr('class', 'link')
-                    .classed('selected', (function(d) {
-                        return d === this.selected_link;
-                    }).bind(this))
-                    .style('marker-start', (function(d) {
-                        if(d.left && !this.undirected) {
-                            return  'url(#start-arrow)';
-                        }
-                        return '';
-                    }).bind(this))
-                    .style('marker-end', (function(d) {
-                        if(d.right && !this.undirected) {
-                            return 'url(#end-arrow)';
-                        }
-                        return '';
-                    }).bind(this))
-                    .on('mousedown', (function(d) {
-                        if (d3.event.ctrlKey) {
-                            return;
-                        }
+                 .append('svg:path')
+                     .attr('class', 'link')
+                     .classed('selected', (function(d) {
+                         return d === this.selected_link;
+                     }).bind(this))
+                     .style('marker-start', (function(d) {
+                         if(d.left && !this.undirected) {
+                             return  'url(#start-arrow)';
+                         }
+                         return '';
+                     }).bind(this))
+                     .style('marker-end', (function(d) {
+                         if(d.right && !this.undirected) {
+                             return 'url(#end-arrow)';
+                         }
+                         return '';
+                     }).bind(this))
+                     .on('mousedown', (function(d) {
+                         if (d3.event.ctrlKey) {
+                             return;
+                         }
 
-                        // select link
-                        this.mousedown_link = d;
-                        if (this.mousedown_link === this.selected_link) {
-                            this.selected_link = null;
-                        } else {
-                            this.selected_link = this.mousedown_link;
-                        }
-                        this.selected_node = null;
-                        this.restart();
-                    }).bind(this));
+                         // Select link
+                         this.mousedown_link = d;
+                         if (this.mousedown_link === this.selected_link) {
+                             this.selected_link = null;
+                         } else {
+                             this.selected_link = this.mousedown_link;
+                         }
+                         this.selected_node = null;
+                         this.restart();
+                     }).bind(this));
 
-    // remove old links
+    // Remove old links.
     this.path.exit().remove();
 }
 
@@ -278,115 +285,115 @@ Editor.prototype.restartLinks = function() {
  * Creates 'circle' elements for each new node in this.nodes
  */
 Editor.prototype.addNodes = function() {
-    // Adds new nodes
-    // The enter() call appends a 'g' element for each node in this.nodes
+    // Adds new nodes.
+    // The enter() call appends a 'g' element for each node in this.nodes.
     // that is not present in this.circle already.
     var g = this.circle.enter().append('svg:g');
 
-    // Draw the new node
+    // Draw the new node.
     g.append('svg:circle')
-        .attr('class', 'node')
-        .attr('r', 14)
-        .style('fill', (function(d) {
-            return d === this.selected_node ?
-                d3.rgb(this.colors(d.id)).brighter().toString() :
-                this.colors(d.id);
-        }).bind(this))
-        .style('stroke', (function(d) {
-            return d3.rgb(this.colors(d.id)).darker().toString();
-        }).bind(this))
-        .classed('reflexive', function(d) { return d.reflexive; })
-        .on('mouseover', (function(d) {
-            if (!this.mousedown_node || d === this.mousedown_node) {
-                return;
-            }
-            // Enlarge target node
-            d3.select(d3.event.target).attr('transform', 'scale(1.1)');
-        }).bind(this))
-        .on('mouseout', (function(d) {
-            if (!this.mousedown_node || d === this.mousedown_node) {
-                return;
-            }
-            // Unenlarge target node
-            d3.select(d3.event.target).attr('transform', '');
-        }).bind(this))
-        .on('mousedown', (function(d) {
-            if (d3.event.ctrlKey) {
-                return;
-            }
-            // Select node
-            this.mousedown_node = d;
-            if (this.mousedown_node === this.selected_node) {
-                this.selected_node = null;
-            } else {
-                this.selected_node = this.mousedown_node;
-            }
+         .attr('class', 'node')
+         .attr('r', 14)
+         .style('fill', (function(d) {
+             return d === this.selected_node ?
+                 d3.rgb(this.colors(d.id)).brighter().toString() :
+                 this.colors(d.id);
+         }).bind(this))
+         .style('stroke', (function(d) {
+             return d3.rgb(this.colors(d.id)).darker().toString();
+         }).bind(this))
+         .classed('reflexive', function(d) { return d.reflexive; })
+         .on('mouseover', (function(d) {
+             if (!this.mousedown_node || d === this.mousedown_node) {
+                 return;
+             }
+             // Enlarge target node.
+             d3.select(d3.event.target).attr('transform', 'scale(1.1)');
+         }).bind(this))
+         .on('mouseout', (function(d) {
+             if (!this.mousedown_node || d === this.mousedown_node) {
+                 return;
+             }
+             // Unenlarge target node.
+             d3.select(d3.event.target).attr('transform', '');
+         }).bind(this))
+         .on('mousedown', (function(d) {
+             if (d3.event.ctrlKey) {
+                 return;
+             }
+             // Select node.
+             this.mousedown_node = d;
+             if (this.mousedown_node === this.selected_node) {
+                 this.selected_node = null;
+             } else {
+                 this.selected_node = this.mousedown_node;
+             }
 
-            this.selected_link = null;
+             this.selected_link = null;
 
-            // Reposition drag line
-            this.drag_line
-                .style('marker-end', 'url(#end-arrow)')
-                .classed('hidden', false)
-                .attr('d', 'M' + this.mousedown_node.x + ',' + this.mousedown_node.y + 'L' + this.mousedown_node.x + ',' + this.mousedown_node.y);
-            this.restart();
-        }).bind(this))
-        .on('mouseup', (function(d) {
-            if (!this.mousedown_node) {
-                return;
-            }
+             // Reposition drag line.
+             this.drag_line
+                    .style('marker-end', 'url(#end-arrow)')
+                    .classed('hidden', false)
+                    .attr('d', 'M' + this.mousedown_node.x + ',' + this.mousedown_node.y + 'L' + this.mousedown_node.x + ',' + this.mousedown_node.y);
+             this.restart();
+         }).bind(this))
+         .on('mouseup', (function(d) {
+             if (!this.mousedown_node) {
+                 return;
+             }
 
-            this.drag_line
-                .classed('hidden', true)
-                .style('marker-end', '');
+             this.drag_line
+                    .classed('hidden', true)
+                    .style('marker-end', '');
 
-            // check for drag-to-self
-            this.mouseup_node = d;
-            if (this.mouseup_node === this.mousedown_node) {
-                this.resetMouseVars();
-                return;
-            }
+             // Check for drag-to-self.
+             this.mouseup_node = d;
+             if (this.mouseup_node === this.mousedown_node) {
+                 this.resetMouseVars();
+                 return;
+             }
 
-            // Unenlarge target node
-            d3.select(d3.event.target).attr('transform', '');
+             // Unenlarge target node to default size.
+             d3.select(d3.event.target).attr('transform', '');
 
-            // Add link to graph (update if exists)
-            // Note: Links are strictly source < target; arrows separately specified by booleans
-            var source, target, direction;
-            if (this.mousedown_node.id < this.mouseup_node.id) {
-                source = this.mousedown_node;
-                target = this.mouseup_node;
-                direction = 'right';
-            } else {
-                source = this.mouseup_node;
-                target = this.mousedown_node;
-                direction = 'left';
-            }
+             // Add link to graph (update if exists).
+             // Note: Links are strictly source < target; arrows separately specified by booleans.
+             var source, target, direction;
+             if (this.mousedown_node.id < this.mouseup_node.id) {
+                 source = this.mousedown_node;
+                 target = this.mouseup_node;
+                 direction = 'right';
+             } else {
+                 source = this.mouseup_node;
+                 target = this.mousedown_node;
+                 direction = 'left';
+             }
 
-            var link;
-            link = this.links.filter(function(l) {
-                return (l.source === source && l.target === target);
-            })[0];
+             var link;
+             link = this.links.filter(function(l) {
+                 return (l.source === source && l.target === target);
+             })[0];
 
-            if (link) {
-                link[direction] = true;
-            } else {
-                link = {source: source, target: target, left: false, right: false};
-                link[direction] = true;
-                this.links.push(link);
-            }
+             if (link) {
+                 link[direction] = true;
+             } else {
+                 link = {source: source, target: target, left: false, right: false};
+                 link[direction] = true;
+                 this.links.push(link);
+             }
 
-            // Select new link
-            this.selected_link = link;
-            this.selected_node = null;
-            this.restart();
-        }).bind(this))
-        .on('dblclick', (function(d) {
-            if (this.dblnode) {
-                this.dblnode({'event' : d3.event, 'node': d });
-                this.restart();
-            }
-        }).bind(this));
+             // Select new link.
+             this.selected_link = link;
+             this.selected_node = null;
+             this.restart();
+         }).bind(this))
+         .on('dblclick', (function(d) {
+             if (this.dblnode) {
+                 this.dblnode({'event' : d3.event, 'node': d });
+                 this.restart();
+             }
+         }).bind(this));
 
     // Show node IDs
     g.append('svg:text')
@@ -433,7 +440,7 @@ Editor.prototype.restart = function() {
     this.restartLinks();
     this.restartNodes();
 
-    // set the graph in motion
+    // Set the graph in motion
     this.force.start();
 }
 
