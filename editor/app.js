@@ -1,6 +1,12 @@
-/* Editor is a class that encapsulates the graph editing window
- * options.container - HTML element that contains the editor svg
- * options.undirected (Optional) - Indicate whether the graph is directed/undirected
+/*
+ * Graph Editor is based on Directed Graph Editor by rkirsling http://bl.ocks.org/rkirsling/5001347
+ */
+
+/*
+ * Editor is a class that encapsulates the graph editing window
+ * @param {container, [undirected]} options - Initialize editor with these options. See @desc below.
+ * @desc {options.container} - HTML element that contains the editor svg
+ * @desc {options.undirected} - Indicate whether the graph is directed/undirected
  * @constructor
  */
 function Editor(options) {
@@ -10,7 +16,6 @@ function Editor(options) {
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
         this.undirected = options['undirected'] === true;
-
         if (options['dblnode']) {
             this.dblnode = options['dblnode'];
         }
@@ -33,87 +38,128 @@ function Editor(options) {
     this.init();
 }
 
-/* Sets the size of the graph editing window. The graph is always centered in the container according to these dimensions.
+/*
+ * Sets the size of the graph editing window.
+ * The graph is always centered in the container according to these dimensions.
  */
 Editor.prototype.setSize = function() {
     this.width = $(this.container).width();
     this.height = $(this.container).height();
 }
 
-/* Resize the force layout. The D3 force layout controls the movement of the svg elements within the container.
+/*
+ * Resize the force layout. The D3 force layout controls the movement of the
+ * svg elements within the container.
  */
 Editor.prototype.resizeForce = function() {
     this.setSize();
     this.force.size([this.width, this.height]);
 }
 
-/* Initializes the svg elements, force layout and event bindings
+/*
+ * Initializes the SVG element, along with marker and defs.
  */
-Editor.prototype.init = function() {
+Editor.prototype.initElements = function() {
+    // Initialize colors for nodes
     this.colors = d3.scale.category10();
+
+    // Creates the main SVG element and appends it to the container as the first child.
+    // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
-        .insert('svg', ':first-child')
-        .attr('class','editor')
+                     .insert('svg', ':first-child')
+                         .attr('class','editor')
 
-    // app starts here
-    this.svg.on('mousedown', this.mousedown.bind(this))
-        .on('mousemove', this.mousemove.bind(this))
-        .on('mouseup', this.mouseup.bind(this));
-    d3.select(window)
-        .on('keydown', this.keydown.bind(this))
-        .on('keyup', this.keyup.bind(this));
+   // Defines end arrow marker for graph links.
+    this.svg.append('svg:defs')
+                .append('svg:marker')
+                    .attr('id', 'end-arrow')
+                    .attr('viewBox', '0 -5 10 10')
+                    .attr('refX', 6)
+                    .attr('markerWidth', 3)
+                    .attr('markerHeight', 3)
+                    .attr('orient', 'auto')
+                    .append('svg:path')
+                        .attr('d', 'M0,-5L10,0L0,5')
+                        .attr('fill', '#000');
 
-    // define arrow markers for graph links
-    this.svg.append('svg:defs').append('svg:marker')
-            .attr('id', 'end-arrow')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 6)
-            .attr('markerWidth', 3)
-            .attr('markerHeight', 3)
-            .attr('orient', 'auto')
-        .append('svg:path')
-            .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', '#000');
+    // Defines start arrow marker for graph links.
+    this.svg.append('svg:defs')
+                .append('svg:marker')
+                    .attr('id', 'start-arrow')
+                    .attr('viewBox', '0 -5 10 10')
+                    .attr('refX', 4)
+                    .attr('markerWidth', 3)
+                    .attr('markerHeight', 3)
+                    .attr('orient', 'auto')
+                    .append('svg:path')
+                        .attr('d', 'M10,-5L0,0L10,5')
+                        .attr('fill', '#000')
+}
 
-    this.svg.append('svg:defs').append('svg:marker')
-            .attr('id', 'start-arrow')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 4)
-            .attr('markerWidth', 3)
-            .attr('markerHeight', 3)
-            .attr('orient', 'auto')
-    .append('svg:path')
-        .attr('d', 'M10,-5L0,0L10,5')
-        .attr('fill', '#000')
-
-    // line displayed when dragging new nodes
-    this.drag_line = this.svg.append('svg:path')
-        .attr('class', 'link dragline hidden')
-        .attr('d', 'M0,0L0,0');
-
-    // handles to link and node element groups
-    this.path = this.svg.append('svg:g').selectAll('path'),
-    this.circle = this.svg.append('svg:g').selectAll('g');
-
-    // Mouse event vars - These variables are set (and reset) when the corresponding event occurs
+/*
+ * Binds the mouse and key events to the appropriate methods.
+ */
+Editor.prototype.initEvents = function() {
+    // Mouse event vars - These variables are set (and reset) when the corresponding event occurs.
     this.selected_node = null;
     this.selected_link = null;
     this.mousedown_link = null;
     this.mousedown_node = null;
     this.mouseup_node = null;
 
+    // Binds mouse down/up/move events on main SVG to appropriate methods. 
+    // Used to create new nodes, create edges and dragging the graph.
+    this.svg.on('mousedown', this.mousedown.bind(this))
+            .on('mousemove', this.mousemove.bind(this))
+            .on('mouseup', this.mouseup.bind(this));
+
+    // Binds Key down/up events on the window to appropriate methods.
+    d3.select(window)
+          .on('keydown', this.keydown.bind(this))
+          .on('keyup', this.keyup.bind(this));
+}
+
+/*
+ * Initializes D3 force layout to update node/link location and orientation.
+ */
+Editor.prototype.initForce = function() {
     this.force = d3.layout.force()
-            .nodes(this.nodes)
-            .links(this.links)
-            .size([this.width, this.height])
-            .linkDistance(150)
-            .charge( -500 )
-            .on('tick', this.tick.bind(this))
+                            .nodes(this.nodes)
+                            .links(this.links)
+                            .size([this.width, this.height])
+                            .linkDistance(150)
+                            .charge( -500 )
+                            .on('tick', this.tick.bind(this))
+}
+
+/*
+ * Initializes the SVG elements, force layout and event bindings.
+ */
+Editor.prototype.init = function() {
+
+    // Initializes the SVG elements.
+    this.initElements();
+
+    // Binds events and initializes variables used to track selected nodes/links.
+    this.initEvents();
+
+    // Line displayed when dragging an edge off a node
+    this.drag_line = this.svg.append('svg:path')
+                                .attr('class', 'link dragline hidden')
+                                .attr('d', 'M0,0L0,0');
+
+    // Handles to link and node element groups.
+    this.path = this.svg.append('svg:g').selectAll('path'),
+    this.circle = this.svg.append('svg:g').selectAll('g');
+
+    // Initializes the force layout.
+    this.initForce();
 
     this.restart();
 }
 
-/* Reset the mouse event variables to null
+/*
+ * Reset the mouse event variables to null.
  */
 Editor.prototype.resetMouseVars = function() {
     this.mousedown_node = null;
@@ -121,7 +167,8 @@ Editor.prototype.resetMouseVars = function() {
     this.mousedown_link = null;
 }
 
-/* Called at a fixed time interval to update the nodes and edge positions.
+/*
+ * Called at a fixed time interval to update the nodes and edge positions.
  * Gives the fluid appearance to the editor.
  */
 Editor.prototype.tick = function() {
@@ -149,100 +196,125 @@ Editor.prototype.tick = function() {
     });
 }
 
-/* Returns the radius of the node. Radius is not fixed since a node with a longer identifier needs a bigger circle.
+/*
+ * Returns the radius of the node.
+ * Radius is not fixed since nodes with longer identifiers need a bigger circle.
+ * @param {int} node - Node object whose radius is required.
  */
 function getRadius(node) {
     return 14 + node.id.length * 3;
 }
 
-/* Returns the padding of the node. Padding is used by edges as an offset from the node center.
- * Padding is not fixed since a node with a longer identifier needs a bigger circle.
+/*
+ * Returns the padding of the node.
+ * Padding is used by edges as an offset from the node center.
+ * Padding is not fixed since nodes with longer identifiers need bigger circle.
+ * @param {int} node - Node object whose padding is required.
  */
 function getPadding(node) {
     return [17 + node.id.length * 3, 12 + node.id.length * 3];
 }
 
-/* Updates the graph. Called internally on various events.
- * May be called from the client after updating graph properties (like undirected/container size etc)
+/*
+ * Updates existing links and adds new links
  */
-Editor.prototype.restart = function() {
-    this.resizeForce();
-
+Editor.prototype.restartLinks = function() {
     // path (link) group
     this.path = this.path.data(this.links);
 
     // update existing links
-    this.path.classed('selected', (function(d) { return d === this.selected_link; }).bind(this))
-        .style('marker-start', (function(d) { return d.left && !this.undirected ? 'url(#start-arrow)' : ''; }).bind(this))
-        .style('marker-end', (function(d) { return d.right && !this.undirected ? 'url(#end-arrow)' : ''; }).bind(this));
+    this.path.classed('selected', (function(d) {
+        return d === this.selected_link;
+    }).bind(this))
+            .style('marker-start', (function(d) {
+                return d.left && !this.undirected ? 'url(#start-arrow)' : '';
+            }).bind(this))
+            .style('marker-end', (function(d) {
+                return d.right && !this.undirected ? 'url(#end-arrow)' : '';
+            }).bind(this));
 
     // add new links
-    this.path.enter().append('svg:path')
-        .attr('class', 'link')
-        .classed('selected', (function(d) { return d === this.selected_link; }).bind(this))
-        .style('marker-start', (function(d) { return d.left && !this.undirected ? 'url(#start-arrow)' : ''; }).bind(this))
-        .style('marker-end', (function(d) { return d.right && !this.undirected ? 'url(#end-arrow)' : ''; }).bind(this))
-        .on('mousedown', (function(d) {
-            if (d3.event.ctrlKey) {
-                return;
-            }
+    this.path.enter()
+                .append('svg:path')
+                    .attr('class', 'link')
+                    .classed('selected', (function(d) {
+                        return d === this.selected_link;
+                    }).bind(this))
+                    .style('marker-start', (function(d) {
+                        if(d.left && !this.undirected) {
+                            return  'url(#start-arrow)';
+                        }
+                        return '';
+                    }).bind(this))
+                    .style('marker-end', (function(d) {
+                        if(d.right && !this.undirected) {
+                            return 'url(#end-arrow)';
+                        }
+                        return '';
+                    }).bind(this))
+                    .on('mousedown', (function(d) {
+                        if (d3.event.ctrlKey) {
+                            return;
+                        }
 
-            // select link
-            this.mousedown_link = d;
-            if (this.mousedown_link === this.selected_link) {
-                this.selected_link = null;
-            } else {
-                this.selected_link = this.mousedown_link;
-            }
-            this.selected_node = null;
-            this.restart();
-        }).bind(this));
+                        // select link
+                        this.mousedown_link = d;
+                        if (this.mousedown_link === this.selected_link) {
+                            this.selected_link = null;
+                        } else {
+                            this.selected_link = this.mousedown_link;
+                        }
+                        this.selected_node = null;
+                        this.restart();
+                    }).bind(this));
 
     // remove old links
     this.path.exit().remove();
+}
 
-    // circle (node) group
-    // NB: the function arg is crucial here! nodes are known by id, not by index!
-    this.circle = this.circle.data(this.nodes, function(d) { return d.id; });
-
-    // update existing nodes (reflexive & selected visual states)
-    this.circle.selectAll('circle')
-        .style('fill', (function(d) { return (d === this.selected_node) ? d3.rgb(this.colors(d.id)).brighter().toString() : this.colors(d.id); }).bind(this))
-        .classed('reflexive', function(d) { return d.reflexive; })
-        .attr('r', function(d) { return getRadius(d);  });
-
-    // Update node IDs
-    this.circle.selectAll('text')
-        .text(function(d) { return d.id; });
-
-    // add new nodes
+/*
+ * Adds new nodes to the graph and binds mouse events.
+ * Assumes that the data for this.circle is already set by the caller.
+ * Creates 'circle' elements for each new node in this.nodes
+ */
+Editor.prototype.addNodes = function() {
+    // Adds new nodes
+    // The enter() call appends a 'g' element for each node in this.nodes
+    // that is not present in this.circle already.
     var g = this.circle.enter().append('svg:g');
 
+    // Draw the new node
     g.append('svg:circle')
         .attr('class', 'node')
         .attr('r', 14)
-        .style('fill', (function(d) { return (d === this.selected_node) ? d3.rgb(this.colors(d.id)).brighter().toString() : this.colors(d.id); }).bind(this))
-        .style('stroke', (function(d) { return d3.rgb(this.colors(d.id)).darker().toString(); }).bind(this))
+        .style('fill', (function(d) {
+            return d === this.selected_node ?
+                d3.rgb(this.colors(d.id)).brighter().toString() :
+                this.colors(d.id);
+        }).bind(this))
+        .style('stroke', (function(d) {
+            return d3.rgb(this.colors(d.id)).darker().toString();
+        }).bind(this))
         .classed('reflexive', function(d) { return d.reflexive; })
         .on('mouseover', (function(d) {
             if (!this.mousedown_node || d === this.mousedown_node) {
                 return;
             }
-            // enlarge target node
+            // Enlarge target node
             d3.select(d3.event.target).attr('transform', 'scale(1.1)');
         }).bind(this))
         .on('mouseout', (function(d) {
             if (!this.mousedown_node || d === this.mousedown_node) {
                 return;
             }
-            // unenlarge target node
+            // Unenlarge target node
             d3.select(d3.event.target).attr('transform', '');
         }).bind(this))
         .on('mousedown', (function(d) {
             if (d3.event.ctrlKey) {
                 return;
             }
-            // select node
+            // Select node
             this.mousedown_node = d;
             if (this.mousedown_node === this.selected_node) {
                 this.selected_node = null;
@@ -252,7 +324,7 @@ Editor.prototype.restart = function() {
 
             this.selected_link = null;
 
-            // reposition drag line
+            // Reposition drag line
             this.drag_line
                 .style('marker-end', 'url(#end-arrow)')
                 .classed('hidden', false)
@@ -264,7 +336,6 @@ Editor.prototype.restart = function() {
                 return;
             }
 
-            // needed by FF
             this.drag_line
                 .classed('hidden', true)
                 .style('marker-end', '');
@@ -276,11 +347,11 @@ Editor.prototype.restart = function() {
                 return;
             }
 
-            // unenlarge target node
+            // Unenlarge target node
             d3.select(d3.event.target).attr('transform', '');
 
-            // add link to graph (update if exists)
-            // NB: links are strictly source < target; arrows separately specified by booleans
+            // Add link to graph (update if exists)
+            // Note: Links are strictly source < target; arrows separately specified by booleans
             var source, target, direction;
             if (this.mousedown_node.id < this.mouseup_node.id) {
                 source = this.mousedown_node;
@@ -305,7 +376,7 @@ Editor.prototype.restart = function() {
                 this.links.push(link);
             }
 
-            // select new link
+            // Select new link
             this.selected_link = link;
             this.selected_node = null;
             this.restart();
@@ -317,34 +388,67 @@ Editor.prototype.restart = function() {
             }
         }).bind(this));
 
-    // show node IDs
+    // Show node IDs
     g.append('svg:text')
-            .attr('x', 0)
-            .attr('y', 4)
-            .attr('class', 'id')
-            .text(function(d) { return d.id; });
+        .attr('x', 0)
+        .attr('y', 4)
+        .attr('class', 'id')
+        .text(function(d) { return d.id; });
+}
 
-    // remove old nodes
+/*
+ * Updates existing nodes and adds new nodes.
+ */
+Editor.prototype.restartNodes = function() {
+    // Set the circle group's data to this.nodes.
+    // Note that nodes are identified by id, not their index in the array.
+    this.circle = this.circle.data(this.nodes, function(d) { return d.id; });
+
+    // Update existing nodes (reflexive & selected visual states)
+    this.circle.selectAll('circle')
+        .style('fill', (function(d) {
+            return d === this.selected_node ?
+                d3.rgb(this.colors(d.id)).brighter().toString() :
+                this.colors(d.id);
+        }).bind(this))
+        .classed('reflexive', function(d) { return d.reflexive; })
+        .attr('r', function(d) { return getRadius(d);  });
+
+    this.addNodes();
+
+    // Update node IDs
+    this.circle.selectAll('text')
+        .text(function(d) { return d.id; });
+
+   // remove old nodes
     this.circle.exit().remove();
+}
+
+/*
+ * Updates the graph. Called internally on various events.
+ * May be called from the client after updating graph properties.
+ */
+Editor.prototype.restart = function() {
+    this.resizeForce();
+    this.restartLinks();
+    this.restartNodes();
 
     // set the graph in motion
     this.force.start();
 }
 
-/* Handle mousedown event - Insert a new node if CTRL key is not pressed. Otherwise, drag the graph.
+/*
+ * Handles mousedown event.
+ * Insert a new node if CTRL key is not pressed. Otherwise, drag the graph.
  */
 Editor.prototype.mousedown = function() {
-    // prevent I-bar on drag
-    //d3.event.preventDefault();
-
-    // because :active only works in WebKit?
     this.svg.classed('active', true);
 
     if (d3.event.ctrlKey || this.mousedown_node || this.mousedown_link) {
         return;
     }
 
-    // insert new node at point
+    // Insert new node at point
     var point = d3.mouse(d3.event.target),
         node = { id : ( ++this.lastNodeId).toString(), reflexive : false};
     node.x = point[0];
@@ -354,13 +458,18 @@ Editor.prototype.mousedown = function() {
     this.restart();
 }
 
-/* Returns the index of the node in the nodes array with the given id.
+/*
+ * Returns the index of the node with the given id in the nodes array.
+ * @param {int} id - The identifier of the node.
  */
 Editor.prototype.getNodeIndex = function(id) {
     return this.nodes.map(function(e) { return e.id }).indexOf(id);
 }
 
-/* Returns the edge list. Edge list is the representation of the graph as a list of edges - vertex pairs (u,v)
+/*
+ * Returns the edge list.
+ * Edge list is the representation of the graph as a list of edges.
+ * An edge is represented as a vertex pair (u,v).
  */
 Editor.prototype.getEdgeList = function() {
     edgeList = '';
@@ -372,19 +481,19 @@ Editor.prototype.getEdgeList = function() {
     return edgeList;
 }
 
-/* Returns the adjacency list. Adj list is the representation of the graph as a list of nodes adjacent to each node.
+/*
+ * Returns the adjacency list.
+ * Adj list is the representation of the graph as a list of nodes adjacent to
+ * each node.
  */
-
 Editor.prototype.getAdjList = function() {
     adjList = '';
 
     for (var i = 0; i < this.nodes.length; i++) {
         var id = this.nodes[i].id;
         var nodes = [];
-
         for (var j = 0; j < this.links.length; j++) {
             var link = this.links[j];
-
             if ((link.left === true || this.undirected === true) && link.target.id === id) {
                 nodes.push(link.source.id);
             }
@@ -392,14 +501,11 @@ Editor.prototype.getAdjList = function() {
                 nodes.push(link.target.id);
             }
         }
-
         if (nodes.length > 0) {
             adjList += id + '\t';
-
             for (var j = 0; j < nodes.length; j++) {
                 adjList += nodes[j] + '\t';
             }
-
             adjList += i != this.nodes.length - 1 ? '\n' : '';
         }
     }
@@ -407,7 +513,8 @@ Editor.prototype.getAdjList = function() {
     return adjList;
 }
 
-/* Returns the list of nodes along with their attributes
+/*
+ * Returns the list of nodes along with their attributes.
  */
 Editor.prototype.getNodeList  = function() {
     nodeList = '';
@@ -420,20 +527,24 @@ Editor.prototype.getNodeList  = function() {
     return nodeList;
 }
 
-/* Handle the mousemove event - Updates the drag line if mouse is pressed at present (i.e. mousedown_node is set).
+/*
+ * Handle the mousemove event.
+ * Updates the drag line if mouse is pressed at present.
  * Ignores otherwise.
  */
 Editor.prototype.mousemove = function() {
+    // This indicates if the mouse is pressed at present.
     if (!this.mousedown_node) {
         return;
     }
 
-    // update drag line
+    // Update drag line.
     this.drag_line.attr('d', 'M' + this.mousedown_node.x + ',' + this.mousedown_node.y + 'L' + d3.mouse(this.svg[0][0])[0] + ',' + d3.mouse(this.svg[0][0])[1]);
     this.restart();
 }
 
-/* Handle the mouseup event.
+/*
+ * Handles the mouseup event.
  */
 Editor.prototype.mouseup = function() {
     if (this.mousedown_node) {
@@ -443,14 +554,14 @@ Editor.prototype.mouseup = function() {
             .style('marker-end', '');
     }
 
-    // because :active only works in WebKit?
     this.svg.classed('active', false);
 
-    // clear mouse event vars
+    // Clear mouse event vars
     this.resetMouseVars();
 }
 
-/* Removes the links associated with a given node.
+/*
+ * Removes the links associated with a given node.
  * Used when a node is deleted.
  */
 Editor.prototype.spliceLinksForNode = function(node) {
@@ -458,21 +569,25 @@ Editor.prototype.spliceLinksForNode = function(node) {
         return (l.source === node || l.target === node);
     });
 
-    toSplice.map(function(l) {
+    toSplice.map((function(l) {
         this.links.splice(this.links.indexOf(l), 1);
-    });
+    }).bind(this));
 }
 
-/* Handle keydown event.
+/*
+ * Handles keydown event.
+ * If Key is Ctrl, drags the graph using the force layout.
+ * If Key is 'L' or 'R' and link is selected, orients the link likewise.
+ * If Key is 'R' and node is selected, marks the node as reflexive.
+ * If Key is 'Backspace' or 'Delete', deletes the selected node or edge.
  */
 Editor.prototype.keydown = function() {
-    // d3.event.preventDefault();
     if (this.lastKeyDown !== -1) {
         return;
     }
     this.lastKeyDown = d3.event.keyCode;
 
-    // ctrl
+    // Ctrl key was pressed
     if (d3.event.keyCode === 17) {
         this.circle.call(this.force.drag);
         this.svg.classed('ctrl', true);
@@ -486,7 +601,7 @@ Editor.prototype.keydown = function() {
         case 8: // backspace
         case 46: // delete
             if (this.selected_node) {
-                this.nodes.splice(nodes.indexOf(this.selected_node), 1);
+                this.nodes.splice(this.nodes.indexOf(this.selected_node), 1);
                 this.spliceLinksForNode(this.selected_node);
             } else if (this.selected_link) {
                 this.links.splice(this.links.indexOf(this.selected_link), 1);
@@ -529,12 +644,15 @@ Editor.prototype.keydown = function() {
     }
 }
 
-/* Handle the keyup event
+/*
+ * Handles the keyup event.
+ * Resets lastKeyDown to -1.
+ * Also resets the drag event binding to null if the key released was Ctrl.
  */
 Editor.prototype.keyup = function() {
     this.lastKeyDown = -1;
 
-    // ctrl
+    // Ctrl
     if (d3.event.keyCode === 17) {
         this.circle
             .on('mousedown.drag', null)
