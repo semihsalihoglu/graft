@@ -24,9 +24,9 @@ function Editor(options) {
     this.setSize();
 
     this.nodes = [
-            {id : '0', reflexive : false, attrs : []},
-            {id : '1', reflexive : true, attrs : []},
-            {id : '2', reflexive : false, attrs : []}
+            getNewNode('0'),
+            getNewNode('1'),
+            getNewNode('2')
         ],
     this.lastNodeId = 2,
     this.links = [
@@ -66,6 +66,7 @@ Editor.prototype.initElements = function() {
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
+                     .html('')
                      .insert('svg', ':first-child')
                          .attr('class','editor')
 
@@ -202,7 +203,7 @@ Editor.prototype.tick = function() {
  * @param {int} node - Node object whose radius is required.
  */
 function getRadius(node) {
-    return 14 + node.id.length * 3;
+    return 16 + Math.max(node.id.length, node.attrs.length > 0 ? node.attrs[0].toString().length : 0) * 3;
 }
 
 /*
@@ -212,7 +213,16 @@ function getRadius(node) {
  * @param {int} node - Node object whose padding is required.
  */
 function getPadding(node) {
-    return [17 + node.id.length * 3, 12 + node.id.length * 3];
+    var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? node.attrs[0].toString().length : 0) * 3;
+    return [19 + nodeOffset, 12  + nodeOffset];
+}
+
+/*
+ * Returns a new node objects.
+ * @param {string} id - Identifier of the node.
+ */
+function getNewNode(id) {
+    return {id : id, reflexive : false, attrs : [], x: 0, y: 0};
 }
 
 /*
@@ -293,7 +303,9 @@ Editor.prototype.addNodes = function() {
     // Draw the new node.
     g.append('svg:circle')
          .attr('class', 'node')
-         .attr('r', 14)
+         .attr('r', (function(d) {
+             return getRadius(d);
+         }).bind(this))
          .style('fill', (function(d) {
              return d === this.selected_node ?
                  d3.rgb(this.colors(d.id)).brighter().toString() :
@@ -399,8 +411,7 @@ Editor.prototype.addNodes = function() {
     g.append('svg:text')
         .attr('x', 0)
         .attr('y', 4)
-        .attr('class', 'id')
-        .text(function(d) { return d.id; });
+        .attr('class', 'tid')
 }
 
 /*
@@ -423,9 +434,27 @@ Editor.prototype.restartNodes = function() {
 
     this.addNodes();
 
-    // Update node IDs
-    this.circle.selectAll('text')
-        .text(function(d) { return d.id; });
+    // Update node IDs and add/update node value (if present).
+    var el = this.circle.selectAll('text').text('');
+    el.append('tspan')
+          .text(function(d) {
+              return d.id;
+          })
+          .attr('x', 0)
+          .attr('dy', function(d) {
+              return d.attrs.length > 0 ? '-8' : '0 ';
+          })
+          .attr('class', 'id');
+
+    el.append('tspan')
+          .text(function(d) {
+              return d.attrs[0];
+          })
+          .attr('x', 0)
+          .attr('dy', function(d) {
+              return d.attrs.length > 0 ? '18' : '0';
+          })
+          .attr('class', 'vval');
 
    // remove old nodes
     this.circle.exit().remove();
@@ -457,10 +486,9 @@ Editor.prototype.mousedown = function() {
 
     // Insert new node at point
     var point = d3.mouse(d3.event.target),
-        node = { id : ( ++this.lastNodeId).toString(), reflexive : false};
+        node =  getNewNode((++this.lastNodeId).toString());
     node.x = point[0];
     node.y = point[1];
-    node.attrs = []
     this.nodes.push(node);
     this.restart();
 }
@@ -482,7 +510,17 @@ Editor.prototype.getEdgeList = function() {
     edgeList = '';
 
     for (var i = 0; i < this.links.length; i++) {
-        edgeList += this.links[i].source.id + '\t' + this.links[i].target.id + '\n';
+        var sourceId = this.links[i].source.id;
+        var targetId = this.links[i].target.id;
+
+        // Left links are target->source. So swap.
+        if (this.links[i].left === true) {
+            var temp = sourceId;
+            sourceId = targetId;
+            targetId = temp;
+        }
+
+        edgeList += sourceId + '\t' + targetId + '\n';
     }
 
     return edgeList;
@@ -666,4 +704,53 @@ Editor.prototype.keyup = function() {
             .on('touchstart.drag', null);
         this.svg.classed('ctrl', false);
     }
+}
+
+/*
+ * Builds the graph from adj list by constructing the nodes and links arrays.
+ * @param {obj} adjList - Adjacency list of the graph.
+ * @desc adjList - {nodeId: [adjId1, adjId2]}
+ */
+Editor.prototype.buildGraphFromAdjList = function(adjList) {
+    this.links = [];
+    this.nodes = [];
+    this.lastNodeId = 0;
+
+    // Scan ever node in adj list to build the nodes array.
+    for (var nodeId in adjList) {
+        if (this.getNodeIndex(nodeId) === -1) {
+            var node = getNewNode(nodeId);
+            this.lastNodeId++;
+            this.nodes.push(node);
+        }
+        var adj = adjList[nodeId];
+        for (var i = 0; i < adj.length; i++) {
+            if (this.getNodeIndex(adj[i]) === -1) {
+                node = getNewNode(adj[i]);
+                this.lastNodeId++;
+                this.nodes.push(node);
+            }
+        }
+    }
+
+    // Scan the adj list to build links array.
+    // Note that edges are stored as source, target where source < target
+    for (var nodeId in adjList) {
+        var adj = adjList[nodeId];
+        var node = this.nodes[this.getNodeIndex(nodeId)];
+        for (var i = 0; i < adj.length; i ++) {
+            var adjId = adj[i];
+            var adjNode = this.nodes[this.getNodeIndex(adjId)];
+            var link;
+            if (nodeId < adjId) {
+                link = {source: node, target: adjNode, left: false, right: true};
+            } else {
+                link = {source: adjNode, target: node, left: true, right: false};
+            }
+            this.links.push(link);
+        }
+    }
+
+    this.init();
+    this.restart();
 }

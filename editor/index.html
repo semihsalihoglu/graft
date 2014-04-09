@@ -68,23 +68,25 @@
 								}
 							});
 
-							$(".ui-widget-overlay").click(function(){ $("#node-attr").dialog("close"); });
-							$("#btn-node-attr-cancel").click(function(){ 
+							$(".ui-widget-overlay").click(function() { $("#node-attr").dialog("close"); });
+							$("#btn-node-attr-cancel").click(function() { 
 										$("#node-attr").dialog("close");
 									});
 
 							$("#btn-node-attr-save").unbind("click");
-							$("#btn-node-attr-save").click(function(){ 
+							$("#btn-node-attr-save").click(function() { 
 									var new_id = $("#node-attr-id").val();
-									var new_attrs = $("#node-attr-attrs").val().split(",");
+									var new_attrs_val = $("#node-attr-attrs").val();
+									var new_attrs = new_attrs_val.trim().length > 0 ? new_attrs_val.split(",") : [];
 
-									if(editor.getNodeIndex(new_id)>=0 && new_id!=data.node.id){
+									if (editor.getNodeIndex(new_id) >= 0 && new_id != data.node.id) {
 										$("#node-attr-group-error").show();
 										return;
 									}
 			
 									var index = editor.getNodeIndex(data.node.id);
 									editor.nodes[index].id = new_id;
+
 									editor.nodes[index].attrs = new_attrs;
 									editor.restart();
 									$("#node-attr").dialog("close");
@@ -99,19 +101,18 @@
 						originalHeight = $("#editor-container").height();
 
 						// undirected behaviour 
-						$(".graph-type").change(function(event){
+						$(".graph-type").change(function(event) {
 							editor.undirected = event.target.value === "undirected" ? true : false;
 							editor.restart();
 						});
 
 						// btn attr-view 
-						$("#btn-attr-view").click(function(){
+						$("#btn-attr-view").click(function() {
 							$("#attr-view-content").empty();
 							$("#attr-view-content").append("<tr><th>Node ID</th><th>Attributes</th></tr><tr>");
 
 							// attribute view 
-							for(var i=0;i<editor.nodes.length;i++)
-							{
+							for (var i=0;i<editor.nodes.length;i++) {
 								$("#attr-view-content").append("<tr></tr>");	
 							}
 
@@ -127,12 +128,12 @@
 
 							// show the dialog
 							$("#attr-view").dialog({
-								modal:true, 
-								title:"Node Attributes View", 
-								closeText:"close", 
-								maxHeight:600,
-								closeOnEscape:true,
-								hide : {effect : "fade", duration:100}
+									modal:true, 
+									title:"Node Attributes View", 
+									closeText:"close", 
+									maxHeight:600,
+									closeOnEscape:true,
+									hide : {effect : "fade", duration:100}
 							});
 
 							$(".ui-widget-overlay").click(function(){ $("#attr-view").dialog("close"); });
@@ -142,9 +143,8 @@
 						$("#btn-attr-view-save").click(function(){
 								var rows = $("#attr-view-content textarea");
 							
-								for(var i=0;i<rows.length;i++)
-								{
-									if(rows[i]!=""){
+								for(var i=0;i<rows.length;i++) {
+									if (rows[i]!="") {
 										editor.nodes[i].attrs = rows[i].value.split(",");
 									}
 								}
@@ -158,12 +158,12 @@
 							$("#attr-view").dialog("close");
 						});
 
-						$("#btn-expand").click(function(){
+						$("#btn-expand").click(function() {
 								if(!expanded){
 									$("#editor-container").animate({
 										height:750},
 										1500,
-										function(){
+										function() {
 											editor.restart();
 										});
 									}
@@ -171,7 +171,7 @@
 									$("#editor-container").animate({
 										height:originalHeight},
 										1500,
-										function(){
+										function() {
 											editor.restart();
 										});
 									}
