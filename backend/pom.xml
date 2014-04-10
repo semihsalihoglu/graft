@@ -1,0 +1,71 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>stanford.infolab.debugger</groupId>
+  <artifactId>backend</artifactId>
+  <packaging>jar</packaging>
+  <version>0.0-SNAPSHOT</version>
+
+  <properties>
+    <top.dir>/Users/semihsalihoglu/projects/distributed_graph_debugger</top.dir>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+	    <configuration>
+             <tasks>
+               <mkdir dir="target/generated-sources"/>
+               <exec executable="protoc">
+                 <arg value="--java_out=target/generated-sources"/>
+                 <arg value="--proto_path=${top.dir}/proto/"/>
+                 <arg value="${top.dir}/proto/scenario.proto"/>
+               </exec>
+             </tasks>
+             <sourceRoot>target/generated-sources</sourceRoot>
+           </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+   <dependency>
+     <groupId>com.google.protobuf</groupId>
+     <artifactId>protobuf-java</artifactId>
+     <version>2.5.0</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.giraph</groupId>
+     <artifactId>giraph-core</artifactId>
+     <version>1.0.0</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.giraph</groupId>
+     <artifactId>giraph-examples</artifactId>
+     <version>1.0.0</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.hadoop</groupId>
+     <artifactId>hadoop-core</artifactId>
+     <version>0.20.203.0</version>
+   </dependency>
+   <dependency>
+     <groupId>junit</groupId>
+     <artifactId>junit</artifactId>
+     <version>4.8.1</version>
+     <scope>test</scope>
+   </dependency>
+  </dependencies>
+</project>
