@@ -4,9 +4,9 @@
 
 /*
  * Editor is a class that encapsulates the graph editing window
- * @param {container, [undirected]} options - Initialize editor with these options. See @desc below.
- * @desc {options.container} - HTML element that contains the editor svg.
- * @desc {options.undirected} - Indicate whether the graph is directed/undirected.
+ * @param {container, [undirected]} options - Initialize editor with these options.
+ * {options.container} - HTML element that contains the editor svg.
+ * {options.undirected} - Indicate whether the graph is directed/undirected.
  * @constructor
  */
 function Editor(options) {
@@ -28,7 +28,7 @@ function Editor(options) {
             getNewNode('1'),
             getNewNode('2')
         ],
-    this.lastNodeId = 2,
+    this.numNodes = 2,
     this.links = [
             {source : this.nodes[0], target : this.nodes[1], left : false, right : true },
             {source : this.nodes[1], target : this.nodes[2], left : false, right : true }
@@ -203,6 +203,9 @@ Editor.prototype.tick = function() {
  * @param {int} node - Node object whose radius is required.
  */
 function getRadius(node) {
+    // Radius is detemined by multiplyiing the max of length of node ID
+    // and node value (first attribute) by a factor and adding a constant.
+    // If node value is not present, only node id length is used.
     return 16 + Math.max(node.id.length, node.attrs.length > 0 ? node.attrs[0].toString().length : 0) * 3;
 }
 
@@ -213,6 +216,9 @@ function getRadius(node) {
  * @param {int} node - Node object whose padding is required.
  */
 function getPadding(node) {
+    // Offset is detemined by multiplyiing the max of length of node ID
+    // and node value (first attribute) by a factor and adding a constant.
+    // If node value is not present, only node id length is used.
     var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? node.attrs[0].toString().length : 0) * 3;
     return [19 + nodeOffset, 12  + nodeOffset];
 }
@@ -434,7 +440,7 @@ Editor.prototype.restartNodes = function() {
 
     this.addNodes();
 
-    // Update node IDs and add/update node value (if present).
+    // Update node IDs
     var el = this.circle.selectAll('text').text('');
     el.append('tspan')
           .text(function(d) {
@@ -446,6 +452,7 @@ Editor.prototype.restartNodes = function() {
           })
           .attr('class', 'id');
 
+    // Node value (if present) is added/updated here
     el.append('tspan')
           .text(function(d) {
               return d.attrs[0];
@@ -484,9 +491,9 @@ Editor.prototype.mousedown = function() {
         return;
     }
 
-    // Insert new node at point
+    // Insert new node at point.
     var point = d3.mouse(d3.event.target),
-        node =  getNewNode((++this.lastNodeId).toString());
+        node =  getNewNode((++this.numNodes).toString());
     node.x = point[0];
     node.y = point[1];
     this.nodes.push(node);
@@ -495,10 +502,18 @@ Editor.prototype.mousedown = function() {
 
 /*
  * Returns the index of the node with the given id in the nodes array.
- * @param {int} id - The identifier of the node.
+ * @param {string} id - The identifier of the node.
  */
 Editor.prototype.getNodeIndex = function(id) {
     return this.nodes.map(function(e) { return e.id }).indexOf(id);
+}
+
+/*
+ * Returns true if the node with the given ID is present in the graph.
+ * @param {string} id - the identifier of the node.
+ */
+Editor.prototype.containsNode = function(id) {
+    return this.getNodeIndex(id) >= 0;
 }
 
 /*
@@ -513,14 +528,14 @@ Editor.prototype.getEdgeList = function() {
         var sourceId = this.links[i].source.id;
         var targetId = this.links[i].target.id;
 
-        // Left links are target->source. So swap.
-        if (this.links[i].left === true) {
-            var temp = sourceId;
-            sourceId = targetId;
-            targetId = temp;
+        // Right links are source->target.
+        // Left links are target->source.
+        if (this.links[i].right) {
+            edgeList += sourceId + '\t' + targetId + '\n';
+        } else {
+            edgeList += targetId + '\t' + sourceId + '\n';
         }
 
-        edgeList += sourceId + '\t' + targetId + '\n';
     }
 
     return edgeList;
@@ -708,46 +723,35 @@ Editor.prototype.keyup = function() {
 
 /*
  * Builds the graph from adj list by constructing the nodes and links arrays.
- * @param {obj} adjList - Adjacency list of the graph.
- * @desc adjList - {nodeId: [adjId1, adjId2]}
+ * @param {object} adjList - Adjacency list of the graph. The format is {nodeId: [adjId1, adjId2]}.
  */
 Editor.prototype.buildGraphFromAdjList = function(adjList) {
     this.links = [];
     this.nodes = [];
-    this.lastNodeId = 0;
+    this.numNodes = 0;
 
-    // Scan ever node in adj list to build the nodes array.
+    // Scan every node in adj list to build the nodes array.
     for (var nodeId in adjList) {
-        if (this.getNodeIndex(nodeId) === -1) {
+        if (!this.containsNode(nodeId)) {
             var node = getNewNode(nodeId);
-            this.lastNodeId++;
+            this.numNodes++;
             this.nodes.push(node);
         }
         var adj = adjList[nodeId];
         for (var i = 0; i < adj.length; i++) {
-            if (this.getNodeIndex(adj[i]) === -1) {
-                node = getNewNode(adj[i]);
-                this.lastNodeId++;
-                this.nodes.push(node);
-            }
-        }
-    }
-
-    // Scan the adj list to build links array.
-    // Note that edges are stored as source, target where source < target
-    for (var nodeId in adjList) {
-        var adj = adjList[nodeId];
-        var node = this.nodes[this.getNodeIndex(nodeId)];
-        for (var i = 0; i < adj.length; i ++) {
             var adjId = adj[i];
-            var adjNode = this.nodes[this.getNodeIndex(adjId)];
-            var link;
-            if (nodeId < adjId) {
-                link = {source: node, target: adjNode, left: false, right: true};
-            } else {
-                link = {source: adjNode, target: node, left: true, right: false};
+            if (!this.containsNode(adjId)) {
+                adjNode = getNewNode(adjId);
+                this.numNodes++;
+                this.nodes.push(adjNode);
+                // Add the edge.
+                // Note that edges are stored as source, target where source < target.
+                if (nodeId < adjId) {
+                    this.links.push({source: node, target: adjNode, left: false, right: true});
+                } else {
+                    this.links.push({source: adjNode, target: node, left: true, right: false});
+                }
             }
-            this.links.push(link);
         }
     }
 
