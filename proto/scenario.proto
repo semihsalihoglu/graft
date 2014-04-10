@@ -3,5 +3,6 @@ package stanford.infolab.debugger;
 message GiraphScenario {
   required int64 vertexId = 1;
   repeated int64 nbrs = 2;
-  repeated bytes messages = 3;
+  required bytes vertexValue = 3;
+  repeated bytes messages = 4;
 }

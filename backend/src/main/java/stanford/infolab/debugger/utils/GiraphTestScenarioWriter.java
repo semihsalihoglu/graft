@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import org.apache.giraph.utils.WritableUtils;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.Text;
 
 import com.google.protobuf.ByteString;
 
@@ -32,6 +33,9 @@ public class GiraphTestScenarioWriter {
     	for (int i = 0; i <= 7; ++i) {
     		giraphScenarioBuiler.addNbrs(i);
     	}
+    	Text vertexValue = new Text("This is the value of the vertex!!");    	
+    	giraphScenarioBuiler.setVertexValue(
+    		ByteString.copyFrom(WritableUtils.writeToByteArray(vertexValue)));
     	for (int i = 0; i <= 5; ++i) {
     		DoubleWritable serializedDoubleWritable = new DoubleWritable(i*10.0);
     		byte[] serializedByteArray = WritableUtils.writeToByteArray(serializedDoubleWritable);
@@ -50,6 +54,11 @@ public class GiraphTestScenarioWriter {
     		new FileInputStream(outputFileName));
     	System.out.println("deserializedScenario: " + deserializedScenario);
     	System.out.println("deserializedScenario.vertexID: " + deserializedScenario.getVertexId());
+    	Text deserializedVertexValue = new Text();
+    	WritableUtils.readFieldsFromByteArray(deserializedScenario.getVertexValue().toByteArray(),
+    		deserializedVertexValue);
+    	System.out.println("deserializedScenario.vertexValue: "
+    		+ deserializedVertexValue.toString());
     	for (ByteString msgAsByteString : deserializedScenario.getMessagesList()) {
         	DoubleWritable deserializedDoubleWritable = new DoubleWritable();
         	byte[] byteArray = msgAsByteString.toByteArray();    		
@@ -57,7 +66,6 @@ public class GiraphTestScenarioWriter {
         	WritableUtils.readFieldsFromByteArray(byteArray, deserializedDoubleWritable);
         	System.out.println("Deserialized msg: " + deserializedDoubleWritable.get());
     	}
-    	
     	for (long nbrID : deserializedScenario.getNbrsList()) {
     		System.out.println("nbrID: " + nbrID);
     	}
