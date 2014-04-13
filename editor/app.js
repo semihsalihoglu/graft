@@ -34,6 +34,10 @@ function Editor(options) {
             {source : this.nodes[1], target : this.nodes[2], left : false, right : true }
         ];
 
+    // Format of messages is the same as links
+    // {sender: senderNodeObj, receiver: receiverNodeObj, message: message}
+    this.messages  = [];
+
     this.lastKeyDown = -1;
     this.init();
 }
@@ -509,6 +513,50 @@ Editor.prototype.getNodeIndex = function(id) {
 }
 
 /*
+ * Returns the node object with the given id.
+ * @param {string{ id - The identifier of the node.
+ */
+Editor.prototype.getNodeWithId = function(id) {
+    return this.nodes[this.getNodeIndex(id)];
+}
+
+/*
+ * Returns all the messages sent by node with the given id.
+ * Output format: {receiverId: message}
+ * @param {string} id
+ */
+Editor.prototype.getMessagesSent = function(id) {
+    var messagesSent = {};
+
+    for (var i = 0; i < this.messages.length; i++) {
+        var messageObj = this.messages[i];
+        if (messageObj.sender.id === id) {
+            messagesSent[messageObj.receiver.id] = messageObj.message;
+        }
+    }
+
+    return messagesSent;
+}
+
+/*
+ * Returns all the messages received by node with the given id.
+ * Output format: {senderId: message}
+ * @param {string} id
+ */
+Editor.prototype.getMessagesReceived = function(id) {
+    var messagesReceived = {};
+
+    for (var i = 0; i < this.messages.length; i++) {
+        var messageObj = this.messages[i];
+        if (messageObj.receiver.id === id) {
+            messagesReceived[messageObj.sender.id] = messageObj.message;
+        }
+    }
+
+    return messagesReceived;
+}
+
+/*
  * Returns true if the node with the given ID is present in the graph.
  * @param {string} id - the identifier of the node.
  */
@@ -723,7 +771,18 @@ Editor.prototype.keyup = function() {
 
 /*
  * Builds the graph from adj list by constructing the nodes and links arrays.
- * @param {object} adjList - Adjacency list of the graph. The format is {nodeId: [adjId1, adjId2]}.
+ * @param {object} adjList - Adjacency list of the graph. attrs and msgs are optional.
+ * Format:
+ * {
+ *  nodeId: {
+ *            adj: [adjId1, adjId2],
+ *            attrs: [attr1, attr2],
+ *            msgs: {
+ *                    receiverId1: "message1",
+ *                    receiverId2: "message2"
+ *                  }
+ *          }
+ * }
  */
 Editor.prototype.buildGraphFromAdjList = function(adjList) {
     this.links = [];
@@ -734,23 +793,42 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
     for (var nodeId in adjList) {
         if (!this.containsNode(nodeId)) {
             var node = getNewNode(nodeId);
+            if (adjList[nodeId]['attrs']) {
+                node.attrs = adjList[nodeId]['attrs'];
+            }
             this.numNodes++;
             this.nodes.push(node);
         }
-        var adj = adjList[nodeId];
+        var node = this.getNodeWithId(nodeId);
+        var adj = adjList[nodeId]['adj'];
+
+        // For every node in the adj list of this node,
+        // add the node to this.nodes and add the edge to this.links
         for (var i = 0; i < adj.length; i++) {
             var adjId = adj[i];
             if (!this.containsNode(adjId)) {
                 adjNode = getNewNode(adjId);
+                if (adjList[adjId] && adjList[adjId]['attrs']) {
+                    adjNode.attrs = adjList[adjId]['attrs'];
+                }
                 this.numNodes++;
                 this.nodes.push(adjNode);
-                // Add the edge.
-                // Note that edges are stored as source, target where source < target.
-                if (nodeId < adjId) {
-                    this.links.push({source: node, target: adjNode, left: false, right: true});
-                } else {
-                    this.links.push({source: adjNode, target: node, left: true, right: false});
-                }
+            }
+            var adjNode = this.getNodeWithId(adjId);
+            // Add the edge.
+            // Note that edges are stored as source, target where source < target.
+            if (nodeId < adjId) {
+                this.links.push({source: node, target: adjNode, left: false, right: true});
+            } else {
+                this.links.push({source: adjNode, target: node, left: true, right: false});
+            }
+        }
+
+        var msgs = adjList[nodeId]['msgs'];
+        // Build the this.messages
+        if (msgs) {
+            for(var receiverId in msgs) {
+                this.messages.push({ sender: node, receiver: this.getNodeWithId(receiverId), message: msgs[receiverId]});
             }
         }
     }

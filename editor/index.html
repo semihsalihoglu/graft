@@ -16,6 +16,7 @@
 		<script type="text/javascript">
 			var editor;
 			var expanded = false;
+			var selectedNodeId = null; // Node that is currently double clicked;
 			var originalHeight;
 
 			$(document).ready(function(){
@@ -49,7 +50,18 @@
 						pom.click();
 					 });
 
+					function showMessages(messageData) { 
+						$("#node-attr-messages").html("");
+								for(var nodeId in messageData) {
+									var tr = document.createElement("tr");
+									$(tr).html("<td>" + nodeId + "</td><td>" + messageData[nodeId] + "</td>");
+									$("#node-attr-messages").append(tr);
+						}
+					}
+
 					function dblnode(data){
+						// Set the currently double clicked node
+						selectedNodeId = data.node.id;
 						$("#node-attr-id").attr("value", data.node.id);
 						$("#node-attr-id").attr("placeholder", data.node.id);
 						$("#node-attr-attrs").attr("value", data.node.attrs);
@@ -57,14 +69,14 @@
 
 						$("#node-attr").dialog({
 								modal : true,
-								width: 200,
+								width: 300,
 								resizable:false,
 								title:"Node (ID: " + data.node.id + ")" ,
-								position: [data.event.pageX, data.event.pageY],
+								position: [data.event.clientX, data.event.clientY],
 								closeOnEscape:true,
 								hide : {effect : "fade", duration:100},
 								close: function(){
-									var index = editor.nodes.indexOf(data.node.id);
+									selectedNodeId = null;
 								}
 							});
 
@@ -91,8 +103,13 @@
 									editor.restart();
 									$("#node-attr").dialog("close");
 							});
+
+							// Set the 'Sent' tab as the active tab and show messages.
+							toggleMessageTabs("sent");
+							showMessages(editor.getMessagesSent(selectedNodeId));
 						}
 
+						// Instantiate the editor object.
 						editor = new Editor({
 							"container":"#editor-container",
 							"dblnode" : dblnode
@@ -100,19 +117,19 @@
 
 						originalHeight = $("#editor-container").height();
 
-						// undirected behaviour 
+						// Undirected behaviour.
 						$(".graph-type").change(function(event) {
 							editor.undirected = event.target.value === "undirected" ? true : false;
 							editor.restart();
 						});
 
-						// btn attr-view 
+						// Btn attr-view 
 						$("#btn-attr-view").click(function() {
 							$("#attr-view-content").empty();
 							$("#attr-view-content").append("<tr><th>Node ID</th><th>Attributes</th></tr><tr>");
 
-							// attribute view 
-							for (var i=0;i<editor.nodes.length;i++) {
+							// Attribute view 
+							for (var i = 0;i < editor.nodes.length; i++) {
 								$("#attr-view-content").append("<tr></tr>");	
 							}
 
@@ -177,6 +194,22 @@
 									}
 									expanded=!expanded;
 							});
+
+						function toggleMessageTabs(activeSuffix) { 
+								// Remove the active class from the li element of the other link
+								var removeSuffix = (activeSuffix==="sent" ? "received" : "sent");
+								$("#node-attr-"+removeSuffix).parent().removeClass("active");
+								// Add the active class to the li element (parent) of the clicked link
+								$("#node-attr-"+activeSuffix).parent().addClass("active");
+						}
+						$(".nav-msg").click(function() { 
+								// Render the table
+								var clickedId = $(this).attr("id");
+								var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-')+1, clickedId.length);
+								toggleMessageTabs(clickedSuffix);
+								var messageData = clickedSuffix ==="sent" ? editor.getMessagesSent(selectedNodeId) : editor.getMessagesReceived(selectedNodeId);
+								showMessages(messageData);
+							});
 					});
 		</script>
 	</head>
@@ -184,21 +217,40 @@
 	<body>
 		<!--Node-attr modal-->
 		<div id="node-attr" style="display:none">
-			<div role="form">
+			<div role="form" class="form-horizontal">
 				<div class="form-group">
-					<label for="node-attr-id">Node ID:</label>
-					<input type="text" class="form-control" id="node-attr-id" placeholder="" />
+					<label for="node-attr-id" class="control-label col-sm-4">Node ID:</label>
+					<div class="col-sm-8">
+						<input type="text" class="form-control" id="node-attr-id" placeholder="" />
+					</div>
 				</div>
 				<div class="form-group">
-					<label for="node-attr-attrs">Attributes:</label>
-					<textarea class="form-control" rows="3" id="node-attr-attrs"></textarea>
+					<label for="node-attr-attrs" class="control-label col-sm-4">Attributes:</label>
+					<div class="col-sm-8">
+						<textarea class="form-control" rows="1" id="node-attr-attrs"></textarea>
+					</div>
 				</div>
 				<div class="form-group">
-					<button type="button" class="btn btn-primary btn-sm editable-submit" id="btn-node-attr-save"><i class="glyphicon glyphicon-ok"></i></button>
-					<button type="button" class="btn btn-default btn-sm editable-cancel" id="btn-node-attr-cancel"><i class="glyphicon glyphicon-remove"></i></button>
+					<div class="col-sm-12">
+						<button type="button" class="btn btn-primary btn-sm editable-submit" id="btn-node-attr-save"><i class="glyphicon glyphicon-ok"></i></button>
+						<button type="button" class="btn btn-default btn-sm editable-cancel" id="btn-node-attr-cancel"><i class="glyphicon glyphicon-remove"></i></button>
+				</div>
 				</div>
 				<div class="form-group has-error" id="node-attr-group-error" style="display:none">
-					<label class="control-label" id="node-attr-error">Node ID must be unique</label>
+					<div class="col-sm-12">
+						<label class="control-label" id="node-attr-error">Node ID must be unique</label>
+					</div>
+				</div>
+
+				<div>
+					<ul class="nav nav-tabs">
+						<li class="active"><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>
+						<li><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>
+					</ul>
+					<div class="highlight">
+						<table class="table" id="node-attr-messages" >
+						</table>
+					</div>
 				</div>
 			</div>
 		</div><!--Modal ends-->
