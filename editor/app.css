@@ -130,3 +130,13 @@ text.tid {
 	text-align:center;
 	vertical-align:middle;
 }
+
+#node-attr .form-horizontal .control-label 
+{
+	text-align:left;
+}
+
+#node-attr 
+{
+	overflow: hidden;
+}
