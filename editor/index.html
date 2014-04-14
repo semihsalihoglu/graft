@@ -15,7 +15,6 @@
 
 		<script type="text/javascript">
 			var editor;
-			var expanded = false;
 			var selectedNodeId = null; // Node that is currently double clicked;
 			var originalHeight;
 
@@ -54,7 +53,8 @@
 						$("#node-attr-messages").html("");
 								for(var nodeId in messageData) {
 									var tr = document.createElement("tr");
-									$(tr).html("<td>" + nodeId + "</td><td>" + messageData[nodeId] + "</td>");
+									$(tr).html("<td>" + nodeId + "</td><td>" + 
+											messageData[nodeId] + "</td>");
 									$("#node-attr-messages").append(tr);
 						}
 					}
@@ -106,7 +106,7 @@
 
 							// Set the 'Sent' tab as the active tab and show messages.
 							toggleMessageTabs("sent");
-							showMessages(editor.getMessagesSent(selectedNodeId));
+							showMessages(editor.getMessagesSentByNode(selectedNodeId));
 						}
 
 						// Instantiate the editor object.
@@ -129,7 +129,7 @@
 							$("#attr-view-content").append("<tr><th>Node ID</th><th>Attributes</th></tr><tr>");
 
 							// Attribute view 
-							for (var i = 0;i < editor.nodes.length; i++) {
+							for (var i = 0; i < editor.nodes.length; i++) {
 								$("#attr-view-content").append("<tr></tr>");	
 							}
 
@@ -175,26 +175,6 @@
 							$("#attr-view").dialog("close");
 						});
 
-						$("#btn-expand").click(function() {
-								if(!expanded){
-									$("#editor-container").animate({
-										height:750},
-										1500,
-										function() {
-											editor.restart();
-										});
-									}
-								else{
-									$("#editor-container").animate({
-										height:originalHeight},
-										1500,
-										function() {
-											editor.restart();
-										});
-									}
-									expanded=!expanded;
-							});
-
 						function toggleMessageTabs(activeSuffix) { 
 								// Remove the active class from the li element of the other link
 								var removeSuffix = (activeSuffix==="sent" ? "received" : "sent");
@@ -207,7 +187,9 @@
 								var clickedId = $(this).attr("id");
 								var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-')+1, clickedId.length);
 								toggleMessageTabs(clickedSuffix);
-								var messageData = clickedSuffix ==="sent" ? editor.getMessagesSent(selectedNodeId) : editor.getMessagesReceived(selectedNodeId);
+								var messageData = clickedSuffix ==="sent" ?
+										editor.getMessagesSentByNode(selectedNodeId) :
+										editor.getMessagesReceivedByNode(selectedNodeId);
 								showMessages(messageData);
 							});
 					});
@@ -215,7 +197,7 @@
 	</head>
   
 	<body>
-		<!--Node-attr modal-->
+		<!--Node-attr modal. This is the attribute view modal. -->
 		<div id="node-attr" style="display:none">
 			<div role="form" class="form-horizontal">
 				<div class="form-group">
@@ -296,9 +278,6 @@
 					</form>
 					<form class="form-inline" role="form" action="#">
 						<button type="button" class="btn btn-primary btn-danger form-control" id="btn-attr-view">Attribute view</button>
-						<button type="button" class="btn btn-default form-control" id="btn-expand">
-							<span class="glyphicon glyphicon-zoom-in"></span> Resize
-						</button>
 					</form>
 				</div>
 				<div class="col-md-6">
