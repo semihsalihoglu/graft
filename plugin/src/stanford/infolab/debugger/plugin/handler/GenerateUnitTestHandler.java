@@ -3,6 +3,7 @@ package stanford.infolab.debugger.plugin.handler;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.IHandler;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
@@ -22,8 +23,9 @@ public class GenerateUnitTestHandler extends AbstractHandler {
 	}
 
 	/**
-	 * the command has been executed, so extract extract the needed information
-	 * from the application context.
+	 * The event run when the command is executed
+	 * @see IHandler#execute(ExecutionEvent)
+	 * @return Must be null following {@link IHandler#execute(ExecutionEvent)}
 	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		ISelection sel = HandlerUtil.getCurrentSelection(event);
@@ -58,6 +60,7 @@ public class GenerateUnitTestHandler extends AbstractHandler {
 		    			"Please select a Java source file");
 		    }
 		}
+		
 		return null;
 	}
 	
