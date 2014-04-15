@@ -151,9 +151,7 @@ Editor.prototype.getEdgeList = function() {
         } else {
             edgeList += targetId + '\t' + sourceId + '\n';
         }
-
     }
-
     return edgeList;
 }
 
@@ -194,12 +192,10 @@ Editor.prototype.getAdjList = function() {
  */
 Editor.prototype.getNodeList  = function() {
     nodeList = '';
-
     for (var i = 0; i < this.nodes.length; i++){
         nodeList += this.nodes[i].id + '\t' + this.nodes[i].attrs.join(',');
         nodeList += (i != this.nodes.length - 1 ? '\n' : '');
     }
-
     return nodeList;
 }
 
@@ -215,7 +211,11 @@ Editor.prototype.mousemove = function() {
     }
 
     // Update drag line.
-    this.drag_line.attr('d', 'M' + this.mousedown_node.x + ',' + this.mousedown_node.y + 'L' + d3.mouse(this.svg[0][0])[0] + ',' + d3.mouse(this.svg[0][0])[1]);
+    this.drag_line.attr('d', 'M' + this.mousedown_node.x + ',' +
+        this.mousedown_node.y + 'L' + d3.mouse(this.svg[0][0])[0] + ',' +
+        d3.mouse(this.svg[0][0])[1]
+    );
+
     this.restart();
 }
 
