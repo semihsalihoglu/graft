@@ -140,6 +140,7 @@
     </menuContribution>
   </extension>
   
+  <!-- Register the command to generate unit test to the editor's context menu -->
   <extension point="org.eclipse.ui.menus">
     <menuContribution locationURI="popup:org.eclipse.jdt.ui.CompilationUnitEditor.EditorContext">
       <command commandId="stanford.infolab.debugger.plugin.generateUnitTest"
