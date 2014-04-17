@@ -121,6 +121,9 @@
          </action>
       </objectContribution>
    </extension>
+   
+   <!-- Register the command to generate unit test to a context menu when
+   a Java file in the PackageExplorer is selected and right-clicked on -->
    <extension point="org.eclipse.ui.menus">
     <menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
       <command commandId="stanford.infolab.debugger.plugin.generateUnitTest"
@@ -137,18 +140,22 @@
     </menuContribution>
   </extension>
   
-  <!-- Execution -->
+  <extension point="org.eclipse.ui.menus">
+    <menuContribution locationURI="popup:org.eclipse.jdt.ui.CompilationUnitEditor.EditorContext">
+      <command commandId="stanford.infolab.debugger.plugin.generateUnitTest"
+	        label="Generate Unit Test" style="push">
+	    <visibleWhen
+           checkEnabled="false">
+	    </visibleWhen>
+	  </command>
+    </menuContribution>
+  </extension>
+  
+  <!-- The command to generate the methods to perform unit test in a Java file -->
   <extension point="org.eclipse.ui.commands"> 
     <command defaultHandler="stanford.infolab.debugger.plugin.handler.GenerateUnitTestHandler"
       id="stanford.infolab.debugger.plugin.generateUnitTest" name="Generate Unit Test">
     </command>
   </extension>
-  <extension
-        point="org.eclipse.ui.commands">
-     <command
-           id="stanford.infolab.debugger.plugin.command1"
-           name="name">
-     </command>
-  </extension>
-
+  
 </plugin>
