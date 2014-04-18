@@ -1,6 +1,3 @@
-/**
- * 
- */
 package stanford.infolab.debugger.plugin;
 
 import org.eclipse.core.runtime.Status;
@@ -11,7 +8,7 @@ import org.eclipse.ui.statushandlers.WorkbenchErrorHandler;
 /**
  * This static class is the centralized place to log all messages (errors, warnings, etc.) of our
  * plugin. It extracts some plugin-specific parameters, packages them into the messages and sends
- * them to Eclipse. Note that this class does not specific how the messages are handled/displayed.
+ * them to Eclipse. Note that this class does not specify how the messages are handled/displayed.
  * 
  * To specify how the messages are displayed, extend {@link AbstractStatusHandler} and then register
  * the handler to org.eclipse.ui.statusHandlers extension point. Without a specific handler, by
@@ -24,16 +21,28 @@ public final class StatusLogger {
   public static final void logWarning(String msg) {
     StatusManager.getManager().handle(new Status(Status.WARNING, Activator.PLUGIN_ID, msg));
   }
-  
+
   public static final void logError(String msg) {
     StatusManager.getManager().handle(new Status(Status.ERROR, Activator.PLUGIN_ID, msg));
   }
-  
+
   public static final void logError(String msg, Throwable ex) {
     StatusManager.getManager().handle(new Status(Status.ERROR, Activator.PLUGIN_ID, msg, ex));
   }
-  
+
   public static final void logError(Throwable ex) {
-    StatusManager.getManager().handle(new Status(Status.ERROR, Activator.PLUGIN_ID, ex.getMessage(), ex));
+    StatusManager.getManager().handle(
+        new Status(Status.ERROR, Activator.PLUGIN_ID, ex.getMessage(), ex));
+  }
+
+  /**
+   * Log a message against with its {@link Status} severity
+   * 
+   * @param severity The severity; one of <code>OK</code>, <code>ERROR</code>, <code>INFO</code>,
+   *          <code>WARNING</code>, or <code>CANCEL</code>, defined in {@link Status}
+   * @param msg The logged message
+   */
+  public static final void log(int severity, String msg) {
+    StatusManager.getManager().handle(new Status(severity, Activator.PLUGIN_ID, msg));
   }
 }
