@@ -29,7 +29,6 @@ import stanford.infolab.debugger.plugin.StatusLogger;
  * TODO(brian): Currently just puts empty foo() method. Add Giraph-specific code.
  * 
  * @author Brian Truong
- * 
  */
 public class GenerateUnitTestHandler extends AbstractHandler {
 
@@ -69,7 +68,6 @@ public class GenerateUnitTestHandler extends AbstractHandler {
         createUnitTestCaseOrError(firstElement, Status.ERROR, "Non-Java file is being selected.");
       }
     }
-
     return null;
   }
 
@@ -107,9 +105,9 @@ public class GenerateUnitTestHandler extends AbstractHandler {
         // Check whether methods of the same signature exist.
         if (!type.getMethod("foo", new String[] {}).exists()) {
           String methodStr = "public void foo() {assert (true);}";
-          type.createMethod(methodStr, // the added method
-              null, // don't care where the method is added
-              false, // don't replace user's method by our method
+          type.createMethod(methodStr, /* the added method */
+              null /* don't care where the method is added */,
+              false /* don't replace user's method by our method */,
               null /* don't monitor the generation process*/);
         }
         // A Java file has at most public class.
