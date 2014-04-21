@@ -342,7 +342,7 @@ Editor.prototype.addNodes = function() {
          }).bind(this))
          .on('dblclick', (function(d) {
              if (this.dblnode) {
-                 this.dblnode({'event' : d3.event, 'node': d });
+                 this.dblnode({'event' : d3.event, 'node': d, editor : this });
                  this.restart();
              }
          }).bind(this));
