@@ -1,30 +1,48 @@
 /*
- * Abstracts the debugger controls. 
+ * Abstracts the debugger controls.
  */
 
 /*
  * Debugger is a class that encapsulates the graph editor and debugging controls.
- * @param {editor, nodeAttrs} options - Initialize debugger with these options.
- * @param {container, [undirected]} options.editor - Editor options.
- * @param { } options.nodeAttrs
+ * @param {editorContainer, nodeAttrContainer} options - Initialize debugger with these options.
+ * @param options.editorContainer - Selector for the container of the graph editor.
+ * @param options.nodeAttrContainer - Selector for the container of the node attr modal.
  * @constructor
  */
-
 function GiraphDebugger(options) {
-    this.init(options.editor);
+    this.init(options);
     this.selectedNodeId = null; // Node that is currently double clicked;
     return this;
 }
 
-GiraphDebugger.prototype.init = function(editorOptions) {
+/*
+ * Initializes the graph editor, node attr modal DOM elements.
+ */
+GiraphDebugger.prototype.init = function(options) {
     // Instantiate the editor object.
     this.editor = new Editor({
-        'container' : editorOptions.container,
+        'container' : options.editorContainer,
         'dblnode' : this.openNodeAttrs.bind(this)
     });
 
     this.nodeAttrContainer = '#node-attr-container';
+    this.initIds();
     this.initElements();
+}
+
+/*
+ * Initialize DOM element Id constants
+ */
+GiraphDebugger.prototype.initIds = function() {
+    this.ids = {
+        _nodeAttrModal : 'node-attr',
+        _nodeAttrId : 'node-attr-id',
+        _nodeAttrAttrs : 'node-attr-attrs',
+        _nodeAttrGroupError : 'node-attr-group-error',
+        _nodeAttrError : 'node-attr-error',
+        _btnNodeAttrSave : 'btn-node-attr-save',
+        _btnNodeAttrCancel : 'btn-node-attr-cancel',
+    };
 }
 
 /*
@@ -39,16 +57,16 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
 
     // Create Node ID Label
     var nodeAttrIdLabel = $('<label />')
-        .attr('for', 'node-attr-id')
+        .attr('for', this.ids._nodeAttrId)
         .addClass('control-label col-sm-4')
         .html('Node ID:')
         .appendTo(formGroup1);
 
     // Create the ID input textbox
     // Add it to a column div, which in turn is added to formgroup2
-    var nodeAttrIdInput = $('<input>')
+    this.nodeAttrIdInput = $('<input>')
         .attr('type', 'text')
-        .attr('id', 'node-attr-id')
+        .attr('id', this.ids._nodeAttrId)
         .addClass('form-control')
         .appendTo($('<div>').addClass('col-sm-8').appendTo(formGroup1));
 
@@ -58,16 +76,16 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
         .appendTo(nodeAttrForm);
 
     var nodeAttrAttributeLabel = $('<label />')
-        .attr('for', 'node-attr-attrs')
+        .attr('for', this.ids._nodeAttrAttrs)
         .addClass('control-label col-sm-4')
         .html('Attributes: ')
         .appendTo(formGroup2);
 
     // Create the Attributes input textbox
     // Add it to a column div, which in turn is added to formgroup2
-    var nodeAttrAttributeInput = $('<input>')
+    this.nodeAttrAttrsInput = $('<input>')
         .attr('type', 'text')
-        .attr('id', 'node-attr-attrs')
+        .attr('id', this._nodeAttrAttrs)
         .addClass('form-control')
         .appendTo($('<div>').addClass('col-sm-8').appendTo(formGroup2));
 
@@ -80,31 +98,31 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
         .addClass('col-sm-12')
         .appendTo(formGroupButtons);
 
-    var btnSubmit = $('<button />')
+    this.btnNodeAttrSubmit = $('<button />')
         .attr('type', 'button')
         .addClass('btn btn-primary btn-sm editable-submit')
-        .attr('id', 'btn-node-attr-save')
+        .attr('id', this.ids._btnNodeAttrSave)
         .html('<i class="glyphicon glyphicon-ok"></i>')
         .appendTo(buttonsContainer);
 
-    var btnCancel = $('<button />')
+    this.btnNodeAttrCancel = $('<button />')
         .attr('type', 'button')
         .addClass('btn btn-default btn-sm editable-cancel')
-        .attr('id', 'btn-node-attr-cancel')
+        .attr('id', this.ids._btnNodeAttrCancel)
         .html('<i class="glyphicon glyphicon-remove"></i>')
         .appendTo(buttonsContainer);
 
-    var errorContainer = $('<div />')
+    this.nodeAttrGroupError = $('<div />')
         .addClass('form-group has-error')
-        .attr('id', 'node-attr-group-error')
+        .attr('id', this.ids._nodeAttrGroupError)
         .hide()
         .appendTo(nodeAttrForm);
 
     var errorLabel = $('<label />')
         .addClass('control-label')
-        .attr('id', 'node-attr-error')
+        .attr('id', this.ids._nodeAttrError)
         .html('Node ID must be unique')
-        .appendTo($('<div class="col-sm-12"></div>').appendTo(errorContainer));
+        .appendTo($('<div class="col-sm-12"></div>').appendTo(this.nodeAttrGroupError));
 }
 
 /*
@@ -118,7 +136,7 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
 
     var messageTabs = $('<ul />')
         .addClass('nav nav-tabs')
-        .html('<li class="active"><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>' + 
+        .html('<li class="active"><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>' +
             '<li><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>')
         .appendTo(messageContainer);
 
@@ -137,84 +155,83 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
 GiraphDebugger.prototype.initElements = function() {
 
     // Div for the node attribute modal.
-    var nodeAttr = $('<div></div>')
-        .attr('id', 'node-attr')
+    this.nodeAttrModal = $('<div />')
+        .attr('id', this.ids._nodeAttrModal)
         .hide()
         .appendTo(this.nodeAttrContainer);
 
     // Create a form and append to nodeAttr
-    var nodeAttrForm = $('<div></div>')
+    var nodeAttrForm = $('<div />')
         .addClass('form-horizontal')
-        .appendTo(nodeAttr);
+        .appendTo(this.nodeAttrModal);
 
     this.initInputElements(nodeAttrForm);
     this.initMessageElements(nodeAttrForm);
 
     // Attach events.
-    
     // Click event of the Sent/Received tab buttons
-    $(".nav-msg").click((function(event) { 
+    $('.nav-msg').click((function(event) {
         // Render the table
         var clickedId = event.target.id;
-        var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-')+1, clickedId.length);
+        var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-') + 1, clickedId.length);
         this.toggleMessageTabs(clickedSuffix);
-        var messageData = clickedSuffix ==="sent" ?
+        var messageData = clickedSuffix === 'sent' ?
                 this.editor.getMessagesSentByNode(this.selectedNodeId) :
                 this.editor.getMessagesReceivedByNode(this.selectedNodeId);
         this.showMessages(messageData);
-    }).bind(this)); 
-
+    }).bind(this));
 }
 
-/* 
- * This is a double-click handler. 
+/*
+ * This is a double-click handler.
  * Called from the editor when a node is double clicked.
  * Opens the node attribute modal with NodeId, Attributes and Messages.
  */
 GiraphDebugger.prototype.openNodeAttrs = function(data) {
     // Set the currently double clicked node
     this.selectedNodeId = data.node.id;
-    $('#node-attr-id').attr('value', data.node.id);
-    $('#node-attr-id').attr('placeholder', data.node.id);
-    $('#node-attr-attrs').attr('value', data.node.attrs);
-    $('#node-attr-group-error').hide();
+    $(this.nodeAttrIdInput).attr('value', data.node.id)
+        .attr('placeholder', data.node.id);
 
-    $('#node-attr').dialog({
-            modal : true,
-            width : 300,
-            resizable :false,
-            title :'Node (ID: ' + data.node.id + ')' ,
-            position : [data.event.clientX, data.event.clientY],
-            closeOnEscape : true,
-            hide : {effect : 'fade', duration:100},
-            close: (function(){
-                this.selectedNodeId = null;
-            }).bind(this)
-        });
+    $(this.nodeAttrAttrsInput).attr('value', data.node.attrs);
+    $(this.nodeAttrGroupError).hide();
 
-        $('.ui-widget-overlay').click(function() { $('#node-attr').dialog('close'); });
-        $('#btn-node-attr-cancel').click(function() { 
-                $('#node-attr').dialog('close');
-        });
-
-        $('#btn-node-attr-save').unbind('click');
-        $('#btn-node-attr-save').click(function() { 
-                var new_id = $('#node-attr-id').val();
-                var new_attrs_val = $('#node-attr-attrs').val();
-                var new_attrs = new_attrs_val.trim().length > 0 ? new_attrs_val.split(',') : [];
-
-                if (data.editor.getNodeIndex(new_id) >= 0 && new_id != data.node.id) {
-                    $('#node-attr-group-error').show();
-                    return;
-                }
-
-                var index = data.editor.getNodeIndex(data.node.id);
-                data.editor.nodes[index].id = new_id;
-
-                data.editor.nodes[index].attrs = new_attrs;
-                data.editor.restart();
-                $('#node-attr').dialog('close');
+    $(this.nodeAttrModal).dialog({
+        modal : true,
+        width : 300,
+        resizable : false,
+        title : 'Node (ID: ' + data.node.id + ')',
+        position : [data.event.clientX, data.event.clientY],
+        closeOnEscape : true,
+        hide : {effect : 'fade', duration : 100},
+        close : (function() {
+            this.selectedNodeId = null;
+        }).bind(this)
     });
+
+    $('.ui-widget-overlay').click(function() { $('#node-attr').dialog('close'); });
+    $(this.btnNodeAttrSubmit).click((function() {
+        $(this.nodeAttrModal).dialog('close');
+    }).bind(this));
+
+    $(this.btnNodeAttrSubmit).unbind('click');
+    $(this.btnNodeAttrSubmit).click((function() {
+        var new_id = $(this.nodeAttrIdInput).val();
+        var new_attrs_val = $(this.nodeAttrAttrsInput).val();
+        var new_attrs = new_attrs_val.trim().length > 0 ? new_attrs_val.split(',') : [];
+
+        if (data.editor.getNodeIndex(new_id) >= 0 && new_id != data.node.id) {
+            $(this.nodeAttrGroupError).show();
+            return;
+        }
+
+        var index = data.editor.getNodeIndex(data.node.id);
+        data.editor.nodes[index].id = new_id;
+
+        data.editor.nodes[index].attrs = new_attrs;
+        data.editor.restart();
+        $(this.nodeAttrModal).dialog('close');
+    }).bind(this));
 
     // Set the 'Sent' tab as the active tab and show messages.
     this.toggleMessageTabs('sent');
@@ -226,24 +243,24 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
  * by setting/removing the 'active' classes on the corresponding elements.
  * @param - Suffix of the clicked element (one of 'sent'/'received')
  */
-GiraphDebugger.prototype.toggleMessageTabs = function(activeSuffix) { 
+GiraphDebugger.prototype.toggleMessageTabs = function(activeSuffix) {
     // Remove the active class from the li element of the other link
-    var removeSuffix = (activeSuffix ==="sent" ? "received" : "sent");
-    $("#node-attr-"+removeSuffix).parent().removeClass("active");
+    var removeSuffix = (activeSuffix === 'sent' ? 'received' : 'sent');
+    $('#node-attr-' + removeSuffix).parent().removeClass('active');
     // Add the active class to the li element (parent) of the clicked link
-    $("#node-attr-"+activeSuffix).parent().addClass("active");
+    $('#node-attr-' + activeSuffix).parent().addClass('active');
 }
 
-/* 
+/*
  * Populates the messages table on the node attr modal with the message data
  * @param messageData - The data of the sent/received messages from/to this node.
  */
 GiraphDebugger.prototype.showMessages = function(messageData) {
-    $("#node-attr-messages").html("");
-        for(var nodeId in messageData) {
-            var tr = document.createElement("tr");
-            $(tr).html("<td>" + nodeId + "</td><td>" + 
-                    messageData[nodeId] + "</td>");
-            $("#node-attr-messages").append(tr);
+    $('#node-attr-messages').html('');
+    for (var nodeId in messageData) {
+        var tr = document.createElement('tr');
+        $(tr).html('<td>' + nodeId + '</td><td>' +
+            messageData[nodeId] + '</td>');
+        $('#node-attr-messages').append(tr);
     }
 }

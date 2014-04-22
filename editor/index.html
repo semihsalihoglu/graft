@@ -50,12 +50,10 @@
 						pom.click();
 					 });
 
-					
 					giraphDebugger = new GiraphDebugger({
-								"editor": {
-									"container" : "#editor-container"
-								}
-					});
+								'editorContainer' : '#editor-container',
+								'nodeAttrContainer' : '#node-attr-container'
+							});
 
 					var editor = giraphDebugger.editor;
 					// Undirected behaviour.
@@ -64,58 +62,58 @@
 							editor.restart();
 					});
 
-						// Btn attr-view 
-						$("#btn-attr-view").click(function() {
-							$("#attr-view-content").empty();
-							$("#attr-view-content").append("<tr><th>Node ID</th><th>Attributes</th></tr><tr>");
+					// Btn attr-view 
+					$("#btn-attr-view").click(function() {
+						$("#attr-view-content").empty();
+						$("#attr-view-content").append("<tr><th>Node ID</th><th>Attributes</th></tr><tr>");
 
-							// Attribute view 
-							for (var i = 0; i < editor.nodes.length; i++) {
-								$("#attr-view-content").append("<tr></tr>");	
-							}
+						// Attribute view 
+						for (var i = 0; i < editor.nodes.length; i++) {
+							$("#attr-view-content").append("<tr></tr>");	
+						}
 
-							var rows = d3.select("#attr-view-content").selectAll("tr")
-								.filter(function(d,i) { return i!=0; })
-								.data(editor.nodes);
+						var rows = d3.select("#attr-view-content").selectAll("tr")
+							.filter(function(d,i) { return i!=0; })
+							.data(editor.nodes);
 
-							rows.append("td").text(function(d){ return d.id; });
-							rows.append("td").append("textarea")
-								.attr("class", "form-control") 
-								.attr("rows","1")
-								.text(function(d){ return d.attrs.join(); }); 
+						rows.append("td").text(function(d){ return d.id; });
+						rows.append("td").append("textarea")
+							.attr("class", "form-control") 
+							.attr("rows","1")
+							.text(function(d){ return d.attrs.join(); }); 
 
-							// show the dialog
-							$("#attr-view").dialog({
-									modal:true, 
-									title:"Node Attributes View", 
-									closeText:"close", 
-									maxHeight:600,
-									closeOnEscape:true,
-									hide : {effect : "fade", duration:100}
-							});
-
-							$(".ui-widget-overlay").click(function(){ $("#attr-view").dialog("close"); });
+						// show the dialog
+						$("#attr-view").dialog({
+								modal:true, 
+								title:"Node Attributes View", 
+								closeText:"close", 
+								maxHeight:600,
+								closeOnEscape:true,
+								hide : {effect : "fade", duration:100}
 						});
 
-						$("#btn-attr-view-save").unbind("click");
-						$("#btn-attr-view-save").click(function(){
-								var rows = $("#attr-view-content textarea");
-							
-								for(var i=0;i<rows.length;i++) {
-									if (rows[i]!="") {
-										editor.nodes[i].attrs = rows[i].value.split(",");
-									}
-								}
-						
-								editor.restart();
-								$("#attr-view").dialog("close");
-							});
+						$(".ui-widget-overlay").click(function(){ $("#attr-view").dialog("close"); });
+					});
 
-						$("#btn-attr-view-cancel").unbind("click");
-						$("#btn-attr-view-cancel").click(function() {
+					$("#btn-attr-view-save").unbind("click");
+					$("#btn-attr-view-save").click(function(){
+							var rows = $("#attr-view-content textarea");
+						
+							for(var i=0;i<rows.length;i++) {
+								if (rows[i]!="") {
+									editor.nodes[i].attrs = rows[i].value.split(",");
+								}
+							}
+					
+							editor.restart();
 							$("#attr-view").dialog("close");
 						});
+
+					$("#btn-attr-view-cancel").unbind("click");
+					$("#btn-attr-view-cancel").click(function() {
+						$("#attr-view").dialog("close");
 					});
+				});
 		</script>
 	</head>
   
