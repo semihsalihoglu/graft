@@ -149,6 +149,7 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
         .attr('id', 'node-attr-messages')
         .appendTo(messageContainer);
 }
+
 /*
  * Creates the document elements, like Node Attributes modal.
  */
@@ -210,7 +211,7 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
     });
 
     $('.ui-widget-overlay').click(function() { $('#node-attr').dialog('close'); });
-    $(this.btnNodeAttrSubmit).click((function() {
+    $(this.btnNodeAttrCancel).click((function() {
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
 

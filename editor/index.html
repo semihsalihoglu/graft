@@ -25,30 +25,28 @@
 							$("#btn-node-attr-save").click();
 						}
 					});
-
-					$("#btn-adj-list-get").click(function(){
-						var adjList = editor.getAdjList();
+			
+					function downloadFile(contents, fileName) {
 						var pom = document.createElement('a');
-						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(adjList));
-						pom.setAttribute('download', "adj.txt");
+						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
+						pom.setAttribute('download', fileName);
 						pom.click();
+					}
+
+					$("#btn-adj-list-get").click(function() {
+						var adjList = editor.getAdjList();
+						downloadFile(adjList, 'adjList.txt');
 					});
 
-					$("#btn-edge-list-get").click(function(){
+					$("#btn-edge-list-get").click(function() {
 						var edgeList = editor.getEdgeList();
-						var pom = document.createElement('a');
-						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(edgeList));
-						pom.setAttribute('download', "edge.txt");
-						pom.click();
+						downloadFile(edgeList, 'edgeList.txt');
 					});
 
 					$("#btn-node-list-get").click(function(){
 						var nodeList = editor.getNodeList();
-						var pom = document.createElement('a');
-						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(nodeList));
-						pom.setAttribute('download', "node.txt");
-						pom.click();
-					 });
+						downloadFile(nodeList, 'nodeList.txt');
+					});
 
 					giraphDebugger = new GiraphDebugger({
 								'editorContainer' : '#editor-container',
