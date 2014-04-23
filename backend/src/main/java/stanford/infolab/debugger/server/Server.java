@@ -22,7 +22,7 @@ public class Server {
     }
 
     /*
-     * Handlers /job HTTP GET call. 
+     * Handles /job HTTP GET call. 
      * Returns the details of the given job_id. 
      */
     static class JobHandler implements HttpHandler {
@@ -36,7 +36,6 @@ public class Server {
             for (String param : params) {
                 String[] parts = param.split("=");
                 String key = URLDecoder.decode(parts[0], "UTF-8");
-
                 if (key.equals("job_id")) {
                     jobId = URLDecoder.decode(parts[1], "UTF-8");
                 }
@@ -44,7 +43,6 @@ public class Server {
 
             String response;
             int statusCode;
-
             // job_id parameter not found - bad request.
             if (jobId == null) {
                 statusCode = HttpURLConnection.HTTP_BAD_REQUEST; 
@@ -54,7 +52,6 @@ public class Server {
                 statusCode = HttpURLConnection.HTTP_OK;
                 response = GetSuperstepData(jobId);
             }
-
             t.sendResponseHeaders(statusCode, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
