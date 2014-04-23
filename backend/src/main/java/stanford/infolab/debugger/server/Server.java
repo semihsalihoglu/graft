@@ -30,13 +30,14 @@ public class Server {
             String rawQuery = t.getRequestURI().getQuery();
             String jobId = null;
         
+            // General URL format is: ?key1=val1&key2=val2.
+            // /job format is: ?job_id=value. Other parameters are ignored.
             String[] params = rawQuery.split("&");
             for (String param : params) {
                 String[] parts = param.split("=");
                 String key = URLDecoder.decode(parts[0], "UTF-8");
 
                 if (key.equals("job_id")) {
-                    // jobID is found, set status to 200 OK. 
                     jobId = URLDecoder.decode(parts[1], "UTF-8");
                 }
             }
