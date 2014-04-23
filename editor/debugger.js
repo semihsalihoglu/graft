@@ -24,7 +24,6 @@ GiraphDebugger.prototype.init = function(options) {
         'container' : options.editorContainer,
         'dblnode' : this.openNodeAttrs.bind(this)
     });
-
     this.nodeAttrContainer = '#node-attr-container';
     this.initIds();
     this.initElements();
@@ -55,22 +54,22 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
         .addClass('form-group')
         .appendTo(nodeAttrForm);
 
-    // Create Node ID Label
+    // Create node ID label.
     var nodeAttrIdLabel = $('<label />')
         .attr('for', this.ids._nodeAttrId)
         .addClass('control-label col-sm-4')
         .html('Node ID:')
         .appendTo(formGroup1);
 
-    // Create the ID input textbox
-    // Add it to a column div, which in turn is added to formgroup2
+    // Create the ID input textbox.
+    // Add it to a column div, which in turn is added to formgroup2.
     this.nodeAttrIdInput = $('<input>')
         .attr('type', 'text')
         .attr('id', this.ids._nodeAttrId)
         .addClass('form-control')
         .appendTo($('<div>').addClass('col-sm-8').appendTo(formGroup1));
 
-    // Create the form group for attributes label and input
+    // Create the form group for attributes label and input.
     var formGroup2 = $('<div />')
         .addClass('form-group')
         .appendTo(nodeAttrForm);
@@ -81,15 +80,15 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
         .html('Attributes: ')
         .appendTo(formGroup2);
 
-    // Create the Attributes input textbox
-    // Add it to a column div, which in turn is added to formgroup2
+    // Create the Attributes input textbox.
+    // Add it to a column div, which in turn is added to formgroup2.
     this.nodeAttrAttrsInput = $('<input>')
         .attr('type', 'text')
         .attr('id', this._nodeAttrAttrs)
         .addClass('form-control')
         .appendTo($('<div>').addClass('col-sm-8').appendTo(formGroup2));
 
-    // Create form group for buttons
+    // Create form group for buttons.
     var formGroupButtons = $('<div />')
         .addClass('form-group')
         .appendTo(nodeAttrForm);
@@ -154,7 +153,6 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
  * Creates the document elements, like Node Attributes modal.
  */
 GiraphDebugger.prototype.initElements = function() {
-
     // Div for the node attribute modal.
     this.nodeAttrModal = $('<div />')
         .attr('id', this.ids._nodeAttrModal)
@@ -177,8 +175,8 @@ GiraphDebugger.prototype.initElements = function() {
         var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-') + 1, clickedId.length);
         this.toggleMessageTabs(clickedSuffix);
         var messageData = clickedSuffix === 'sent' ?
-                this.editor.getMessagesSentByNode(this.selectedNodeId) :
-                this.editor.getMessagesReceivedByNode(this.selectedNodeId);
+            this.editor.getMessagesSentByNode(this.selectedNodeId) :
+            this.editor.getMessagesReceivedByNode(this.selectedNodeId);
         this.showMessages(messageData);
     }).bind(this));
 }
