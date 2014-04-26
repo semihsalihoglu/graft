@@ -50,7 +50,8 @@
 
 					giraphDebugger = new GiraphDebugger({
 								'editorContainer' : '#editor-container',
-								'nodeAttrContainer' : '#node-attr-container'
+								'nodeAttrContainer' : '#node-attr-container',
+								'superstepControlsContainer' : '#controls-container'
 							});
 
 					var editor = giraphDebugger.editor;
@@ -142,40 +143,40 @@
 
 		<!--Container begins-->
 		<div class="container bs-docs-container">
-			<div class="row"> <!--Row begins-->
-				<div class="col-md-6">
-					<form role="form" class="form-horizontal">
-						<div class="radio-inline">
+			<div class="row"> <!--Row1 begins-->
+				<div class="col-md-4">
+					<!--Form begins-->
+					<form role="form" class="form-inline editor-controls"> 
+						<div class="form-group">
 							<label>
-								<input type="radio" name="options" id="options_directed" class="graph-type" value="directed" checked>
-									Directed Graph
+								<input type="radio" name="options" id="options_directed" class="graph-type form-control" value="directed" checked /> Directed
 							</label>
 						</div>
-						<div class="radio-inline">
+						<div class="form-group">
 							<label>
-								<input type="radio" name="options" id="options_undirected" class="graph-type" value="undirected">
-									Undirected Graph
+								<input type="radio" name="options" id="options_undirected" class="graph-type form-control" value="undirected" /> Undirected
 							</label>
 						</div>
-					</form>
-					<form class="form-inline" id="controls" role="form" action="#">
 						<button type="button" class="btn btn-primary btn-danger form-control" id="btn-attr-view">Attribute view</button>
-						<button type="button" class="btn btn-default btn-step" id="btn-prev-step" disabled="true">
-							<span class="glyphicon glyphicon-chevron-left"> Previous</span>
-						</button>
+					</form> <!--Form ends-->
+				</div>
+				<div class="col-md-8">
+					<!--Debugger Superstep controls container begin-->
+					<div id="controls-container">
+					</div>
+					<!--Superstep controls end-->
+				</div>
+			</div> <!--Row1 ends-->
 
-						<h2><span id="superstep">-1 </span><small>Superstep</small></h2>
-						<button type="button" class="btn btn-default btn-step" id="btn-next-step" disabled="true">
-							Next <span class="glyphicon glyphicon-chevron-right"></span>
-						</button>
-					</form>
+			<!-- Row2 begins-->
+			<div class="row" style="margin-top:20px;">
+				<div class="col-md-12">
+					<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
+					<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
+					<button type="button" class="btn btn-warning" id="btn-node-list-get">Download Node List</button>
 				</div>
-				<div class="col-md-6">
-						<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
-						<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
-						<button type="button" class="btn btn-warning" id="btn-node-list-get">Download Node List</button>
-				</div>
-			</div><!--Row ends-->
+			</div> <!--Row2 ends-->
+
 			<div id="instructions">
 				<hr style="border-top:1px solid black;" />
 				<p class="lead">
@@ -184,7 +185,6 @@
 						<mark>Click</mark> a node or an edge to <strong><mark>select</mark></strong> it.<br>
 						<mark>Double-click</mark> a node to open the <strong><mark>node editor</mark></strong>.<br>
 						<mark>Click</mark> on the Attributes View to open an editable list of <strong><mark>node attributes</mark></strong>.</p>
-
 				<p class="lead">
 						When a node is selected: <strong>R</strong> toggles reflexivity, <strong>Delete</strong> removes the node. <br>
 						When an edge is selected: <strong>L</strong>(eft), <strong>R</strong>(ight), <strong>B</strong>(oth) change direction, <strong>Delete</strong> removes the edge.</p>

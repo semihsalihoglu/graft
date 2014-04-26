@@ -7,6 +7,7 @@
  * @param {editorContainer, nodeAttrContainer} options - Initialize debugger with these options.
  * @param options.editorContainer - Selector for the container of the graph editor.
  * @param options.nodeAttrContainer - Selector for the container of the node attr modal.
+ * @param options.superstepControlsContainer - Selector for the container of the superstep controls.
  * @constructor
  */
 function GiraphDebugger(options) {
@@ -24,9 +25,12 @@ GiraphDebugger.prototype.init = function(options) {
         'container' : options.editorContainer,
         'dblnode' : this.openNodeAttrs.bind(this)
     });
-    this.nodeAttrContainer = '#node-attr-container';
+
     this.initIds();
-    this.initElements();
+    // Must initialize these members as they are used by subsequent methods.
+    this.nodeAttrContainer = options.nodeAttrContainer;
+    this.superstepControlsContainer = options.superstepControlsContainer;
+    this.initElements(options);
 }
 
 /*
@@ -34,6 +38,7 @@ GiraphDebugger.prototype.init = function(options) {
  */
 GiraphDebugger.prototype.initIds = function() {
     this.ids = {
+        // IDs of elements in node attribute modal.
         _nodeAttrModal : 'node-attr',
         _nodeAttrId : 'node-attr-id',
         _nodeAttrAttrs : 'node-attr-attrs',
@@ -41,6 +46,11 @@ GiraphDebugger.prototype.initIds = function() {
         _nodeAttrError : 'node-attr-error',
         _btnNodeAttrSave : 'btn-node-attr-save',
         _btnNodeAttrCancel : 'btn-node-attr-cancel',
+        // IDs of elements in Superstep controls.
+        _btnPrevStep : 'btn-prev-step',
+        _btnNextStep : 'btn-next-step',
+        _btnEditMode : 'btn-edit-mode',
+        _btnFetchJob : 'btn-fetch-job'
     };
 }
 
@@ -150,6 +160,95 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
 }
 
 /*
+ * Initializes Superstep controls. 
+ * @param superstepControlsContainer - Selector for the superstep controls container.
+ */
+GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsContainer) {
+    // Create the form that fetches the superstep data from debugger server.
+    this.formFetchJob = $('<div />')
+        .attr('class', 'form-inline')
+        .appendTo(superstepControlsContainer);
+
+    var fetchJobGroup = $('<div />')
+        .attr('class', 'form-group')
+        .appendTo(this.formFetchJob);
+
+    // Fetch job details for job id textbox. 
+    var fetchJobIdInput = $('<input>')
+        .attr('type', 'text')
+        .attr('class', 'form-control ')
+        .attr('placeholder', 'Job ID')
+        .appendTo(fetchJobGroup);
+
+    this.btnFetchJob = $('<button />')
+        .attr('id', this.ids._btnFetchJob)
+        .attr('type', 'button')
+        .attr('class', 'btn btn-danger form-control')
+        .html('Fetch')
+        .appendTo(fetchJobGroup);
+       
+    // Initialize the actual controls.
+    this.formControls = $("<div />")
+        .attr('id', 'controls')
+        .attr('class', 'form-inline')
+        .hide()
+        .appendTo(superstepControlsContainer);
+    
+    var controlsGroup = $("<div />")
+        .attr('class', 'form-group')
+        .appendTo(this.formControls);
+
+    this.btnPrevStep = $("<button />")
+        .attr('class', 'btn btn-default btn-step form-control')
+        .attr('id', this.ids._btnPrevStep)
+        .attr('disabled', 'true')
+        .append(
+            $('<span />')
+            .attr('class', 'glyphicon glyphicon-chevron-left')
+            .html(' Previous')
+        )
+        .appendTo(controlsGroup);
+
+    var superstepLabel = $('<h2><span id="superstep">-1</span>' +
+        '<small> Superstep</small></h2>')
+        .appendTo(controlsGroup);
+
+    this.btnNextStep = $('<button />')
+        .attr('class', 'btn btn-default btn-step form-control')
+        .attr('id', this.ids._btnNextStep)
+        .append(
+            $('<span />')
+            .attr('class', 'glyphicon glyphicon-chevron-right')
+            .html(' Next')
+        )
+        .appendTo(controlsGroup);
+
+    // Return to the edit mode - Exiting the debug mode.
+    this.btnEditMode = $('<button />')
+        .attr('class', 'btn btn-default btn-step form-control')
+        .attr('id', this.ids._btnEditMode)
+        .append(
+            $('<span />')
+            .attr('class', 'glyphicon glyphicon-pencil')
+            .html(' Edit Mode')
+        )
+        .appendTo(controlsGroup);
+
+    // Initialize handlers for events
+    this.initSuperstepControlEvents();
+}
+
+/*
+ * Initializes the handlers of the elements on superstep controls.
+ */
+GiraphDebugger.prototype.initSuperstepControlEvents = function() {
+    // On clicking Fetch button, send a request to the debugger server.
+    $(this.btnFetchJob).click((function(event) {
+        $(this.formFetchJob).hide(); 
+    }).bind(this));
+}
+
+/*
  * Creates the document elements, like Node Attributes modal.
  */
 GiraphDebugger.prototype.initElements = function() {
@@ -166,6 +265,7 @@ GiraphDebugger.prototype.initElements = function() {
 
     this.initInputElements(nodeAttrForm);
     this.initMessageElements(nodeAttrForm);
+    this.initSuperstepControls(this.superstepControlsContainer);
 
     // Attach events.
     // Click event of the Sent/Received tab buttons
