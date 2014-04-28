@@ -18,7 +18,7 @@ import org.apache.hadoop.io.WritableComparable;
 import com.google.protobuf.ByteString;
 
 /**
- * An implementation of {@link IScenarioManager} to load and save data for Protocol Buffer scenario.
+ * An object to load and save Protocol Buffer file.
  * @author Brian Truong
  *
  * @param <I>   Vertex ID
@@ -108,7 +108,7 @@ public class ProtobufGiraphScenearioSaverLoader<I extends WritableComparable, V 
   public void save(String fileName, ProtobufGiraphScenarioWrapper<ProtobufScenario<I, V, E, M1, M2>> scenarioList)
       throws IOException {
     GiraphScenario.Builder giraphScenarioBuilder = GiraphScenario.newBuilder();
-    Scenario.Builder scenarioBuilder = Scenario.newBuilder();
+    ProtobufScenario.Builder scenarioBuilder = ProtobufScenario.newBuilder();
     Neighbor.Builder neighborBuilder = Neighbor.newBuilder();
     OutMsg.Builder outMsgBuilder = OutMsg.newBuilder();
     InMsg.Builder inMsgBuilder = InMsg.newBuilder();
@@ -177,114 +177,5 @@ public class ProtobufGiraphScenearioSaverLoader<I extends WritableComparable, V 
   private static <T> T newInstance(Class<T> theClass) {
     return NullWritable.class.isAssignableFrom(theClass) 
         ? null : ReflectionUtils.newInstance(theClass);
-  }
-}
-
-/**
- * @author Brian Truong
- */
-@SuppressWarnings("rawtypes")
-class ProtobufScenario<I extends WritableComparable, V extends Writable, E extends Writable, 
-    M1 extends Writable, M2 extends Writable> {
-
-  private I vertexId;
-  private V vertexValue;
-  private ArrayList<M1> inMsgs;
-  private Map<I, Nbr> outNbrMap;
-
-  public ProtobufScenario() {
-    reset();
-  }
-  
-  void reset() {
-    this.vertexId = null;
-    this.vertexValue = null;
-    this.inMsgs = new ArrayList<>();
-    this.outNbrMap = new HashMap<>();
-  }
-
-  private void checkLoaded(Object arg) {
-    if (arg == null) {
-      throw new IllegalStateException("The ProtoBuf scenario has not been loaded or initialized.");
-    }
-  }
-
-  public I getVertexId() {
-    return vertexId;
-  }
-
-  public void setVertexId(I vertexId) {
-    this.vertexId = vertexId;
-  }
-
-  public V getVertexValue() {
-    return vertexValue;
-  }
-
-  public void setVertexValue(V vertexValue) {
-    this.vertexValue = vertexValue;
-  }
-
-  public Collection<M1> getIncomingMessages() {
-    return inMsgs;
-  }
-
-  public void addIncomingMessage(M1 message) {
-    inMsgs.add(message);
-  }
-
-  public Collection<I> getNeighbors() {
-    return outNbrMap.keySet();
-  }
-
-  public void addNeighbor(I neighborId, E edgeValue) {
-    if (outNbrMap.containsKey(neighborId)) {
-      outNbrMap.get(neighborId).edgeValue = edgeValue;
-    } else {
-      outNbrMap.put(neighborId, new Nbr(edgeValue));
-    }
-  }
-
-  public E getEdgeValue(I neighborId) {
-    checkLoaded(outNbrMap);
-    Nbr nbr = outNbrMap.get(neighborId);
-    return nbr == null ? null : nbr.edgeValue;
-  }
-
-  public void setEdgeValue(I neighborId, E edgeValue) {
-    if (outNbrMap.containsKey(neighborId)) {
-      outNbrMap.get(neighborId).edgeValue = edgeValue;
-    } else {
-      outNbrMap.put(neighborId, new Nbr(edgeValue));
-    }
-  }
-
-  public Collection<M2> getOutgoingMessages(I neighborId) {
-    Nbr nbr = outNbrMap.get(neighborId);
-    return nbr == null ? null : nbr.msgs;
-  }
-
-  public void addOutgoingMessage(I neighborId, M2 msg) {
-    if (!outNbrMap.containsKey(neighborId)) {
-      outNbrMap.put(neighborId, new Nbr(null));
-    }
-    outNbrMap.get(neighborId).msgs.add(msg);
-  }
-
-  /**
-   * @author Brian Truong
-   */
-  private class Nbr {
-    private E edgeValue;
-    private ArrayList<M2> msgs;
-
-    public Nbr(E edgeValue) {
-      this(edgeValue, new ArrayList<M2>());
-    }
-
-    public Nbr(E edgeValue, ArrayList<M2> msgs) {
-      this.edgeValue = edgeValue;
-      this.msgs = msgs;
-    }
   }
 }

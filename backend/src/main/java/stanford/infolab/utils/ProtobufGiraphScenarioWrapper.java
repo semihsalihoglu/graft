@@ -75,7 +75,7 @@ public class ProtobufGiraphScenarioWrapper<T extends ProtobufScenario<? extends 
 }
 
 @SuppressWarnings("rawtypes")
-class Scenario<I extends WritableComparable, V extends Writable, E extends Writable, 
+class ProtobufScenario<I extends WritableComparable, V extends Writable, E extends Writable, 
     M1 extends Writable, M2 extends Writable> {
 
   private I vertexId;
@@ -83,7 +83,7 @@ class Scenario<I extends WritableComparable, V extends Writable, E extends Writa
   private ArrayList<M1> inMsgs;
   private Map<I, Nbr> outNbrMap;
 
-  public Scenario() {
+  public ProtobufScenario() {
     reset();
   }
   
