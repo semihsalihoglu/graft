@@ -174,7 +174,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .appendTo(this.formFetchJob);
 
     // Fetch job details for job id textbox. 
-    var fetchJobIdInput = $('<input>')
+    this.fetchJobIdInput = $('<input>')
         .attr('type', 'text')
         .attr('class', 'form-control ')
         .attr('placeholder', 'Job ID')
@@ -244,7 +244,15 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
 GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     // On clicking Fetch button, send a request to the debugger server.
     $(this.btnFetchJob).click((function(event) {
-        $(this.formFetchJob).hide(); 
+        var jobId = $(this.fetchJobIdInput).val();
+        $.ajax({
+            url : 'http://localhost:8000/job',
+            data: { jobId : jobId }
+        })
+        .done(function(data) {
+            $(this.formFetchJob).hide();
+            $(this.formControls).show();
+        });
     }).bind(this));
 }
 

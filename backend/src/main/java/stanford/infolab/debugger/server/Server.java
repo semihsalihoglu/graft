@@ -108,7 +108,7 @@ public class Server {
     }
 
     /*
-     * Returns the list of vertices debugged in a given superstep for a given job. 
+     * Returns the scenario for a given superstep of a given job.
      * @URLParams - {jobId, superstepId, [vertexId]}
      * @desc vertexId - vertexId is optional. It can be a single value 
      * or a comma separated list. If it is not supplied, returns the scenario 
