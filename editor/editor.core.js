@@ -349,9 +349,6 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         var node = this.getNodeWithId(nodeId);
         if (node === null) {
             node = this.getNewNode(nodeId);
-            if (adjList[nodeId]['attrs']) {
-                node.attrs = adjList[nodeId]['attrs'];
-            }
             this.numNodes++;
             this.nodes.push(node);
         }
@@ -363,9 +360,6 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
             var adjNode = this.getNodeWithId(adjId);
             if (adjNode === null) {
                 adjNode = this.getNewNode(adjId);
-                if (adjList[adjId] && adjList[adjId]['attrs']) {
-                    adjNode.attrs = adjList[adjId]['attrs'];
-                }
                 this.numNodes++;
                 this.nodes.push(adjNode);
             }
@@ -377,8 +371,28 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
                 this.links.push({source: adjNode, target: node, left: true, right: false});
             }
         }
-        var msgs = adjList[nodeId]['msgs'];
-        // Build the this.messages
+    }
+    this.updateGraphData(adjList);
+    this.init();
+    this.restart();
+}
+
+/*
+ * Updates graph properties - node attributes and messages from adj list.
+ * @param {object} graph - graph has the same format as adjList above,
+ * but with 'adj' ignored. This method assumes the same graph structure,
+ * only updates the node attributes and messages exchanged.
+ */
+Editor.prototype.updateGraphData = function(graph) {
+    // Scan every node in adj list to build the nodes array.
+    for (var nodeId in graph) {
+        var node = this.getNodeWithId(nodeId);
+    if (graph[nodeId]['attrs']) {
+        node.attrs = graph[nodeId]['attrs'];
+    }
+        var adj = graph[nodeId]['adj'];
+        var msgs = graph[nodeId]['msgs'];
+        // Build this.messages
         if (msgs) {
             for(var receiverId in msgs) {
                 this.messages.push({ sender: node,
@@ -388,6 +402,4 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
             }
         }
     }
-    this.init();
-    this.restart();
 }

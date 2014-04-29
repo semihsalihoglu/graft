@@ -54,7 +54,7 @@ public class Server {
                 statusCode = HttpURLConnection.HTTP_BAD_REQUEST; 
                 response = "Malformed URL. Given encoding is not supported.";
             }
-
+            ServerUtils.setMandatoryResponseHeaders(t.getResponseHeaders());
             t.sendResponseHeaders(statusCode, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
@@ -100,6 +100,7 @@ public class Server {
                 statusCode = HttpURLConnection.HTTP_BAD_REQUEST; 
                 response = "Malformed URL. Given encoding is not supported.";
             }
+            ServerUtils.setMandatoryResponseHeaders(t.getResponseHeaders());
             t.sendResponseHeaders(statusCode, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());
@@ -155,6 +156,7 @@ public class Server {
                 statusCode = HttpURLConnection.HTTP_BAD_REQUEST; 
                 response = "Malformed URL. Given encoding is not supported.";
             }
+            ServerUtils.setMandatoryResponseHeaders(t.getResponseHeaders());
             t.sendResponseHeaders(statusCode, response.length());
             OutputStream os = t.getResponseBody();
             os.write(response.getBytes());

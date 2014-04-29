@@ -26,6 +26,9 @@ GiraphDebugger.prototype.init = function(options) {
         'dblnode' : this.openNodeAttrs.bind(this)
     });
 
+    // Initialize current superstep to -1
+    this.currentSuperstepNumber = -1;
+
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
     this.nodeAttrContainer = options.nodeAttrContainer;
@@ -160,7 +163,7 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
 }
 
 /*
- * Initializes Superstep controls. 
+ * Initializes Superstep controls.
  * @param superstepControlsContainer - Selector for the superstep controls container.
  */
 GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsContainer) {
@@ -173,7 +176,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('class', 'form-group')
         .appendTo(this.formFetchJob);
 
-    // Fetch job details for job id textbox. 
+    // Fetch job details for job id textbox.
     this.fetchJobIdInput = $('<input>')
         .attr('type', 'text')
         .attr('class', 'form-control ')
@@ -186,20 +189,20 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('class', 'btn btn-danger form-control')
         .html('Fetch')
         .appendTo(fetchJobGroup);
-       
+
     // Initialize the actual controls.
-    this.formControls = $("<div />")
+    this.formControls = $('<div />')
         .attr('id', 'controls')
         .attr('class', 'form-inline')
         .hide()
         .appendTo(superstepControlsContainer);
-    
-    var controlsGroup = $("<div />")
+
+    var controlsGroup = $('<div />')
         .attr('class', 'form-group')
         .appendTo(this.formControls);
 
-    this.btnPrevStep = $("<button />")
-        .attr('class', 'btn btn-default btn-step form-control')
+    this.btnPrevStep = $('<button />')
+        .attr('class', 'btn btn-default bt-step form-control')
         .attr('id', this.ids._btnPrevStep)
         .attr('disabled', 'true')
         .append(
@@ -212,6 +215,9 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
     var superstepLabel = $('<h2><span id="superstep">-1</span>' +
         '<small> Superstep</small></h2>')
         .appendTo(controlsGroup);
+
+    // Set this.superstepLabel to the actual label that will be updated.
+    this.superstepLabel = $('#superstep');
 
     this.btnNextStep = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
@@ -249,11 +255,48 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
             url : 'http://localhost:8000/job',
             data: { jobId : jobId }
         })
-        .done(function(data) {
+        .done((function(data) {
+            this.jobData = eval(data);
+            this.editor.buildGraphFromAdjList(this.jobData[0]);
+            this.editor.restart();
             $(this.formFetchJob).hide();
             $(this.formControls).show();
-        });
+        }).bind(this));
     }).bind(this));
+
+    // On clicking the edit mode button, hide the superstep controls and show fetch form.
+    $(this.btnEditMode).click((function(event) {
+        this.editor.init();
+        this.editor.restart();
+        $(this.formControls).hide();
+        $(this.formFetchJob).show();
+    }).bind(this));
+
+    // Handle the next and previous buttons on the superstep controls.
+    $(this.btnNextStep).click((function(event) {
+        if (this.currentSuperstepNumber < this.jobData.length - 1) {
+            this.currentSuperstepNumber += 1;
+            this.changeSuperstep(this.currentSuperstepNumber, this.jobData[this.currentSuperstepNumber + 1]);
+        }
+    }).bind(this));
+
+    $(this.btnPrevStep).click((function(event) {
+        if (this.currentSuperstepNumber > -1) {
+            this.currentSuperstepNumber -= 1;
+            this.changeSuperstep(this.currentSuperstepNumber, this.jobData[this.currentSuperstepNumber + 1]);
+        }
+    }).bind(this));
+}
+
+/*
+ * Updates the superstep label, graph editor and disables/enables the prev/next buttons.
+ */
+GiraphDebugger.prototype.changeSuperstep = function(superstepNumber, graphData) {
+    $(this.superstepLabel).html(superstepNumber);
+    this.editor.updateGraphData(graphData);
+    this.editor.restart();
+    $(this.btnNextStep).attr('disabled', superstepNumber === this.jobData.length - 1);
+    $(this.btnPrevStep).attr('disabled', superstepNumber === -1);
 }
 
 /*

@@ -3,6 +3,7 @@ package stanford.infolab.debugger.server;
 import java.util.HashMap;
 import java.net.URLDecoder;
 import java.io.UnsupportedEncodingException;
+import com.sun.net.httpserver.Headers;
 
 /*
  * Utility methods for Debugger Server.
@@ -26,5 +27,14 @@ public class ServerUtils {
             paramMap.put(paramKey, paramValue);
         }
         return paramMap;
+    }
+
+    /*
+     * Add mandatory headers to the HTTP response by the debugger server.
+     * MUST be called before sendResponseHeaders.
+     */
+    public static void setMandatoryResponseHeaders(Headers headers) {
+        // TODO(vikesh): **REMOVE CORS FOR ALL AFTER DECIDING THE DEPLOYMENT ENVIRONMENT**
+        headers.add("Access-Control-Allow-Origin", "*");
     }
 }
