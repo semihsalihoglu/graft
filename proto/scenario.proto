@@ -1,8 +1,39 @@
 package stanford.infolab.debugger;
 
 message GiraphScenario {
-  required int64 vertexId = 1;
-  repeated int64 nbrs = 2;
-  required bytes vertexValue = 3;
-  repeated bytes messages = 4;
+  // The class under test. Must implement org.apache.giraph.graph.Computation interface.
+  required string classUnderTest = 1;
+  // The vertex ID class (usually denoted as I). Must implement org.apache.hadoop.io.WritableComparable.
+  required string vertexIdClass = 2;
+  // The vertex value class (usually denoted as V). Must implement org.apache.hadoop.io.Writable.
+  required string vertexValueClass = 3;
+  // The edge value class (usually denoted as E). Must implement org.apache.hadoop.io.Writable.
+  required string edgeValueClass = 4;
+  // The incoming message class (usually denoted as M1). Must implement org.apache.hadoop.io.Writable.
+  required string incomingMessageClass = 5;
+  // The outgoing message class (usually denoted as M2). Must implement org.apache.hadoop.io.Writable.
+  required string outgoingMessageClass = 6;
+  
+  required Context context = 10;
+  
+  // Each context encapsulates a particular pair of inputs and outputs of Computation.compute().
+  message Context {
+    required bytes vertexId = 1;
+    required bytes vertexValue = 2;
+    repeated Neighbor neighbor = 3;
+    repeated bytes inMessage = 4;
+    repeated OutMsg outMessage = 5;    
+    
+    // Messages sent by the current vertex.
+    message OutMsg {
+      required bytes destinationId = 1;
+      required bytes msgData = 2;
+    }
+
+    // The outgoing neighbors of the current vertex.
+    message Neighbor {
+      required bytes neighborId = 1;
+      optional bytes edgeValue = 2;
+    }
+  }
 }
