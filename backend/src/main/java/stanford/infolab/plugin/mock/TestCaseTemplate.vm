@@ -1,0 +1,85 @@
+package mock;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.apache.giraph.conf.GiraphConfiguration;
+import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.edge.ReusableEdge;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.utils.MockUtils.MockedEnvironment;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.DoubleWritable;
+import org.junit.Before;
+import org.junit.Test;
+
+
+public class $className {
+
+  private $classUnderTestName classUnderTest;
+  private ImmutableClassesGiraphConfiguration<$vertexIdWrapper, $vertexValueWrapper, $edgeValueWrapper> conf;
+  private MockedEnvironment<$vertexIdWrapper, $vertexValueWrapper, $edgeValueWrapper, $outMsgWrapper> mockEnv;
+
+  @Before
+  public void setUp() throws Exception {
+    GiraphConfiguration config = new GiraphConfiguration();
+    config.setComputationClass($classUnderTestName#[[.class]]#);
+#foreach( $config in $configs )
+#if ( $config.type == 'Integer' )
+    config.setInt($config.key, $config.value);
+#elseif ( $config.type == 'Long' )
+    config.setLong($config.key, $config.value);
+#elseif ( $config.type == 'Double' )
+    config.setDouble($config.key, $config.value);
+#elseif ( $config.type == 'Boolean' )
+    config.setBoolean($config.key, $config.value);
+#else
+    config.set( $config.key, $config.value);
+#end
+#end
+    conf = new ImmutableClassesGiraphConfiguration<>(config);
+
+    classUnderTest = ($classUnderTestName) conf.createComputation();
+
+    mockEnv = new MockedEnvironment<>();
+    GraphState graphState = mockEnv.getGraphState();
+    when(graphState.getSuperstep()).thenReturn($superstep#[[l]]#);
+    when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
+    when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
+    classUnderTest.initialize(graphState, mockEnv.getWorkerClientRequestProcessor(), null, null,
+        null);
+  }
+
+  @Test
+  public final void testCompute() {
+    try {
+      Vertex<$vertexIdWrapper, $vertexValueWrapper, $edgeValueWrapper> vertex = conf.createVertex();
+      vertex.initialize(new $vertexIdWrapper($vertexId), new $vertexValueWrapper($vertexValue));
+
+      ArrayList<$inMsgWrapper> inMsgs = new ArrayList<>();
+#foreach ($inMsg in $inMsgs)
+      inMsgs.add(new $inMsgWrapper($inMsg));   
+#end
+
+      classUnderTest.compute(vertex, inMsgs);
+
+      // assertEquals(, vertex.getValue().get(), 0.001f);
+
+      // mockEnv.verifyNoMessageSent();
+
+      // $vertexValueWrapper outMessage = new $outMsgWrapper();
+      // mockEnv.verifyMessageSentToAllEdges(vertex, outMessage);
+
+      // $vertexValueWrapper outMessage = new $outMsgWrapper();
+      // mockEnv.verifyMessageSent(new $vertexIdWrapper($vertexId), outMessage);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+}
