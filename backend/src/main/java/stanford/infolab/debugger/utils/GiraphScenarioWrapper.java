@@ -87,7 +87,7 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     return stringBuilder.toString();
   }
   
-  class ContextWrapper {
+  public class ContextWrapper {
     private I vertexId;
     private V vertexValue;
     private ArrayList<M1> inMsgs;
