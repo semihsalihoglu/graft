@@ -10,6 +10,7 @@
 
   <properties>
     <top.dir>/Users/semihsalihoglu/projects/distributed_graph_debugger</top.dir>
+    <giraph.dir>/Users/semihsalihoglu/projects/giraph</giraph.dir>
   </properties>
 
   <build>
@@ -49,17 +50,21 @@
    <dependency>
      <groupId>org.apache.giraph</groupId>
      <artifactId>giraph-core</artifactId>
-     <version>1.0.0</version>
+     <version>1.1.0</version>
+      <scope>system</scope>
+      <systemPath>${giraph.dir}/giraph-core/target/giraph-1.1.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</systemPath>
    </dependency>
    <dependency>
      <groupId>org.apache.giraph</groupId>
      <artifactId>giraph-examples</artifactId>
-     <version>1.0.0</version>
+     <version>1.1.0</version>
+      <scope>system</scope>
+      <systemPath>${giraph.dir}/giraph-examples/target/giraph-examples-1.1.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</systemPath>
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
      <artifactId>hadoop-core</artifactId>
-     <version>0.20.203.0</version>
+     <version>1.2.1</version>
    </dependency>
    <dependency>
      <groupId>junit</groupId>
