@@ -87,7 +87,7 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     return stringBuilder.toString();
   }
   
-  class ContextWrapper {
+  public class ContextWrapper {
     private I vertexId;
     private V vertexValue;
     private ArrayList<M1> inMsgs;
@@ -173,12 +173,20 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
      */
     public class NeighborWrapper {
 
-      public I nbrId;
-      public E edgeValue;
+      private I nbrId;
+      private E edgeValue;
 
       public NeighborWrapper(I nbrId, E edgeValue) {
         this.nbrId = nbrId;
         this.edgeValue = edgeValue;
+      }
+      
+      public I getNbrId() {
+        return nbrId;
+      }
+      
+      public E getEdgeValue() {
+        return edgeValue;
       }
       
       @Override

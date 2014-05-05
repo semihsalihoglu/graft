@@ -1,0 +1,83 @@
+package $package;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.apache.giraph.conf.GiraphConfiguration;
+import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.edge.ReusableEdge;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.utils.MockUtils.MockedEnvironment;
+import org.junit.Before;
+import org.junit.Test;
+#if ($usedTypes)
+#foreach ($type in $usedTypes)
+import $type.Name;
+#end
+#end
+
+public class $classUnderTestName#[[Test]]# {
+
+  private $classUnderTestName classUnderTest;
+  private ImmutableClassesGiraphConfiguration<$vertexIdType, $vertexValueType, $edgeValueType> conf;
+  private MockedEnvironment<$vertexIdType, $vertexValueType, $edgeValueType, $outMsgType> mockEnv;
+
+  @Before
+  public void setUp() throws Exception {
+    GiraphConfiguration config = new GiraphConfiguration();
+    config.setComputationClass($classUnderTestName#[[.class]]#);
+    GiraphConfiguration.VERTEX_ID_CLASS.set(config, $vertexIdType#[[.class]]#);
+    GiraphConfiguration.VERTEX_VALUE_CLASS.set(config, $vertexValueType#[[.class]]#);
+    GiraphConfiguration.EDGE_VALUE_CLASS.set(config, $edgeValueType#[[.class]]#);
+    GiraphConfiguration.INCOMING_MESSAGE_VALUE_CLASS.set(config, $inMsgType#[[.class]]#);
+    GiraphConfiguration.OUTGOING_MESSAGE_VALUE_CLASS.set(config, $outMsgType#[[.class]]#);
+    conf = new ImmutableClassesGiraphConfiguration<>(config);
+
+    classUnderTest = ($classUnderTestName) conf.createComputation();
+
+    mockEnv = new MockedEnvironment<>();
+    GraphState graphState = mockEnv.getGraphState();
+    classUnderTest.initialize(graphState, mockEnv.getWorkerClientRequestProcessor(), null, null,
+        null);
+  }
+
+  @Test
+  public final void testCompute() {
+    try {
+      Vertex<$vertexIdType, $vertexValueType, $edgeValueType> vertex = conf.createVertex();
+      vertex.initialize(new $vertexIdType($vertexId), new $vertexValueType($vertexValue));
+      
+#if ($neighbors)
+      ReusableEdge<$vertexIdType, $edgeValueType> edge = conf.createReusableEdge();
+#foreach ($neighbor in $neighbors)
+      edge.setTargetVertexId(new $vertexIdType($neighbor.NbrId));
+      edge.setValue(new $edgeValueType($neighbor.edgeValue));
+      vertex.addEdge(edge);
+#end
+#end
+
+      ArrayList<$inMsgType> inMsgs = new ArrayList<>();
+#foreach ($inMsg in $inMsgs)
+      inMsgs.add(new $inMsgType($inMsg));   
+#end
+
+      classUnderTest.compute(vertex, inMsgs);
+
+      // assertEquals(, vertex.getValue().get(), 0.001f);
+
+      // mockEnv.verifyNoMessageSent();
+
+      // $vertexValueType outMessage = new $outMsgType();
+      // mockEnv.verifyMessageSentToAllEdges(vertex, outMessage);
+
+      // $vertexValueType outMessage = new $outMsgType();
+      // mockEnv.verifyMessageSent(new $vertexIdType($vertexId), outMessage);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+}
