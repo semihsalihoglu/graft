@@ -1,4 +1,4 @@
-package mock;
+package $package;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -12,46 +12,35 @@ import org.apache.giraph.edge.ReusableEdge;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.utils.MockUtils.MockedEnvironment;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.DoubleWritable;
 import org.junit.Before;
 import org.junit.Test;
+#if ($usedTypes)
+#foreach ($type in $usedTypes)
+import $type.Name;
+#end
+#end
 
-
-public class $className {
+public class $classUnderTestName#[[Test]]# {
 
   private $classUnderTestName classUnderTest;
-  private ImmutableClassesGiraphConfiguration<$vertexIdWrapper, $vertexValueWrapper, $edgeValueWrapper> conf;
-  private MockedEnvironment<$vertexIdWrapper, $vertexValueWrapper, $edgeValueWrapper, $outMsgWrapper> mockEnv;
+  private ImmutableClassesGiraphConfiguration<$vertexIdType, $vertexValueType, $edgeValueType> conf;
+  private MockedEnvironment<$vertexIdType, $vertexValueType, $edgeValueType, $outMsgType> mockEnv;
 
   @Before
   public void setUp() throws Exception {
     GiraphConfiguration config = new GiraphConfiguration();
     config.setComputationClass($classUnderTestName#[[.class]]#);
-#foreach( $config in $configs )
-#if ( $config.type == 'Integer' )
-    config.setInt($config.key, $config.value);
-#elseif ( $config.type == 'Long' )
-    config.setLong($config.key, $config.value);
-#elseif ( $config.type == 'Double' )
-    config.setDouble($config.key, $config.value);
-#elseif ( $config.type == 'Boolean' )
-    config.setBoolean($config.key, $config.value);
-#else
-    config.set( $config.key, $config.value);
-#end
-#end
+    GiraphConfiguration.VERTEX_ID_CLASS.set(config, $vertexIdType#[[.class]]#);
+    GiraphConfiguration.VERTEX_VALUE_CLASS.set(config, $vertexValueType#[[.class]]#);
+    GiraphConfiguration.EDGE_VALUE_CLASS.set(config, $edgeValueType#[[.class]]#);
+    GiraphConfiguration.INCOMING_MESSAGE_VALUE_CLASS.set(config, $inMsgType#[[.class]]#);
+    GiraphConfiguration.OUTGOING_MESSAGE_VALUE_CLASS.set(config, $outMsgType#[[.class]]#);
     conf = new ImmutableClassesGiraphConfiguration<>(config);
 
     classUnderTest = ($classUnderTestName) conf.createComputation();
 
     mockEnv = new MockedEnvironment<>();
     GraphState graphState = mockEnv.getGraphState();
-    when(graphState.getSuperstep()).thenReturn($superstep#[[l]]#);
-    when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
-    when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
     classUnderTest.initialize(graphState, mockEnv.getWorkerClientRequestProcessor(), null, null,
         null);
   }
@@ -59,12 +48,21 @@ public class $className {
   @Test
   public final void testCompute() {
     try {
-      Vertex<$vertexIdWrapper, $vertexValueWrapper, $edgeValueWrapper> vertex = conf.createVertex();
-      vertex.initialize(new $vertexIdWrapper($vertexId), new $vertexValueWrapper($vertexValue));
+      Vertex<$vertexIdType, $vertexValueType, $edgeValueType> vertex = conf.createVertex();
+      vertex.initialize(new $vertexIdType($vertexId), new $vertexValueType($vertexValue));
+      
+#if ($neighbors)
+      ReusableEdge<$vertexIdType, $edgeValueType> edge = conf.createReusableEdge();
+#foreach ($neighbor in $neighbors)
+      edge.setTargetVertexId(new $vertexIdType($neighbor.NbrId));
+      edge.setValue(new $edgeValueType($neighbor.edgeValue));
+      vertex.addEdge(edge);
+#end
+#end
 
-      ArrayList<$inMsgWrapper> inMsgs = new ArrayList<>();
+      ArrayList<$inMsgType> inMsgs = new ArrayList<>();
 #foreach ($inMsg in $inMsgs)
-      inMsgs.add(new $inMsgWrapper($inMsg));   
+      inMsgs.add(new $inMsgType($inMsg));   
 #end
 
       classUnderTest.compute(vertex, inMsgs);
@@ -73,11 +71,11 @@ public class $className {
 
       // mockEnv.verifyNoMessageSent();
 
-      // $vertexValueWrapper outMessage = new $outMsgWrapper();
+      // $vertexValueType outMessage = new $outMsgType();
       // mockEnv.verifyMessageSentToAllEdges(vertex, outMessage);
 
-      // $vertexValueWrapper outMessage = new $outMsgWrapper();
-      // mockEnv.verifyMessageSent(new $vertexIdWrapper($vertexId), outMessage);
+      // $vertexValueType outMessage = new $outMsgType();
+      // mockEnv.verifyMessageSent(new $vertexIdType($vertexId), outMessage);
     } catch (IOException e) {
       e.printStackTrace();
     }

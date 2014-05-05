@@ -1,56 +1,61 @@
-package mock;
+package stanford.infolab.plugin.mock;
 
+import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.exception.VelocityException;
 
+import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
+
+/**
+ * This is a code generator which can generate the JUnit test cases for a Giraph
+ * 
+ * @author Brian Truong Ba Quan
+ */
 public class TestCaseGenerator {
 
-  public String generateTest(Input input) {
+  public <I extends WritableComparable<I>, V extends Writable, E extends Writable, M1 extends Writable, 
+      M2 extends Writable> String generateTest(GiraphScenarioWrapper<I, V, E, M1, M2> input, 
+      String testPackage) throws VelocityException, IOException {
     Velocity.init();
 
     VelocityContext context = new VelocityContext();
 
-    context.put("classUnderTestName", new String(input.getClassUnderTest()));
-    
-    context.put("className", new String("TestedComputationTest"));
-    context.put("vertexIdWrapper", input.getVertexIdWrapper());
-    context.put("vertexValueWrapper", input.getVertexValueWrapper());
-    context.put("edgeValueWrapper", input.getEdgeValueWrapper());
-    context.put("inMsgWrapper", input.getIncomingMessageWrapper());
-    context.put("outMsgWrapper", input.getOutgoingMessageWrapper());
+    context.put("package", testPackage);
 
-    context.put("vertexId", input.getVertexId());
-    context.put("vertexValue", input.getVertexValue());
-    context.put("inMsgs", input.getIncomingMessages());
+    HashSet<Class> usedTypes = new LinkedHashSet<>(6);
+    usedTypes.add(input.getClassUnderTest());
+    usedTypes.add(input.getVertexIdClass());
+    usedTypes.add(input.getVertexValueClass());
+    usedTypes.add(input.getEdgeValueClass());
+    usedTypes.add(input.getIncomingMessageClass());
+    usedTypes.add(input.getOutgoingMessageClass());
+    context.put("usedTypes", usedTypes);
 
-    ArrayList<Object> configs = new ArrayList<>();
-    Config<Integer> config = new Config<Integer>("SUPERSTEP_COUNT", 10);
-    configs.add(config);
-    context.put("configs", input.getConfigs());
-    context.put("superstep", input.getSuperstep());
-    context.put("nVertices", input.getNVertices());
-    context.put("nEdges", input.getNEdges());
+    context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
 
+    context.put("vertexIdType", input.getVertexIdClass().getSimpleName());
+    context.put("vertexValueType", input.getVertexValueClass().getSimpleName());
+    context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
+    context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
+    context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
 
-    Template template = null;
+    context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
+    context.put("vertexValue", input.getContextWrapper().getVertexValueWrapper());
+    context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
+    context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
 
-    try {
-      template = Velocity.getTemplate("TestCaseTemplate.vm");
-    } catch (ResourceNotFoundException | ParseErrorException | MethodInvocationException e) {
-      e.printStackTrace(System.err);
+    try (StringWriter sw = new StringWriter()) {
+      Template template = Velocity.getTemplate("TestCaseTemplate.vm");
+      template.merge(context, sw);
+      return sw.toString();
     }
-
-    StringWriter sw = new StringWriter();
-
-    template.merge(context, sw);
-
-    return sw.toString();
   }
 }
