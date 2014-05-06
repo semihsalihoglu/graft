@@ -100,7 +100,7 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
       reset();
     }
 
-    void reset() {
+    public void reset() {
       this.superstepNo = -1;
       this.vertexId = null;
       this.vertexValueBefore = null;

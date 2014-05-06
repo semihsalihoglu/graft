@@ -7,6 +7,9 @@ import java.io.IOException;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.utils.ReflectionUtils;
 import org.apache.giraph.utils.WritableUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -115,6 +118,23 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
 
   public void save(String fileName, GiraphScenarioWrapper<I, V, E, M1, M2> scenarioWrapper)
       throws IOException {
+    GiraphScenario giraphScenario = buildGiraphScnearioFromWrapper(scenarioWrapper);
+    try (FileOutputStream output = new FileOutputStream(fileName)) {
+      giraphScenario.writeTo(output);
+      output.close();
+    }
+  }
+
+  public void saveToHDFS(String fileName, GiraphScenarioWrapper<I, V, E, M1, M2> scenarioWrapper)
+    throws IOException {
+    GiraphScenario giraphScenario = buildGiraphScnearioFromWrapper(scenarioWrapper);
+    Path pt=new Path(fileName);
+    FileSystem fs = FileSystem.get(new Configuration());
+    giraphScenario.writeTo(fs.create(pt, true).getWrappedStream());
+  }
+
+  private GiraphScenario buildGiraphScnearioFromWrapper(
+    GiraphScenarioWrapper<I, V, E, M1, M2> scenarioWrapper) {
     GiraphScenario.Builder giraphScenarioBuilder = GiraphScenario.newBuilder();
     Context.Builder contextBuilder = Context.newBuilder();
     Neighbor.Builder neighborBuilder = Neighbor.newBuilder();
@@ -128,13 +148,16 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     giraphScenarioBuilder.setIncomingMessageClass(scenarioWrapper.getIncomingMessageClass().getName());
     giraphScenarioBuilder.setOutgoingMessageClass(scenarioWrapper.getOutgoingMessageClass().getName());
 
-    GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper scenario = scenarioWrapper.getContextWrapper();
-      contextBuilder.clear();
-      contextBuilder.setVertexId(toByteString(scenario.getVertexIdWrapper())).setVertexValueBefore(
-          toByteString(scenario.getVertexValueBeforeWrapper()));
+    GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper contextWrapper = scenarioWrapper
+      .getContextWrapper();
+    contextBuilder.clear();
+    contextBuilder.setSuperstepNo(contextWrapper.getSuperstepNoWrapper())
+      .setVertexId(toByteString(contextWrapper.getVertexIdWrapper()))
+      .setVertexValueBefore(toByteString(contextWrapper.getVertexValueBeforeWrapper()))
+      .setVertexValueAfter(toByteString(contextWrapper.getVertexValueAfterWrapper()));
 
     for (GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper.NeighborWrapper neighbor :
-      scenario.getNeighborWrappers()) {
+      contextWrapper.getNeighborWrappers()) {
       neighborBuilder.clear();
       neighborBuilder.setNeighborId(toByteString(neighbor.getNbrId()));
       E edgeValue = neighbor.getEdgeValue();
@@ -146,11 +169,11 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
       contextBuilder.addNeighbor(neighborBuilder);
     }
 
-    for (M1 msg : scenario.getIncomingMessageWrappers()) {
+    for (M1 msg : contextWrapper.getIncomingMessageWrappers()) {
       contextBuilder.addInMessage(toByteString(msg));
     }
 
-    for (OutgoingMessageWrapper msg : scenario.getOutgoingMessageWrappers()) {
+    for (OutgoingMessageWrapper msg : contextWrapper.getOutgoingMessageWrappers()) {
       outMsgBuilder.setMsgData(toByteString(msg.message));
       outMsgBuilder.setDestinationId(toByteString(msg.destinationId));
       contextBuilder.addOutMessage(outMsgBuilder);
@@ -158,9 +181,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     giraphScenarioBuilder.setContext(contextBuilder.build());   
 
     GiraphScenario giraphScenario = giraphScenarioBuilder.build();
-    try (FileOutputStream output = new FileOutputStream(fileName)) {
-      giraphScenario.writeTo(output);
-    }
+    return giraphScenario;
   }
 
   @SuppressWarnings("unchecked")

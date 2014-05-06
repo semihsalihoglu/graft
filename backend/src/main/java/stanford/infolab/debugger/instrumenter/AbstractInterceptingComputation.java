@@ -12,12 +12,11 @@ import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
+import stanford.infolab.debugger.utils.GiraphScenearioSaverLoader;
 
 /**
  * Class that intercepts call to the AbstractComputation's exposed methods for GiraphDebugger.
@@ -42,49 +41,28 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private static DebugConfig debugConfig;
   private boolean shouldDebugVertex = false;
   private GiraphScenarioWrapper<I, V, E, M1, M2> giraphScenarioWrapper;
-  private GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper contextWrapper;
+
   @SuppressWarnings("unchecked")
   @Override
-  public void initialize(
-      GraphState graphState,
+  public void initialize(GraphState graphState,
       WorkerClientRequestProcessor<I, V, E> workerClientRequestProcessor,
-      GraphTaskManager<I, V, E> graphTaskManager,
-      WorkerAggregatorUsage workerAggregatorUsage,
+      GraphTaskManager<I, V, E> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage,
       WorkerContext workerContext) {
     // We first call super.initialize so that the getConf() call below returns a non-null value.
     super.initialize(graphState, workerClientRequestProcessor, graphTaskManager,
       workerAggregatorUsage, workerContext);
- 
-    // If we haven't initilized debugConfig, we first instantiate it, and then we instantiate
-    // giraphScenarioWrapper.
-    if (debugConfig == null) {
-      String debugConfigFileName = DEBUG_CONFIG_CLASS.get(getConf());
-      System.out.println("debugConfigFileName: " + debugConfigFileName);
-      Class<?> clazz;
-      try {
-        clazz = Class.forName(debugConfigFileName);
-        debugConfig = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
-        System.out.println("Successfully created a DebugConfig file from: " + debugConfigFileName);
-      } catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
-        System.err.println("Could not create a new DebugConfig instance of " + debugConfigFileName);
-        e.printStackTrace();
-        throw new RuntimeException(e);
-      }
-      
-      System.out.println(this.getClass().getCanonicalName());
-      ParameterizedType parameterizedType = (ParameterizedType) clazz.getGenericSuperclass();
-      System.out.println(((Class<I>) parameterizedType.getActualTypeArguments()[0]).getCanonicalName());
-      System.out.println(((Class<V>) parameterizedType.getActualTypeArguments()[1]).getCanonicalName());
-      System.out.println(((Class<E>) parameterizedType.getActualTypeArguments()[2]).getCanonicalName());
-      System.out.println(((Class<M1>) parameterizedType.getActualTypeArguments()[3]).getCanonicalName());
-      System.out.println(((Class<M2>) parameterizedType.getActualTypeArguments()[4]).getCanonicalName());
-      
-      giraphScenarioWrapper = new GiraphScenarioWrapper(this.getClass(), 
-        (Class<I>) parameterizedType.getActualTypeArguments()[0], 
-        (Class<V>) parameterizedType.getActualTypeArguments()[1],
-        (Class<E>) parameterizedType.getActualTypeArguments()[2],
-        (Class<M1>) parameterizedType.getActualTypeArguments()[3],
-        (Class<M2>) parameterizedType.getActualTypeArguments()[4]);
+
+    String debugConfigFileName = DEBUG_CONFIG_CLASS.get(getConf());
+    System.out.println("debugConfigFileName: " + debugConfigFileName);
+    Class<?> clazz;
+    try {
+      clazz = Class.forName(debugConfigFileName);
+      debugConfig = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
+      System.out.println("Successfully created a DebugConfig file from: " + debugConfigFileName);
+    } catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
+      System.err.println("Could not create a new DebugConfig instance of " + debugConfigFileName);
+      e.printStackTrace();
+      throw new RuntimeException(e);
     }
   }
 
@@ -93,9 +71,36 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     // Other calls will use the value of shouldDebugVertex later on.
     shouldDebugVertex = debugConfig.shouldDebugSuperstep(getSuperstep()) &&
         debugConfig.shouldDebugVertex(vertex.getId());
-    debugVertexBeforeComputationIfConfigured(vertex, messages);
+    if (shouldDebugVertex) {
+      initGiraphScenario();
+      debugVertexBeforeComputation(vertex, messages);
+    }
     computeFurther(vertex, messages);
-//    debugVertexValueIfConfigured(vertex, false /* is after */, contextWrapper);
+    if (shouldDebugVertex) {
+      giraphScenarioWrapper.getContextWrapper().setVertexValueAfterWrapper(vertex.getValue());
+      // TODO(semih): Make sure we write the debugs per vertex.
+      new GiraphScenearioSaverLoader<I, V, E, M1, M2>().saveToHDFS(
+        "/giraph-debug-traces/dummy_job/tr_sn_" + getSuperstep() + "_vid_" + vertex.getId() + ".tr",
+        giraphScenarioWrapper);
+    }
+  }
+
+  private void initGiraphScenario() {
+    System.out.println(this.getClass().getCanonicalName());
+    ParameterizedType parameterizedType = (ParameterizedType) debugConfig.getClass().getGenericSuperclass();
+    System.out.println(((Class<I>) parameterizedType.getActualTypeArguments()[0]).getCanonicalName());
+    System.out.println(((Class<V>) parameterizedType.getActualTypeArguments()[1]).getCanonicalName());
+    System.out.println(((Class<E>) parameterizedType.getActualTypeArguments()[2]).getCanonicalName());
+    System.out.println(((Class<M1>) parameterizedType.getActualTypeArguments()[3]).getCanonicalName());
+    System.out.println(((Class<M2>) parameterizedType.getActualTypeArguments()[4]).getCanonicalName());
+    
+    giraphScenarioWrapper = new GiraphScenarioWrapper(this.getClass(), 
+      (Class<I>) parameterizedType.getActualTypeArguments()[0], 
+      (Class<V>) parameterizedType.getActualTypeArguments()[1],
+      (Class<E>) parameterizedType.getActualTypeArguments()[2],
+      (Class<M1>) parameterizedType.getActualTypeArguments()[3],
+      (Class<M2>) parameterizedType.getActualTypeArguments()[4]);
+    giraphScenarioWrapper.setContextWrapper(giraphScenarioWrapper.new ContextWrapper());
   }
 
   public abstract void computeFurther(Vertex<I, V, E> vertex, Iterable<M1> messages)
@@ -111,7 +116,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
    */
   @Override
   public void sendMessage(I id, M2 message) {
+    System.out.println("send message called..");
     if (shouldDebugVertex) {
+      giraphScenarioWrapper.getContextWrapper().addOutgoingMessageWrapper(id, message);
       System.out.println("vertex is sending a message to: " + id + " msg: " + message);
     }
     super.sendMessage(id, message);
@@ -136,36 +143,30 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     super.sendMessageToAllEdges(vertex, message);
   }
 
-  private void debugVertexBeforeComputationIfConfigured(Vertex<I, V, E> vertex,
-    Iterable<M1> messages) {
-    contextWrapper = giraphScenarioWrapper.new ContextWrapper();
-    debugVertexIfConfigured(vertex, true /* is before */, contextWrapper);
-    if (shouldDebugVertex) {
-      for (M1 message : messages) {
-        System.out.print("\tin-msg: " + message);
-      }
-      System.out.println();
+  private void debugVertexBeforeComputation(Vertex<I, V, E> vertex, Iterable<M1> messages) {
+    System.out.println("-----DEBUGGING VERTEX BEFORE COMPUTATION: " + vertex.getId()
+      + "-----");
+    giraphScenarioWrapper.getContextWrapper().setSuperstepNoWrapper(getSuperstep());
+    debugVertex(vertex);
+    for (M1 message : messages) {
+      giraphScenarioWrapper.getContextWrapper().addIncomingMessageWrapper(message);
+      System.out.print("\tin-msg: " + message);
     }
-    giraphScenarioWrapper.setContextWrapper(contextWrapper);
+    System.out.println("\n-----FINISHED DEBUGGING VERTEX BEFORE COMPUTATION: "  + vertex.getId()
+      + "-----");
   }
-  private void debugVertexIfConfigured(Vertex<I, V, E> vertex, boolean isBefore,
-    GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper contextWrapper) {
-    if (shouldDebugVertex) {
-      System.out.println("-----DEBUGGING VERTEX " + (isBefore ? "BEFORE COMPUTATION: "
-        : "AFTER COMPUTATION: ") + vertex.getId() + "-----");
-      System.out.print("superstep: " + getSuperstep());
-      System.out.print("vertex.ID: " + vertex.getId());
-      contextWrapper.setVertexIdWrapper(vertex.getId());
-      System.out.println("\tvertex.Value: " + vertex.getValue());
-      System.out.print("\tvertex.Value: " + vertex.getValue());
-      Iterable<Edge<I, E>> returnVal = vertex.getEdges();
-      System.out.print("vertex.getEdges:");
-      for (Edge<I, E> edge : returnVal) {
-        System.out.print("\tedge: <" + edge.getTargetVertexId() + ", " + edge.getValue()
-          + ">");
-      }
-      System.out.println("\n-----FINISHED DEBUGGING VERTEX " + (isBefore ? "BEFORE COMPUTATION: "
-        : "AFTER COMPUTATION: ") + vertex.getId() + "-----");
+
+  private void debugVertex(Vertex<I, V, E> vertex) {
+    giraphScenarioWrapper.getContextWrapper().setVertexIdWrapper(vertex.getId());
+    System.out.print("vertex.ID: " + vertex.getId());
+    giraphScenarioWrapper.getContextWrapper().setVertexValueBeforeWrapper(vertex.getValue());
+    System.out.println("\tvertex.Value: " + vertex.getValue());
+    Iterable<Edge<I, E>> returnVal = vertex.getEdges();
+    System.out.print("vertex.getEdges:");
+    for (Edge<I, E> edge : returnVal) {
+      giraphScenarioWrapper.getContextWrapper().addNeighborWrapper(edge.getTargetVertexId(),
+        edge.getValue());
+      System.out.print("\tedge: <" + edge.getTargetVertexId() + ", " + edge.getValue() + ">");
     }
   }
 }
