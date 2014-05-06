@@ -48,7 +48,7 @@ public class TestCaseGenerator {
     context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
 
     context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
-    context.put("vertexValue", input.getContextWrapper().getVertexValueWrapper());
+    context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
     context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
     context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
 

@@ -88,8 +88,10 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
   }
   
   public class ContextWrapper {
+    private long superstepNo;
     private I vertexId;
-    private V vertexValue;
+    private V vertexValueBefore;
+    private V vertexValueAfter;
     private ArrayList<M1> inMsgs;
     private ArrayList<NeighborWrapper> neighbors;
     private ArrayList<OutgoingMessageWrapper> outMsgs;
@@ -99,11 +101,21 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     }
 
     void reset() {
+      this.superstepNo = -1;
       this.vertexId = null;
-      this.vertexValue = null;
+      this.vertexValueBefore = null;
+      this.vertexValueAfter = null;
       this.inMsgs = new ArrayList<M1>();
       this.neighbors = new ArrayList<NeighborWrapper>();
       this.outMsgs = new ArrayList<OutgoingMessageWrapper>();
+    }
+
+    public long getSuperstepNoWrapper() {
+      return superstepNo;
+    }
+
+    public void setSuperstepNoWrapper(long superstepNo) {
+      this.superstepNo = superstepNo;
     }
 
     public I getVertexIdWrapper() {
@@ -114,12 +126,20 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
       this.vertexId = vertexId;
     }
 
-    public V getVertexValueWrapper() {
-      return vertexValue;
+    public V getVertexValueBeforeWrapper() {
+      return vertexValueBefore;
     }
 
-    public void setVertexValueWrapper(V vertexValue) {
-      this.vertexValue = vertexValue;
+    public V getVertexValueAfterWrapper() {
+      return vertexValueAfter;
+    }
+
+    public void setVertexValueBeforeWrapper(V vertexValueBefore) {
+      this.vertexValueBefore = vertexValueBefore;
+    }
+
+    public void setVertexValueAfterWrapper(V vertexValueAfter) {
+      this.vertexValueAfter = vertexValueAfter;
     }
 
     public void addIncomingMessageWrapper(M1 message) {
@@ -149,8 +169,10 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     @Override
     public String toString() {
       StringBuilder stringBuilder = new StringBuilder();
+      stringBuilder.append("superstepNo: " + getSuperstepNoWrapper());
       stringBuilder.append("vertexId: " + getVertexIdWrapper());
-      stringBuilder.append("\nvertexValue: " + getVertexValueWrapper());
+      stringBuilder.append("\nvertexValueBefore: " + getVertexValueBeforeWrapper());
+      stringBuilder.append("\nvertexValueAfter: " + getVertexValueAfterWrapper());
       stringBuilder.append("\nnumNeighbors: " + getNeighborWrappers().size());
       for (NeighborWrapper neighborWrapper : getNeighborWrappers()) {
         stringBuilder.append("\n" + neighborWrapper.toString());

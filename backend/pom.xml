@@ -11,17 +11,54 @@
   <properties>
     <top.dir>/Users/semihsalihoglu/projects/distributed_graph_debugger</top.dir>
     <giraph.dir>/Users/semihsalihoglu/projects/giraph</giraph.dir>
+    <project.build.targetJdk>1.7</project.build.targetJdk>
   </properties>
+
+<repositories>
+  <repository>
+    <id>my-local-repo</id>
+    <url>file://${top.dir}/my-repo</url>
+  </repository>
+</repositories>
 
   <build>
     <plugins>
+             <plugin>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <configuration>
+        <descriptorRefs>
+          <descriptorRef>jar-with-dependencies</descriptorRef>
+        </descriptorRefs>
+      </configuration>
+    </plugin>
+         <plugin>
+           <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.0</version>
+          <configuration>
+            <source>${project.build.targetJdk}</source>
+            <target>${project.build.targetJdk}</target>
+          </configuration>
+        </plugin>
+      <plugin>
+        <!-- NOTE: We don't need a groupId specification because the group is
+             org.apache.maven.plugins ...which is assumed by default.
+         -->
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.4</version>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
             <id>generate-sources</id>
             <phase>generate-sources</phase>
-	    <configuration>
+	        <configuration>
              <tasks>
                <mkdir dir="target/generated-sources"/>
                <exec executable="protoc">
@@ -49,22 +86,29 @@
    </dependency>
    <dependency>
      <groupId>org.apache.giraph</groupId>
-     <artifactId>giraph-core</artifactId>
+     <artifactId>giraph-core-trunk</artifactId>
      <version>1.1.0</version>
-      <scope>system</scope>
+<!--      <scope>system</scope>
       <systemPath>${giraph.dir}/giraph-core/target/giraph-1.1.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</systemPath>
+-->
    </dependency>
    <dependency>
      <groupId>org.apache.giraph</groupId>
-     <artifactId>giraph-examples</artifactId>
+     <artifactId>giraph-examples-trunk</artifactId>
      <version>1.1.0</version>
-      <scope>system</scope>
+<!--      <scope>system</scope>
       <systemPath>${giraph.dir}/giraph-examples/target/giraph-examples-1.1.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</systemPath>
+-->
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
      <artifactId>hadoop-core</artifactId>
      <version>1.2.1</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.velocity</groupId>
+     <artifactId>velocity</artifactId>
+     <version>1.7</version>
    </dependency>
    <dependency>
      <groupId>junit</groupId>

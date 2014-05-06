@@ -18,11 +18,15 @@ message GiraphScenario {
   
   // Each context encapsulates a particular pair of inputs and outputs of Computation.compute().
   message Context {
-    required bytes vertexId = 1;
-    required bytes vertexValue = 2;
-    repeated Neighbor neighbor = 3;
-    repeated bytes inMessage = 4;
-    repeated OutMsg outMessage = 5;    
+    required int64 superstepNo = 1;
+    required bytes vertexId = 2;
+    required bytes vertexValueBefore = 3;
+    required bytes vertexValueAfter = 4;
+    // TODO: We might have to break neighbor also to
+    // neighborsBefore and neighborsAfter.
+    repeated Neighbor neighbor = 5;
+    repeated bytes inMessage = 6;
+    repeated OutMsg outMessage = 7;    
     
     // Messages sent by the current vertex.
     message OutMsg {

@@ -7,6 +7,9 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 
+import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
+import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+
 /**
  * Temporary utility class to generate test protocol buffers that store scenarios.
  * 
@@ -31,7 +34,7 @@ public class GiraphTestScenarioWriter {
     GiraphScenarioWrapper<LongWritable, DoubleWritable, FloatWritable, DoubleWritable,
       DoubleWritable>.ContextWrapper contextWrapper = giraphScenarioWrapper.new ContextWrapper();
     contextWrapper.setVertexIdWrapper(new LongWritable(89));
-    contextWrapper.setVertexValueWrapper(new DoubleWritable(-5));
+    contextWrapper.setVertexValueBeforeWrapper(new DoubleWritable(-5));
     for (int i = 0; i <= 7; ++i) {
       contextWrapper.addNeighborWrapper(new LongWritable(i), new FloatWritable(1));
     }
@@ -48,20 +51,20 @@ public class GiraphTestScenarioWriter {
 
     // Deserialize the written pb, and verify that the deserialized scenario contains the same
     // contents.
-    GiraphScenarioWrapper<LongWritable, DoubleWritable, FloatWritable, DoubleWritable,
-      DoubleWritable> deserializedGiraphScenarioWrapper = new GiraphScenearioSaverLoader<
-        LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable>().load(
-          outputFileName);
-    System.out.println("deserizalied giraph scenario:");
-    System.out.println(deserializedGiraphScenarioWrapper);
+//    GiraphScenarioWrapper<LongWritable, DoubleWritable, FloatWritable, DoubleWritable,
+//      DoubleWritable> deserializedGiraphScenarioWrapper = new GiraphScenearioSaverLoader<
+//        LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable>().load(
+//          outputFileName);
+//    System.out.println("deserizalied giraph scenario:");
+//    System.out.println(deserializedGiraphScenarioWrapper);
 //    GiraphScenarioWrapper<LongWritable, DoubleWritable, FloatWritable, DoubleWritable,
 //      DoubleWritable>.ContextWrapper deserializedContext = giraphScenarioWrapper.getContextWrapper();
 //    System.out.println("deserializedScenario.vertexID: " + deserializedContext.getVertexIdWrapper());
 //    System.out.println("deserializedScenario.vertexValue: "
 //      + deserializedContext.getVertexValueWrapper());
 //    for (NeighborWrapper neighborWrapper : deserializedContext.getNeighborWrappers()) {
-//      System.out.println("deserialized neighborId: " + neighborWrapper.nbrId + " value: "
-//        + neighborWrapper.nbrId);
+//      System.out.println("deserialized neighborId: " + neighborWrapper.getNbrId() + " value: "
+//        + neighborWrapper.getNbrId());
 //    }
 //    for (DoubleWritable neighborId : deserializedContext.getIncomingMessageWrappers()) {
 //      System.out.println("incoming message: " + neighborId.get());

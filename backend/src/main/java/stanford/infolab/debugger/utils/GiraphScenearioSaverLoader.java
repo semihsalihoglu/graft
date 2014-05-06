@@ -66,7 +66,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
             Writable.class);
 
     GiraphScenarioWrapper<I, V, E, M1, M2> giraphScenarioWrapper =
-      new GiraphScenarioWrapper<I, V, E, M1, M2>(classUnderTest, vertexIdClass,
+      new GiraphScenarioWrapper(classUnderTest, vertexIdClass,
         vertexValueClass, edgeValueClass, incomingMessageClass, outgoingMessageClass);
 
     ContextOrBuilder context = giraphScenario.getContextOrBuilder();
@@ -77,8 +77,10 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     contextWrapper.setVertexIdWrapper(vertexId);
 
     V vertexValue = newInstance(vertexValueClass);
-    fromByteString(context.getVertexValue(), vertexValue);
-    contextWrapper.setVertexValueWrapper(vertexValue);
+    fromByteString(context.getVertexValueBefore(), vertexValue);
+    contextWrapper.setVertexValueBeforeWrapper(vertexValue);
+    fromByteString(context.getVertexValueAfter(), vertexValue);
+    contextWrapper.setVertexValueAfterWrapper(vertexValue);
 
     for (Neighbor neighbor : context.getNeighborList()) {
       I neighborId = newInstance(vertexIdClass);
@@ -128,14 +130,14 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
 
     GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper scenario = scenarioWrapper.getContextWrapper();
       contextBuilder.clear();
-      contextBuilder.setVertexId(toByteString(scenario.getVertexIdWrapper())).setVertexValue(
-          toByteString(scenario.getVertexValueWrapper()));
+      contextBuilder.setVertexId(toByteString(scenario.getVertexIdWrapper())).setVertexValueBefore(
+          toByteString(scenario.getVertexValueBeforeWrapper()));
 
     for (GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper.NeighborWrapper neighbor :
       scenario.getNeighborWrappers()) {
       neighborBuilder.clear();
-      neighborBuilder.setNeighborId(toByteString(neighbor.nbrId));
-      E edgeValue = neighbor.edgeValue;
+      neighborBuilder.setNeighborId(toByteString(neighbor.getNbrId()));
+      E edgeValue = neighbor.getEdgeValue();
       if (edgeValue != null) {
         neighborBuilder.setEdgeValue(toByteString(edgeValue));
       } else {
