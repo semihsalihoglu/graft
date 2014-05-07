@@ -29,14 +29,14 @@ public abstract class ServerHttpHandler implements HttpHandler {
 
         try {
             paramMap = ServerUtils.getUrlParams(rawUrl);
-            // Call the method implemeneted by inherited classes.
+            // Call the method implemented by inherited classes.
             processRequest(paramMap);
         }
         catch(UnsupportedEncodingException ex) {
             this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST; 
             this.response = "Malformed URL. Given encoding is not supported.";
         }
-
+        
         // Send response.
         ServerUtils.setMandatoryResponseHeaders(httpExchange.getResponseHeaders());
         httpExchange.sendResponseHeaders(this.statusCode, this.response.length());
