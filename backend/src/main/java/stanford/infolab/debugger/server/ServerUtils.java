@@ -76,9 +76,7 @@ public class ServerUtils {
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
    * 
    * @param jobId : ID of the job debugged.
-   * 
    * @param superstepNo: Superstep number debugged.
-   * 
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
    */
   public static GiraphScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
@@ -93,7 +91,6 @@ public class ServerUtils {
   /*
    * Converts a Giraph Scenario (giraphScenarioWrapper object) to JSON
    * (JSONObject)
-   * 
    * @param giraphScenarioWrapper : Giraph Scenario object.
    */
   public static JSONObject scenarioToJSON(GiraphScenarioWrapper giraphScenarioWrapper)
@@ -104,21 +101,17 @@ public class ServerUtils {
     scenarioObj.put("vertexValue", contextWrapper.getVertexValueAfterWrapper());
     JSONObject outgoingMessagesObj = new JSONObject();
     ArrayList<String> neighborsList = new ArrayList<String>();
-
     for (Object outgoingMessage : contextWrapper.getOutgoingMessageWrappers()) {
       OutgoingMessageWrapper outgoingMessageWrapper = (OutgoingMessageWrapper) outgoingMessage;
       outgoingMessagesObj.put(outgoingMessageWrapper.destinationId.toString(),
         outgoingMessageWrapper.message.toString());
     }
-
     for (Object neighbor : contextWrapper.getNeighborWrappers()) {
       NeighborWrapper neighborWrapper = (NeighborWrapper) neighbor;
       neighborsList.add(neighborWrapper.getNbrId().toString());
     }
-
     scenarioObj.put("outgoingMessages", outgoingMessagesObj);
     scenarioObj.put("neighbors", neighborsList);
-
     return scenarioObj;
   }
 

@@ -40,8 +40,7 @@ public class Server {
   }
 
   /*
-   * Handles /job HTTP GET call. Returns the details of the given jobId
-   * 
+   * Handles /job HTTP GET call. Returns the details of the given jobId.
    * @URLparams -{jobId}
    */
   static class GetJob extends ServerHttpHandler {
@@ -70,14 +69,12 @@ public class Server {
 
   /*
    * Returns the list of vertices debugged in a given Superstep for a given job.
-   * 
    * @URLParams: {jobId, superstepId}
    */
   static class GetVertices extends ServerHttpHandler {
     public void processRequest(HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
-
       try {
         // jobId and superstepId are mandatory. Validate.
         if (jobId == null || superstepId == null) {
@@ -111,9 +108,7 @@ public class Server {
 
   /*
    * Returns the scenario for a given superstep of a given job.
-   * 
    * @URLParams - {jobId, superstepId, [vertexId]}
-   * 
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
    * separated list. If it is not supplied, returns the scenario for all
    * vertices.
@@ -123,14 +118,15 @@ public class Server {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       // Check both jobId and superstepId are present
-
       try {
         if (jobId == null || superstepId == null) {
           throw new IllegalArgumentException("Missing mandatory parameters");
         }
         Long superstepNo = Long.parseLong(paramMap.get(ServerUtils.SUPERSTEP_ID_KEY));
         if (superstepNo < -1) {
-          throw new NumberFormatException("Superstep must be >= -1");
+          this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+          this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
+          return;
         }
         ArrayList<String> vertexIds = null;
         // Get the single vertexId or the list of vertexIds (comma-separated).
@@ -154,9 +150,6 @@ public class Server {
         // Set status as OK and convert JSONObject to string.
         this.statusCode = HttpURLConnection.HTTP_OK;
         this.response = scenarioObj.toString();
-      } catch (NumberFormatException e) {
-        this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
-        this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
       } catch (IllegalArgumentException e) {
         this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
         this.response = String.format("Invalid parameters. %s and %s are mandatory parameter.",
