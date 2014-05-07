@@ -39,9 +39,7 @@ public class SimpleShortestPathsDebugComputation extends AbstractInterceptingCom
    * @return True if the source id
    */
   private boolean isSource(Vertex<LongWritable, ?, ?> vertex) {
-    // TODO(semih): Once you figure out whether to intercept or serialize Config's calls
-    // replace this with the actual code: SOURCE_ID.get(getConf());
-    return vertex.getId().get() == 0;
+    return vertex.getId().get() == SOURCE_ID.get(getConf());
   }
 
   @Override
