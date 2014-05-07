@@ -36,9 +36,7 @@ public class Server {
         server.createContext("/scenario", new GetScenario());
         // Creates a default executor.
         server.setExecutor(null);
-        //System.out.println(ServerUtils.readScenarioFromTrace("job_201405061024_0019", 0, "0").toString());
         server.start();
-        
     }
 
     /*
@@ -84,7 +82,6 @@ public class Server {
                          ServerUtils.JOB_ID_KEY, ServerUtils.SUPERSTEP_ID_KEY);
                  return;
             }
-            
         	ArrayList<String> vertexIds = null;
         	try {
         		vertexIds = ServerUtils.getVerticesDebugged("job_201405061024_0019", 0);
@@ -112,7 +109,6 @@ public class Server {
         public void processRequest(HashMap<String, String> paramMap) {
             String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
             String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
-            
             // Check both jobId and superstepId are present
             if (jobId == null || superstepId == null) {
             	this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
@@ -161,7 +157,6 @@ public class Server {
             // For each vertex, read the scenario and add to the JSON object.
             for(String vertexId : vertexIds) {
             	GiraphScenarioWrapper giraphScenarioWrapper;
-                
             	try {
             		giraphScenarioWrapper =
             				ServerUtils.readScenarioFromTrace(jobId, superstepNo, vertexId.trim());
@@ -180,7 +175,6 @@ public class Server {
             		this.response = "Internal Server error.";
             		return;
             	}
-            	
             	// Add this node's scenario to the final JSON
             	try {
             		scenarioObj.put(vertexId, ServerUtils.scenarioToJSON(giraphScenarioWrapper));
@@ -191,7 +185,6 @@ public class Server {
             		return;
             	}
             }
-            
             // Set status as OK and convert JSONObject to string.
             this.statusCode = HttpURLConnection.HTTP_OK;
             this.response = scenarioObj.toString();
