@@ -1,9 +1,13 @@
 package stanford.infolab.debugger.utils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.giraph.graph.Computation;
+import org.apache.giraph.utils.WritableUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -135,15 +139,22 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     }
 
     public void setVertexValueBeforeWrapper(V vertexValueBefore) {
-      this.vertexValueBefore = vertexValueBefore;
+      // Because Giraph does not create new objects for writables, we need
+      // to make a clone them to get a copy of the objects. Otherwise, if 
+      // we call setVertexValueBeforeWrapper and then setVertexValueAfterWrapper
+      // both of our copies end up pointing to the same object (in this case to
+      // the value passed to setVertexValueAfterWrapper, because it was called later).
+      this.vertexValueBefore = makeCloneOf(vertexValueBefore, vertexValueClass);
     }
 
     public void setVertexValueAfterWrapper(V vertexValueAfter) {
-      this.vertexValueAfter = vertexValueAfter;
+      // See the explanation for making a clone inside setVertexValueBeforeWrapper
+      this.vertexValueAfter = makeCloneOf(vertexValueAfter, vertexValueClass);
     }
 
     public void addIncomingMessageWrapper(M1 message) {
-      inMsgs.add(message);
+      // See the explanation for making a clone inside setVertexValueBeforeWrapper
+      inMsgs.add(makeCloneOf(message, incomingMessageClass));
     }
 
     public Collection<M1> getIncomingMessageWrappers() {
@@ -151,7 +162,9 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     }
 
     public void addOutgoingMessageWrapper(I receiverId, M2 message) {
-      outMsgs.add(new OutgoingMessageWrapper(receiverId, message));
+      // See the explanation for making a clone inside setVertexValueBeforeWrapper
+      outMsgs.add(new OutgoingMessageWrapper(makeCloneOf(receiverId, vertexIdClass),
+        makeCloneOf(message, outgoingMessageClass)));
     }
 
     public Collection<OutgoingMessageWrapper> getOutgoingMessageWrappers() {
@@ -159,18 +172,37 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     }
 
     public void addNeighborWrapper(I neighborId, E edgeValue) {
-      neighbors.add(new NeighborWrapper(neighborId, edgeValue));
+      // See the explanation for making a clone inside setVertexValueBeforeWrapper
+      neighbors.add(new NeighborWrapper(
+        makeCloneOf(neighborId, vertexIdClass), makeCloneOf(edgeValue, edgeValueClass)));
     }
 
     public Collection<NeighborWrapper> getNeighborWrappers() {
       return neighbors;
     }
 
+    private <T extends Writable> T makeCloneOf(T actualId, Class<T> clazz) {
+      T idCopy = GiraphScenearioSaverLoader.newInstance(clazz);
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
+      try {
+        actualId.write(dataOutputStream);
+      } catch (IOException e) {
+        // Throwing a runtime exception because the methods that call other methods
+        // such as addNeighborWrapper or addOutgoingMessageWrapper, implement abstract classes
+        // or interfaces of Giraph that we can't edit to include a throws statement.
+        throw new RuntimeException(e);
+      }
+      WritableUtils.readFieldsFromByteArray(byteArrayOutputStream.toByteArray(), idCopy);
+      byteArrayOutputStream.reset();
+      return idCopy;
+    }
+
     @Override
     public String toString() {
       StringBuilder stringBuilder = new StringBuilder();
       stringBuilder.append("superstepNo: " + getSuperstepNoWrapper());
-      stringBuilder.append("vertexId: " + getVertexIdWrapper());
+      stringBuilder.append("\nvertexId: " + getVertexIdWrapper());
       stringBuilder.append("\nvertexValueBefore: " + getVertexValueBeforeWrapper());
       stringBuilder.append("\nvertexValueAfter: " + getVertexValueAfterWrapper());
       stringBuilder.append("\nnumNeighbors: " + getNeighborWrappers().size());

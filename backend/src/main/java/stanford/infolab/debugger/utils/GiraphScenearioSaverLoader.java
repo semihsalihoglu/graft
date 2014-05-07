@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.utils.ReflectionUtils;
 import org.apache.giraph.utils.WritableUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -38,11 +37,21 @@ import com.google.protobuf.ByteString;
 public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends Writable, 
     E extends Writable, M1 extends Writable, M2 extends Writable> {
 
-  @SuppressWarnings("unchecked")
   public GiraphScenarioWrapper<I, V, E, M1, M2> load(String fileName)
       throws ClassNotFoundException, IOException {
     GiraphScenario giraphScenario = GiraphScenario.parseFrom(new FileInputStream(fileName));
+    return loadGiraphScneario(giraphScenario);
+  }
 
+  public GiraphScenarioWrapper<I, V, E, M1, M2> loadFromHDFS(FileSystem fs, String fileName)
+    throws ClassNotFoundException, IOException {
+    GiraphScenario giraphScenario = GiraphScenario.parseFrom(fs.open(new Path(fileName)));
+    return loadGiraphScneario(giraphScenario);
+  }
+  
+  @SuppressWarnings("unchecked")
+  private GiraphScenarioWrapper<I, V, E, M1, M2> loadGiraphScneario(GiraphScenario giraphScenario)
+    throws ClassNotFoundException, IOException {
     Class<?> clazz = Class.forName(giraphScenario.getClassUnderTest());
     Class<? extends Computation<I, V, E, M1, M2>> classUnderTest =
         (Class<? extends Computation<I, V, E, M1, M2>>) castClassToUpperBound(clazz,
@@ -75,6 +84,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     ContextOrBuilder context = giraphScenario.getContextOrBuilder();
     GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper contextWrapper =
       giraphScenarioWrapper.new ContextWrapper();
+    contextWrapper.setSuperstepNoWrapper(context.getSuperstepNo());
     I vertexId = newInstance(vertexIdClass);
     fromByteString(context.getVertexId(), vertexId);
     contextWrapper.setVertexIdWrapper(vertexId);
@@ -125,22 +135,17 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     }
   }
 
-  public void saveToHDFS(String fileName, GiraphScenarioWrapper<I, V, E, M1, M2> scenarioWrapper)
-    throws IOException {
+  public void saveToHDFS(FileSystem fs, String fileName,
+    GiraphScenarioWrapper<I, V, E, M1, M2> scenarioWrapper) throws IOException {
     GiraphScenario giraphScenario = buildGiraphScnearioFromWrapper(scenarioWrapper);
     Path pt=new Path(fileName);
-    FileSystem fs = FileSystem.get(new Configuration());
     giraphScenario.writeTo(fs.create(pt, true).getWrappedStream());
   }
 
   private GiraphScenario buildGiraphScnearioFromWrapper(
     GiraphScenarioWrapper<I, V, E, M1, M2> scenarioWrapper) {
-    GiraphScenario.Builder giraphScenarioBuilder = GiraphScenario.newBuilder();
-    Context.Builder contextBuilder = Context.newBuilder();
-    Neighbor.Builder neighborBuilder = Neighbor.newBuilder();
-    OutMsg.Builder outMsgBuilder = OutMsg.newBuilder();
 
-    giraphScenarioBuilder.clear();
+    GiraphScenario.Builder giraphScenarioBuilder = GiraphScenario.newBuilder();
     giraphScenarioBuilder.setClassUnderTest(scenarioWrapper.getClassUnderTest().getName());
     giraphScenarioBuilder.setVertexIdClass(scenarioWrapper.getVertexIdClass().getName());
     giraphScenarioBuilder.setVertexValueClass(scenarioWrapper.getVertexValueClass().getName());
@@ -150,7 +155,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
 
     GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper contextWrapper = scenarioWrapper
       .getContextWrapper();
-    contextBuilder.clear();
+    Context.Builder contextBuilder = Context.newBuilder();
     contextBuilder.setSuperstepNo(contextWrapper.getSuperstepNoWrapper())
       .setVertexId(toByteString(contextWrapper.getVertexIdWrapper()))
       .setVertexValueBefore(toByteString(contextWrapper.getVertexValueBeforeWrapper()))
@@ -158,7 +163,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
 
     for (GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper.NeighborWrapper neighbor :
       contextWrapper.getNeighborWrappers()) {
-      neighborBuilder.clear();
+      Neighbor.Builder neighborBuilder = Neighbor.newBuilder();
       neighborBuilder.setNeighborId(toByteString(neighbor.getNbrId()));
       E edgeValue = neighbor.getEdgeValue();
       if (edgeValue != null) {
@@ -166,7 +171,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
       } else {
         neighborBuilder.clearEdgeValue();
       }
-      contextBuilder.addNeighbor(neighborBuilder);
+      contextBuilder.addNeighbor(neighborBuilder.build());
     }
 
     for (M1 msg : contextWrapper.getIncomingMessageWrappers()) {
@@ -174,6 +179,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     }
 
     for (OutgoingMessageWrapper msg : contextWrapper.getOutgoingMessageWrappers()) {
+      OutMsg.Builder outMsgBuilder = OutMsg.newBuilder();
       outMsgBuilder.setMsgData(toByteString(msg.message));
       outMsgBuilder.setDestinationId(toByteString(msg.destinationId));
       contextBuilder.addOutMessage(outMsgBuilder);
@@ -203,7 +209,7 @@ public class GiraphScenearioSaverLoader<I extends WritableComparable, V extends 
     return ByteString.copyFrom(WritableUtils.writeToByteArray(writable));
   }
   
-  private static <T> T newInstance(Class<T> theClass) {
+  static <T> T newInstance(Class<T> theClass) {
     return NullWritable.class.isAssignableFrom(theClass) 
         ? null : ReflectionUtils.newInstance(theClass);
   }

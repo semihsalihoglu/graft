@@ -12,6 +12,8 @@ import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -78,22 +80,15 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     computeFurther(vertex, messages);
     if (shouldDebugVertex) {
       giraphScenarioWrapper.getContextWrapper().setVertexValueAfterWrapper(vertex.getValue());
-      // TODO(semih): Make sure we write the debugs per vertex.
       new GiraphScenearioSaverLoader<I, V, E, M1, M2>().saveToHDFS(
-        "/giraph-debug-traces/dummy_job/tr_sn_" + getSuperstep() + "_vid_" + vertex.getId() + ".tr",
-        giraphScenarioWrapper);
+        FileSystem.get(new Configuration()), "/giraph-debug-traces/" + getContext().getJobID()
+          + "/tr_stp_" + getSuperstep() + "_vid_" + vertex.getId() + ".tr", giraphScenarioWrapper);
     }
   }
 
   private void initGiraphScenario() {
-    System.out.println(this.getClass().getCanonicalName());
-    ParameterizedType parameterizedType = (ParameterizedType) debugConfig.getClass().getGenericSuperclass();
-    System.out.println(((Class<I>) parameterizedType.getActualTypeArguments()[0]).getCanonicalName());
-    System.out.println(((Class<V>) parameterizedType.getActualTypeArguments()[1]).getCanonicalName());
-    System.out.println(((Class<E>) parameterizedType.getActualTypeArguments()[2]).getCanonicalName());
-    System.out.println(((Class<M1>) parameterizedType.getActualTypeArguments()[3]).getCanonicalName());
-    System.out.println(((Class<M2>) parameterizedType.getActualTypeArguments()[4]).getCanonicalName());
-    
+    ParameterizedType parameterizedType = (ParameterizedType) debugConfig.getClass()
+      .getGenericSuperclass();
     giraphScenarioWrapper = new GiraphScenarioWrapper(this.getClass(), 
       (Class<I>) parameterizedType.getActualTypeArguments()[0], 
       (Class<V>) parameterizedType.getActualTypeArguments()[1],
@@ -116,10 +111,8 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
    */
   @Override
   public void sendMessage(I id, M2 message) {
-    System.out.println("send message called..");
     if (shouldDebugVertex) {
       giraphScenarioWrapper.getContextWrapper().addOutgoingMessageWrapper(id, message);
-      System.out.println("vertex is sending a message to: " + id + " msg: " + message);
     }
     super.sendMessage(id, message);
   }
@@ -134,39 +127,22 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   @Override
   public void sendMessageToAllEdges(Vertex<I, V, E> vertex, M2 message) {
     if (shouldDebugVertex) {
-      System.out.print("vertex is sending a message to all neighbors. msg: " + message);
-      for (Edge<I, E> edge : vertex.getEdges()) {
-        System.out.print("\tnbrId: " + edge.getTargetVertexId());
-      }
-      System.out.println();
+      // TODO(semih): Intercept
     }
     super.sendMessageToAllEdges(vertex, message);
   }
 
-  private void debugVertexBeforeComputation(Vertex<I, V, E> vertex, Iterable<M1> messages) {
-    System.out.println("-----DEBUGGING VERTEX BEFORE COMPUTATION: " + vertex.getId()
-      + "-----");
+  private void debugVertexBeforeComputation(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
     giraphScenarioWrapper.getContextWrapper().setSuperstepNoWrapper(getSuperstep());
-    debugVertex(vertex);
-    for (M1 message : messages) {
-      giraphScenarioWrapper.getContextWrapper().addIncomingMessageWrapper(message);
-      System.out.print("\tin-msg: " + message);
-    }
-    System.out.println("\n-----FINISHED DEBUGGING VERTEX BEFORE COMPUTATION: "  + vertex.getId()
-      + "-----");
-  }
-
-  private void debugVertex(Vertex<I, V, E> vertex) {
     giraphScenarioWrapper.getContextWrapper().setVertexIdWrapper(vertex.getId());
-    System.out.print("vertex.ID: " + vertex.getId());
     giraphScenarioWrapper.getContextWrapper().setVertexValueBeforeWrapper(vertex.getValue());
-    System.out.println("\tvertex.Value: " + vertex.getValue());
     Iterable<Edge<I, E>> returnVal = vertex.getEdges();
-    System.out.print("vertex.getEdges:");
     for (Edge<I, E> edge : returnVal) {
       giraphScenarioWrapper.getContextWrapper().addNeighborWrapper(edge.getTargetVertexId(),
         edge.getValue());
-      System.out.print("\tedge: <" + edge.getTargetVertexId() + ", " + edge.getValue() + ">");
+    }
+    for (M1 message : messages) {
+      giraphScenarioWrapper.getContextWrapper().addIncomingMessageWrapper(message);
     }
   }
 }
