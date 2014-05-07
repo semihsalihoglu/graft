@@ -74,7 +74,6 @@ public class ServerUtils {
   /*
    * Reads the protocol buffer trace corresponding to the given jobId,
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
-   * 
    * @param jobId : ID of the job debugged.
    * @param superstepNo: Superstep number debugged.
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
