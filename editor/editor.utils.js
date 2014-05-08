@@ -175,11 +175,60 @@ function getPadding(node) {
 }
 
 /*
- * Returns a new node objects.
+ * Returns a new node object.
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
     return {id : id, reflexive : false, attrs : [], x: 0, y: 0};
+}
+
+/*
+ * Returns a new link (edge) object from the node IDs of the logical edge.
+ * @param {string} sourceNodeId - The ID of the source node in the logical edge.
+ * @param {string} targetNodeId - The ID of the target node in the logical edge.
+ * @desc - Logical edge means, "Edge from node with ID x to node with ID y". 
+ * It implicitly captures the direction. However, the link objects have 
+ * the 'left' and 'right' properties to denote direction. Also, source strictly < target.
+ * Therefore, the source and target may not match that of the logical edge, but the 
+ * direction will compensate for the mismatch.
+ */
+Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
+    var source, target, direction;
+    if (sourceNodeId < targetNodeId) {
+        source = sourceNodeId;
+        target = targetNodeId;
+        direction = 'right';
+    } else {
+        source = targetNodeId;
+        target = sourceNodeId;
+        direction = 'left';
+    }
+    link = {source: this.getNodeWithId(source), target: this.getNodeWithId(target), left: false, right: false};
+    link[direction] = true;
+    return link;
+}
+
+/*
+ * Adds a new link object to the links array or updates an existing link. 
+ * @param {string} sourceNodeId - Id of the source node in the logical edge.
+ * @param {string} targetNodeid - Id of the target node in the logical edge.
+ */
+Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
+    // Get the new link object.
+    var newLink = this.getNewLink(this.mousedown_node.id, this.mouseup_node.id);
+    // Check if a link with these source and target Ids already exists.
+    var existingLink = this.links.filter(function(l) {
+        return (l.source === newLink.source && l.target === newLink.target);
+    })[0];
+
+    // Add link to graph (update if exists).
+    if (existingLink) {
+        existingLink.left = existingLink.right = true;
+        return existingLink;
+    } else {
+        this.links.push(newLink);
+        return newLink;
+    }
 }
 
 /*
@@ -263,14 +312,8 @@ Editor.prototype.addNodes = function() {
          .attr('r', (function(d) {
              return getRadius(d);
          }).bind(this))
-         .style('fill', (function(d) {
-             return d === this.selected_node ?
-                 d3.rgb(this.colors(d.id)).brighter().toString() :
-                 this.colors(d.id);
-         }).bind(this))
-         .style('stroke', (function(d) {
-             return d3.rgb(this.colors(d.id)).darker().toString();
-         }).bind(this))
+         .style('fill', "#FFFDDB")
+         .style('stroke', "#000000")
          .classed('reflexive', function(d) { return d.reflexive; })
          .on('mouseover', (function(d) {
              if (!this.mousedown_node || d === this.mousedown_node) {
@@ -327,34 +370,8 @@ Editor.prototype.addNodes = function() {
              d3.select(d3.event.target).attr('transform', '');
 
              // Add link to graph (update if exists).
-             // Note: Links are strictly source < target; arrows separately specified by booleans.
-             var source, target, direction;
-             if (this.mousedown_node.id < this.mouseup_node.id) {
-                 source = this.mousedown_node;
-                 target = this.mouseup_node;
-                 direction = 'right';
-             } else {
-                 source = this.mouseup_node;
-                 target = this.mousedown_node;
-                 direction = 'left';
-             }
-
-             var link;
-             link = this.links.filter(function(l) {
-                 return (l.source === source && l.target === target);
-             })[0];
-
-             if (link) {
-                 link[direction] = true;
-             } else {
-                 link = {source: source, target: target, left: false, right: false};
-                 link[direction] = true;
-                 this.links.push(link);
-             }
-
-             // Select new link.
-             this.selected_link = link;
-             this.selected_node = null;
+             var newLink = this.addEdge(this.mousedown_node.id, this.mouseup_node.id);
+             this.selected_link = newLink;
              this.restart();
          }).bind(this))
          .on('dblclick', (function(d) {
@@ -381,11 +398,7 @@ Editor.prototype.restartNodes = function() {
 
     // Update existing nodes (reflexive & selected visual states)
     this.circle.selectAll('circle')
-        .style('fill', (function(d) {
-            return d === this.selected_node ?
-                d3.rgb(this.colors(d.id)).brighter().toString() :
-                this.colors(d.id);
-        }).bind(this))
+        .style('fill', "#FFFDDB")
         .classed('reflexive', function(d) { return d.reflexive; })
         .attr('r', function(d) { return getRadius(d);  });
 

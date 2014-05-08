@@ -26,8 +26,8 @@ GiraphDebugger.prototype.init = function(options) {
         'dblnode' : this.openNodeAttrs.bind(this)
     });
 
-    // Initialize current superstep to -1
-    this.currentSuperstepNumber = -1;
+    // Initialize current superstep to -2 (Not in debug mode)
+    this.currentSuperstepNumber = -2;
 
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
@@ -248,20 +248,25 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
  * Initializes the handlers of the elements on superstep controls.
  */
 GiraphDebugger.prototype.initSuperstepControlEvents = function() {
-    // On clicking Fetch button, send a request to the debugger server.
+    // On clicking Fetch button, send a request to the debugger server
+    // Fetch the scenario for this job for superstep -1
     $(this.btnFetchJob).click((function(event) {
         var jobId = $(this.fetchJobIdInput).val();
         $.ajax({
             url : 'http://localhost:8000/job',
-            data: { jobId : jobId }
+            data: { 'jobId' : jobId }
         })
         .done((function(data) {
+            console.log("Hello");
             this.jobData = eval(data);
             this.editor.buildGraphFromAdjList(this.jobData[0]);
             this.editor.restart();
             $(this.formFetchJob).hide();
             $(this.formControls).show();
-        }).bind(this));
+        }).bind(this))
+        .fail(function(error) {
+            console.log(error);
+        });
     }).bind(this));
 
     // On clicking the edit mode button, hide the superstep controls and show fetch form.

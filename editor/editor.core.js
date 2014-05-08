@@ -329,9 +329,9 @@ Editor.prototype.keyup = function() {
  * Format:
  * {
  *  nodeId: {
- *            adj: [adjId1, adjId2...],
- *            attrs: [attr1, attr2...],
- *            msgs: {
+ *            neighbors : [adjId1, adjId2...],
+ *            vertexValues : [attr1, attr2...],
+ *            outgoingMessages : {
  *                    receiverId1: "message1",
  *                    receiverId2: "message2",
  *                    ...
@@ -352,7 +352,7 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
             this.numNodes++;
             this.nodes.push(node);
         }
-        var adj = adjList[nodeId]['adj'];
+        var adj = adjList[nodeId]['neighbors'];
         // For every node in the adj list of this node,
         // add the node to this.nodes and add the edge to this.links
         for (var i = 0; i < adj.length; i++) {
@@ -380,18 +380,19 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
 /*
  * Updates graph properties - node attributes and messages from adj list.
  * @param {object} graph - graph has the same format as adjList above,
- * but with 'adj' ignored. This method assumes the same graph structure,
+ * but with 'adj' ignored. 
+ * **NOTE**: This method assumes the same graph structure,
  * only updates the node attributes and messages exchanged.
  */
 Editor.prototype.updateGraphData = function(graph) {
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in graph) {
         var node = this.getNodeWithId(nodeId);
-    if (graph[nodeId]['attrs']) {
-        node.attrs = graph[nodeId]['attrs'];
+    if (graph[nodeId]['vertexValues']) {
+        node.attrs = graph[nodeId]['vertexValues'];
     }
-        var adj = graph[nodeId]['adj'];
-        var msgs = graph[nodeId]['msgs'];
+        var adj = graph[nodeId]['neighbors'];
+        var msgs = graph[nodeId]['outgoingMessages'];
         // Build this.messages
         if (msgs) {
             for(var receiverId in msgs) {
@@ -401,6 +402,23 @@ Editor.prototype.updateGraphData = function(graph) {
                 });
             }
         }
+    }
+}
+
+/*
+ * Adds new nodes and links to the graph without changing the existing structure.
+ * @param graph - graph has the same format as above. 
+ * **NOTE** - This method will add news nodes and links without modifying
+ * the existing structure. For instance, if the passed graph object does
+ * not have a link, but it already exists in the graph, it will stay.
+ */
+Editor.prototype.addToGraph = function(graph) {
+    for (var nodeId in graph) {
+        // If this node is not present in the graph. Add it.
+        if (!this.getNodeWithId(nodeId)) {
+            this.nodes.push(this.getNewNode(nodeId));
+            this.numNodes++;
+        }        
     }
 }
 
