@@ -55,11 +55,10 @@ Editor.prototype.initElements = function() {
                     .append('svg:path')
                         .attr('d', 'M10,-5L0,0L10,5')
                         .attr('fill', '#000');
-    
     // Append the preloader
     // Dimensions of the image are 128x128
-    var preloaderX = this.width/2 - 64;
-    var preloaderY = this.height/2 - 64;
+    var preloaderX = this.width / 2 - 64;
+    var preloaderY = this.height / 2 - 64;
     this.preloader = this.svg.append('svg:g')
                                  .attr('transform', 'translate(' + preloaderX + ',' + preloaderY + ')')
                                  .attr('opacity', 0);
@@ -186,10 +185,10 @@ Editor.prototype.getNewNode = function(id) {
  * Returns a new link (edge) object from the node IDs of the logical edge.
  * @param {string} sourceNodeId - The ID of the source node in the logical edge.
  * @param {string} targetNodeId - The ID of the target node in the logical edge.
- * @desc - Logical edge means, "Edge from node with ID x to node with ID y". 
- * It implicitly captures the direction. However, the link objects have 
+ * @desc - Logical edge means, "Edge from node with ID x to node with ID y".
+ * It implicitly captures the direction. However, the link objects have
  * the 'left' and 'right' properties to denote direction. Also, source strictly < target.
- * Therefore, the source and target may not match that of the logical edge, but the 
+ * Therefore, the source and target may not match that of the logical edge, but the
  * direction will compensate for the mismatch.
  */
 Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
@@ -209,12 +208,12 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
 }
 
 /*
- * Adds a new link object to the links array or updates an existing link. 
+ * Adds a new link object to the links array or updates an existing link.
  * @param {string} sourceNodeId - Id of the source node in the logical edge.
  * @param {string} targetNodeid - Id of the target node in the logical edge.
  */
 Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
-    console.log("Adding edge: " + sourceNodeId + " -> " + targetNodeId);
+    console.log('Adding edge: ' + sourceNodeId + ' -> ' + targetNodeId);
     // Get the new link object.
     var newLink = this.getNewLink(sourceNodeId, targetNodeId);
     // Check if a link with these source and target Ids already exists.
@@ -224,7 +223,7 @@ Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
 
     // Add link to graph (update if exists).
     if (existingLink) {
-        // Set the existingLink directions to true if either 
+        // Set the existingLink directions to true if either
         // newLink or existingLink denote the edge.
         existingLink.left |= newLink.left;
         existingLink.right |= newLink.right;
@@ -336,8 +335,8 @@ Editor.prototype.addNodes = function() {
          .attr('r', (function(d) {
              return getRadius(d);
          }).bind(this))
-         .style('fill', "#FFFDDB")
-         .style('stroke', "#000000")
+         .style('fill', '#FFFDDB')
+         .style('stroke', '#000000')
          .classed('reflexive', function(d) { return d.reflexive; })
          .on('mouseover', (function(d) {
              if (!this.mousedown_node || d === this.mousedown_node) {
@@ -422,7 +421,7 @@ Editor.prototype.restartNodes = function() {
 
     // Update existing nodes (reflexive & selected visual states)
     this.circle.selectAll('circle')
-        .style('fill', "#FFFDDB")
+        .style('fill', '#FFFDDB')
         .classed('reflexive', function(d) { return d.reflexive; })
         .attr('r', function(d) { return getRadius(d);  });
 

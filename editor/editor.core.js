@@ -370,7 +370,7 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
 /*
  * Updates graph properties - node attributes and messages from adj list.
  * @param {object} graph - graph has the same format as adjList above,
- * but with 'adj' ignored. 
+ * but with 'adj' ignored.
  * **NOTE**: This method assumes the same graph structure,
  * only updates the node attributes and messages exchanged.
  */
@@ -378,9 +378,9 @@ Editor.prototype.updateGraphData = function(graph) {
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in graph) {
         var node = this.getNodeWithId(nodeId);
-    if (graph[nodeId]['vertexValues']) {
-        node.attrs = graph[nodeId]['vertexValues'];
-    }
+        if (graph[nodeId]['vertexValues']) {
+            node.attrs = graph[nodeId]['vertexValues'];
+        }
         var adj = graph[nodeId]['neighbors'];
         var msgs = graph[nodeId]['outgoingMessages'];
         // Build this.messages
@@ -397,7 +397,7 @@ Editor.prototype.updateGraphData = function(graph) {
 
 /*
  * Adds new nodes and links to the graph without changing the existing structure.
- * @param {object} - scenario has the same format as above. 
+ * @param {object} - scenario has the same format as above.
  * **NOTE** - This method will add news nodes and links without modifying
  * the existing structure. For instance, if the passed graph object does
  * not have a link, but it already exists in the graph, it will stay.
@@ -408,7 +408,7 @@ Editor.prototype.addToGraph = function(scenario) {
         this.addNode(nodeId);
         var neighbors = scenario[nodeId]['neighbors'];
         // For each neighbor, add the edge.
-        for (var i=0 ; i< neighbors.length; i++) {
+        for (var i = 0 ; i < neighbors.length; i++) {
             var neighborId = neighbors[i];
             // Add neighbor node if it doesn't exist.
             this.addNode(neighborId);
