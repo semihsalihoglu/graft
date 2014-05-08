@@ -26,8 +26,15 @@ GiraphDebugger.prototype.init = function(options) {
         'dblnode' : this.openNodeAttrs.bind(this)
     });
 
-    // Initialize current superstep to -1
-    this.currentSuperstepNumber = -1;
+    // Initialize current superstep to -2 (Not in debug mode)
+    this.currentSuperstepNumber = -2;
+    // ID of the job currently being debugged.
+    this.currentJobId = null;
+    // Minimum value of superstepNumber
+    this.minSuperstepNumber = -1;
+    // Maximum value of superstepNumber - Depends on the job.
+    // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
+    this.maxSuperstepNumber = 15;
 
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
@@ -248,22 +255,13 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
  * Initializes the handlers of the elements on superstep controls.
  */
 GiraphDebugger.prototype.initSuperstepControlEvents = function() {
-    // On clicking Fetch button, send a request to the debugger server.
+    // On clicking Fetch button, send a request to the debugger server
+    // Fetch the scenario for this job for superstep -1
     $(this.btnFetchJob).click((function(event) {
-        var jobId = $(this.fetchJobIdInput).val();
-        $.ajax({
-            url : 'http://localhost:8000/job',
-            data: { jobId : jobId }
-        })
-        .done((function(data) {
-            this.jobData = eval(data);
-            this.editor.buildGraphFromAdjList(this.jobData[0]);
-            this.editor.restart();
-            $(this.formFetchJob).hide();
-            $(this.formControls).show();
-        }).bind(this));
+        this.currentJobId = $(this.fetchJobIdInput).val();
+        this.currentSuperstepNumber = 0;
+        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
     }).bind(this));
-
     // On clicking the edit mode button, hide the superstep controls and show fetch form.
     $(this.btnEditMode).click((function(event) {
         this.editor.init();
@@ -274,29 +272,47 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
 
     // Handle the next and previous buttons on the superstep controls.
     $(this.btnNextStep).click((function(event) {
-        if (this.currentSuperstepNumber < this.jobData.length - 1) {
-            this.currentSuperstepNumber += 1;
-            this.changeSuperstep(this.currentSuperstepNumber, this.jobData[this.currentSuperstepNumber + 1]);
-        }
+        this.currentSuperstepNumber += 1;
+        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
     }).bind(this));
 
     $(this.btnPrevStep).click((function(event) {
-        if (this.currentSuperstepNumber > -1) {
-            this.currentSuperstepNumber -= 1;
-            this.changeSuperstep(this.currentSuperstepNumber, this.jobData[this.currentSuperstepNumber + 1]);
-        }
+        this.currentSuperstepNumber -= 1;
+        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
     }).bind(this));
 }
 
 /*
- * Updates the superstep label, graph editor and disables/enables the prev/next buttons.
+ * Fetches the data for this superstep, updates the superstep label, graph editor
+ * and disables/enables the prev/next buttons.
+ * @param {int} superstepNumber : Superstep to fetch the data for.
  */
-GiraphDebugger.prototype.changeSuperstep = function(superstepNumber, graphData) {
+GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     $(this.superstepLabel).html(superstepNumber);
-    this.editor.updateGraphData(graphData);
+    // Show preloader while AJAX request is in progress.
+    this.editor.showPreloader();
+    // Fetch from the debugger server.
+    $.ajax({
+        url : 'http://localhost:8000/scenario',
+        dataType : 'json',
+        data: { 'jobId' : jobId, 'superstepId' : superstepNumber }
+    })
+    .done((function(data) {
+        console.log(data);
+        this.jobData = $.extend(this.jobData, data);
+        this.editor.addToGraph(data);
+        this.editor.updateGraphData(data);
+        this.editor.hidePreloader();
+        this.editor.restart();
+        $(this.formFetchJob).hide();
+        $(this.formControls).show();
+    }).bind(this))
+    .fail(function(error) {
+        console.log(error);
+    });
     this.editor.restart();
-    $(this.btnNextStep).attr('disabled', superstepNumber === this.jobData.length - 1);
-    $(this.btnPrevStep).attr('disabled', superstepNumber === -1);
+    $(this.btnNextStep).attr('disabled', superstepNumber === this.maxSuperstepNumber);
+    $(this.btnPrevStep).attr('disabled', superstepNumber === this.minSuperstepNumber);
 }
 
 /*
