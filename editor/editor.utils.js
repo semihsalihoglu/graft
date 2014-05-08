@@ -54,7 +54,23 @@ Editor.prototype.initElements = function() {
                     .attr('orient', 'auto')
                     .append('svg:path')
                         .attr('d', 'M10,-5L0,0L10,5')
-                        .attr('fill', '#000')
+                        .attr('fill', '#000');
+    // Append the preloader
+    // Dimensions of the image are 128x128
+    var preloaderX = this.width / 2 - 64;
+    var preloaderY = this.height / 2 - 64;
+    this.preloader = this.svg.append('svg:g')
+                                 .attr('transform', 'translate(' + preloaderX + ',' + preloaderY + ')')
+                                 .attr('opacity', 0);
+
+    this.preloader.append('svg:image')
+                      .attr('xlink:href', 'img/preloader.gif')
+                      .attr('width', '128')
+                      .attr('height', '128');
+    this.preloader.append('svg:text')
+                      .text('Loading')
+                      .attr('x', '40')
+                      .attr('y', '128');
 }
 
 /*
@@ -158,11 +174,84 @@ function getPadding(node) {
 }
 
 /*
- * Returns a new node objects.
+ * Returns a new node object.
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
     return {id : id, reflexive : false, attrs : [], x: 0, y: 0};
+}
+
+/*
+ * Returns a new link (edge) object from the node IDs of the logical edge.
+ * @param {string} sourceNodeId - The ID of the source node in the logical edge.
+ * @param {string} targetNodeId - The ID of the target node in the logical edge.
+ * @desc - Logical edge means, "Edge from node with ID x to node with ID y".
+ * It implicitly captures the direction. However, the link objects have
+ * the 'left' and 'right' properties to denote direction. Also, source strictly < target.
+ * Therefore, the source and target may not match that of the logical edge, but the
+ * direction will compensate for the mismatch.
+ */
+Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
+    var source, target, direction;
+    if (sourceNodeId < targetNodeId) {
+        source = sourceNodeId;
+        target = targetNodeId;
+        direction = 'right';
+    } else {
+        source = targetNodeId;
+        target = sourceNodeId;
+        direction = 'left';
+    }
+    link = {source: this.getNodeWithId(source), target: this.getNodeWithId(target), left: false, right: false};
+    link[direction] = true;
+    return link;
+}
+
+/*
+ * Adds a new link object to the links array or updates an existing link.
+ * @param {string} sourceNodeId - Id of the source node in the logical edge.
+ * @param {string} targetNodeid - Id of the target node in the logical edge.
+ */
+Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
+    console.log('Adding edge: ' + sourceNodeId + ' -> ' + targetNodeId);
+    // Get the new link object.
+    var newLink = this.getNewLink(sourceNodeId, targetNodeId);
+    // Check if a link with these source and target Ids already exists.
+    var existingLink = this.links.filter(function(l) {
+        return (l.source === newLink.source && l.target === newLink.target);
+    })[0];
+
+    // Add link to graph (update if exists).
+    if (existingLink) {
+        // Set the existingLink directions to true if either
+        // newLink or existingLink denote the edge.
+        existingLink.left |= newLink.left;
+        existingLink.right |= newLink.right;
+        return existingLink;
+    } else {
+        this.links.push(newLink);
+        return newLink;
+    }
+}
+
+/*
+ * Adds node with nodeId to the graph (or ignores if already exists).
+ * Returns the added (or already existing) node.
+ * @param [{string}] nodeId - ID of the node to add. If not provided, adds
+ * a new node with a new nodeId.
+ * TODO(vikesh): Incremental nodeIds are buggy. May cause conflict. Use unique identifiers.
+ */
+Editor.prototype.addNode = function(nodeId) {
+    if (!nodeId) {
+        nodeId = (this.numNodes + 1).toString();
+    }
+    var newNode = this.getNodeWithId(nodeId);
+    if (!newNode) {
+        newNode = this.getNewNode(nodeId);
+        this.nodes.push(newNode);
+        this.numNodes++;
+    }
+    return newNode;
 }
 
 /*
@@ -246,14 +335,8 @@ Editor.prototype.addNodes = function() {
          .attr('r', (function(d) {
              return getRadius(d);
          }).bind(this))
-         .style('fill', (function(d) {
-             return d === this.selected_node ?
-                 d3.rgb(this.colors(d.id)).brighter().toString() :
-                 this.colors(d.id);
-         }).bind(this))
-         .style('stroke', (function(d) {
-             return d3.rgb(this.colors(d.id)).darker().toString();
-         }).bind(this))
+         .style('fill', '#FFFDDB')
+         .style('stroke', '#000000')
          .classed('reflexive', function(d) { return d.reflexive; })
          .on('mouseover', (function(d) {
              if (!this.mousedown_node || d === this.mousedown_node) {
@@ -310,34 +393,8 @@ Editor.prototype.addNodes = function() {
              d3.select(d3.event.target).attr('transform', '');
 
              // Add link to graph (update if exists).
-             // Note: Links are strictly source < target; arrows separately specified by booleans.
-             var source, target, direction;
-             if (this.mousedown_node.id < this.mouseup_node.id) {
-                 source = this.mousedown_node;
-                 target = this.mouseup_node;
-                 direction = 'right';
-             } else {
-                 source = this.mouseup_node;
-                 target = this.mousedown_node;
-                 direction = 'left';
-             }
-
-             var link;
-             link = this.links.filter(function(l) {
-                 return (l.source === source && l.target === target);
-             })[0];
-
-             if (link) {
-                 link[direction] = true;
-             } else {
-                 link = {source: source, target: target, left: false, right: false};
-                 link[direction] = true;
-                 this.links.push(link);
-             }
-
-             // Select new link.
-             this.selected_link = link;
-             this.selected_node = null;
+             var newLink = this.addEdge(this.mousedown_node.id, this.mouseup_node.id);
+             this.selected_link = newLink;
              this.restart();
          }).bind(this))
          .on('dblclick', (function(d) {
@@ -364,11 +421,7 @@ Editor.prototype.restartNodes = function() {
 
     // Update existing nodes (reflexive & selected visual states)
     this.circle.selectAll('circle')
-        .style('fill', (function(d) {
-            return d === this.selected_node ?
-                d3.rgb(this.colors(d.id)).brighter().toString() :
-                this.colors(d.id);
-        }).bind(this))
+        .style('fill', '#FFFDDB')
         .classed('reflexive', function(d) { return d.reflexive; })
         .attr('r', function(d) { return getRadius(d);  });
 
