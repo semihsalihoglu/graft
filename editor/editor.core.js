@@ -403,3 +403,19 @@ Editor.prototype.updateGraphData = function(graph) {
         }
     }
 }
+
+/*
+ * Shows the preloader and hides all other elements.
+ */
+Editor.prototype.showPreloader = function() {
+    this.svg.selectAll('g').transition().style('opacity', 0);
+    this.preloader.transition().style('opacity', 1);
+}
+
+/*
+ * Hides the preloader and shows all other elements.
+ */
+Editor.prototype.hidePreloader = function() {
+    this.svg.selectAll('g').transition().style('opacity', 1);
+    this.preloader.transition().style('opacity', 0);
+}

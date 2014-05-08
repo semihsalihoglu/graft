@@ -54,7 +54,24 @@ Editor.prototype.initElements = function() {
                     .attr('orient', 'auto')
                     .append('svg:path')
                         .attr('d', 'M10,-5L0,0L10,5')
-                        .attr('fill', '#000')
+                        .attr('fill', '#000');
+    
+    // Append the preloader
+    // Dimensions of the image are 128x128
+    var preloaderX = this.width/2 - 64;
+    var preloaderY = this.height/2 - 64;
+    this.preloader = this.svg.append('svg:g')
+                                 .attr('transform', 'translate(' + preloaderX + ',' + preloaderY + ')')
+                                 .attr('opacity', 0);
+
+    this.preloader.append('svg:image')
+                      .attr('xlink:href', 'img/preloader.gif')
+                      .attr('width', '128')
+                      .attr('height', '128');
+    this.preloader.append('svg:text')
+                      .text('Loading')
+                      .attr('x', '40')
+                      .attr('y', '128');
 }
 
 /*
