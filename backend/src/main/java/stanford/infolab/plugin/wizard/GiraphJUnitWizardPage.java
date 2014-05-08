@@ -83,8 +83,8 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   }
 
   /**
-   * Initialized the page with the current selection
-   * 
+   * Initialized the page with the current selection. The selection is used to specify the default
+   * values for the new file's package. 
    * @param selection The selection
    */
   public void init(IStructuredSelection selection) {
@@ -95,6 +95,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   }
 
   /**
+   * A generic method to handle modifications at any fields.
    * @see org.eclipse.jdt.ui.wizards.NewContainerWizardPage#handleFieldChanged(String)
    */
   @Override
@@ -104,8 +105,8 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   }
 
   /**
-   * Returns all status to be consider for the validation. Clients can override.
-   * 
+   * Returns all status to be consider for the validation. Can only proceed when all statuses are
+   * ok. Clients can override.
    * @return The list of status to consider for the validation.
    */
   protected IStatus[] getStatusList() {
@@ -114,6 +115,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
 
 
   /**
+   * Create the control (and the panels) for the page's UI.
    * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
    */
   public void createControl(Composite parent) {
@@ -187,6 +189,9 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     fScenarioFileButton.setLayoutData(gd);
   }
 
+  /**
+   * Called when the button to select the scenario file is pressed.
+   */
   private void scenarioFileButtonPressed() {
     String scenarioFileName = chooseScenarioFile();
     if (scenarioFileName != null) {
@@ -194,8 +199,13 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     }
   }
 
+  /**
+   * Open a {@link FileDialog} for the user to choose a scenario file.
+   * @return The new file's name.
+   */
   private String chooseScenarioFile() {
     FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+    // the extension filter is .tr for now (i.e. only .tr files are displayed and selectable)
     dialog.setFilterExtensions(new String[] {"*.tr"});
     dialog.setFilterNames(new String[] {"Scenario files (.tr)"});
     String fileName = dialog.open(); // can be null
@@ -211,6 +221,10 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     handleFieldChanged(SCENARIO_FILE);
   }
 
+  /**
+   * Called when the scenario filename changes. Load and validate the new scenario file.
+   * @return
+   */
   protected IStatus scenarioFileChanged() {
     fScenario = null;
 
@@ -231,6 +245,8 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   }
 
   /**
+   * Called by {@link NewTypeWizardPage#createType(IProgressMonitor)} to create the type members
+   * for the new types.
    * @see org.eclipse.jdt.ui.wizards.NewTypeWizardPage#createTypeMembers(org.eclipse.jdt.core.IType,
    *      org.eclipse.jdt.ui.wizards.NewTypeWizardPage.ImportsManager,
    *      org.eclipse.core.runtime.IProgressMonitor)
@@ -240,7 +256,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   protected void createTypeMembers(IType type, ImportsManager imports, IProgressMonitor monitor)
       throws CoreException {
     GiraphScenarioWrapper scenario = getScenario();
-
+    // add imports if not exist
     imports.addStaticImport("org.junit.Assert", "*", false);
     imports.addStaticImport("org.mockito.Mockito", "*", false);
     imports.addImport("java.io.IOException");
@@ -263,6 +279,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
       imports.addImport(usedType.getName());
     }
 
+    // add methods
     createSetUp(type, imports);
     createTestCompute(type, imports);
   }
@@ -275,6 +292,9 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     TestCaseGenerator generator = new TestCaseGenerator();
     String content;
     try {
+      // for all type.createField(), we don't specify where the fields are (the first null),
+      // don't monitor the process (the second null) and force the change in the fields if the
+      // fields already exist (the true flag)
       type.createField(generator.generateClassUnderTestField(scenario), null, true, null);
       type.createField(generator.generateConfField(scenario), null, true, null);
       type.createField(generator.generateMockEnvField(scenario), null, true, null);
@@ -302,6 +322,8 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   }
 
   /**
+   * Called when the superclass textbox is changed. Validate the new superclass. Ensure that the 
+   * superclass is in the class path.  
    * @see org.eclipse.jdt.ui.wizards.NewTypeWizardPage#superClassChanged()
    */
   @Override
@@ -330,13 +352,17 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
   }
 
   /**
+   * Always return false since this is the last page.
    * @see org.eclipse.jface.wizard.IWizardPage#canFlipToNextPage()
    */
   @Override
   public boolean canFlipToNextPage() {
-    return super.canFlipToNextPage() && getScenario() != null;
+    return false;
   }
 
+  /**
+   * Find the corresponding {@link IType} for the given class's name.
+   */
   private IType resolveClassNameToType(IJavaProject jproject, IPackageFragment pack,
       String classToTestName) throws JavaModelException {
     if (!jproject.exists()) {

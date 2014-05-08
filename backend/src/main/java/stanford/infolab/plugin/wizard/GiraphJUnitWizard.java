@@ -41,8 +41,6 @@ public class GiraphJUnitWizard extends Wizard implements INewWizard {
    */
   @Override
   public void addPages() {
-    // page = new GiraphJUnitWizardPage(selection);
-    // addPage(page);
     page = new GiraphJUnitWizardPage();
     addPage(page);
     page.init(selection);
@@ -74,27 +72,34 @@ public class GiraphJUnitWizard extends Wizard implements INewWizard {
     return false;
   }
 
-  /*
-   * Run a runnable
+  /**
+   * Run a runnable.
+   * @param runnable The runable.
    */
   protected boolean finishPage(IRunnableWithProgress runnable) {
     IRunnableWithProgress op = new WorkspaceModifyDelegatingOperation(runnable);
     try {
-      PlatformUI.getWorkbench().getProgressService()
-          .runInUI(getContainer(), op, ResourcesPlugin.getWorkspace().getRoot());
+      PlatformUI.getWorkbench().getProgressService().runInUI(
+          getContainer(), op, ResourcesPlugin.getWorkspace().getRoot());
 
-    } catch (InvocationTargetException e) {
-      return false;
-    } catch (InterruptedException e) {
+    } catch (InvocationTargetException|InterruptedException e) {
       return false;
     }
     return true;
   }
 
+  /**
+   * Select and reveal the specified resource in the project.
+   * @param newResource The resource.
+   */
   protected void selectAndReveal(IResource newResource) {
     BasicNewResourceWizard.selectAndReveal(newResource, workbench.getActiveWorkbenchWindow());
   }
 
+  /**
+   * Open the resource (a file) in the editor.
+   * @param resource The opened resource.
+   */
   protected void openResource(final IResource resource) {
     if (resource.getType() == IResource.FILE) {
       final IWorkbenchPage activePage = workbench.getActiveWorkbenchWindow().getActivePage();
