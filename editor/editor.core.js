@@ -24,11 +24,11 @@ function Editor(options) {
     this.setSize();
 
     this.nodes = [
-            this.getNewNode('0'),
             this.getNewNode('1'),
-            this.getNewNode('2')
+            this.getNewNode('2'),
+            this.getNewNode('3')
         ],
-    this.numNodes = 2,
+    this.numNodes = 3,
     this.links = [
             {source : this.nodes[0], target : this.nodes[1], left : false, right : true },
             {source : this.nodes[1], target : this.nodes[2], left : false, right : true }
@@ -93,10 +93,9 @@ Editor.prototype.mousedown = function() {
 
     // Insert new node at point.
     var point = d3.mouse(d3.event.target),
-        node =  this.getNewNode((++this.numNodes).toString());
+        node =  this.addNode();
     node.x = point[0];
     node.y = point[1];
-    this.nodes.push(node);
     this.restart();
 }
 
@@ -347,10 +346,8 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in adjList) {
         var node = this.getNodeWithId(nodeId);
-        if (node === null) {
-            node = this.getNewNode(nodeId);
-            this.numNodes++;
-            this.nodes.push(node);
+        if (!node) {
+            node = this.addNode(nodeId);
         }
         var adj = adjList[nodeId]['neighbors'];
         // For every node in the adj list of this node,
@@ -358,18 +355,11 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         for (var i = 0; i < adj.length; i++) {
             var adjId = adj[i];
             var adjNode = this.getNodeWithId(adjId);
-            if (adjNode === null) {
-                adjNode = this.getNewNode(adjId);
-                this.numNodes++;
-                this.nodes.push(adjNode);
+            if (!adjNode) {
+                adjNode = this.addNode(adjId);
             }
             // Add the edge.
-            // Note that edges are stored as source, target where source < target.
-            if (nodeId < adjId) {
-                this.links.push({source: node, target: adjNode, left: false, right: true});
-            } else {
-                this.links.push({source: adjNode, target: node, left: true, right: false});
-            }
+            this.addEdge(nodeId, adjId);
         }
     }
     this.updateGraphData(adjList);
@@ -407,18 +397,24 @@ Editor.prototype.updateGraphData = function(graph) {
 
 /*
  * Adds new nodes and links to the graph without changing the existing structure.
- * @param graph - graph has the same format as above. 
+ * @param {object} - scenario has the same format as above. 
  * **NOTE** - This method will add news nodes and links without modifying
  * the existing structure. For instance, if the passed graph object does
  * not have a link, but it already exists in the graph, it will stay.
  */
-Editor.prototype.addToGraph = function(graph) {
-    for (var nodeId in graph) {
+Editor.prototype.addToGraph = function(scenario) {
+    for (var nodeId in scenario) {
         // If this node is not present in the graph. Add it.
-        if (!this.getNodeWithId(nodeId)) {
-            this.nodes.push(this.getNewNode(nodeId));
-            this.numNodes++;
-        }        
+        this.addNode(nodeId);
+        var neighbors = scenario[nodeId]['neighbors'];
+        // For each neighbor, add the edge.
+        for (var i=0 ; i< neighbors.length; i++) {
+            var neighborId = neighbors[i];
+            // Add neighbor node if it doesn't exist.
+            this.addNode(neighborId);
+            // Addes edge, or ignores if already exists.
+            this.addEdge(nodeId, neighborId);
+        }
     }
 }
 

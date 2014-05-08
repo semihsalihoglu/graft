@@ -214,8 +214,9 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
  * @param {string} targetNodeid - Id of the target node in the logical edge.
  */
 Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
+    console.log("Adding edge: " + sourceNodeId + " -> " + targetNodeId);
     // Get the new link object.
-    var newLink = this.getNewLink(this.mousedown_node.id, this.mouseup_node.id);
+    var newLink = this.getNewLink(sourceNodeId, targetNodeId);
     // Check if a link with these source and target Ids already exists.
     var existingLink = this.links.filter(function(l) {
         return (l.source === newLink.source && l.target === newLink.target);
@@ -223,12 +224,35 @@ Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
 
     // Add link to graph (update if exists).
     if (existingLink) {
-        existingLink.left = existingLink.right = true;
+        // Set the existingLink directions to true if either 
+        // newLink or existingLink denote the edge.
+        existingLink.left |= newLink.left;
+        existingLink.right |= newLink.right;
         return existingLink;
     } else {
         this.links.push(newLink);
         return newLink;
     }
+}
+
+/*
+ * Adds node with nodeId to the graph (or ignores if already exists).
+ * Returns the added (or already existing) node.
+ * @param [{string}] nodeId - ID of the node to add. If not provided, adds
+ * a new node with a new nodeId.
+ * TODO(vikesh): Incremental nodeIds are buggy. May cause conflict. Use unique identifiers.
+ */
+Editor.prototype.addNode = function(nodeId) {
+    if (!nodeId) {
+        nodeId = (this.numNodes + 1).toString();
+    }
+    var newNode = this.getNodeWithId(nodeId);
+    if (!newNode) {
+        newNode = this.getNewNode(nodeId);
+        this.nodes.push(newNode);
+        this.numNodes++;
+    }
+    return newNode;
 }
 
 /*
