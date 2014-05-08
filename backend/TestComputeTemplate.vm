@@ -1,0 +1,35 @@
+  @Test
+  public final void testCompute() {
+    try {
+      Vertex<$vertexIdType, $vertexValueType, $edgeValueType> vertex = conf.createVertex();
+      vertex.initialize(new $vertexIdType($vertexId), new $vertexValueType($vertexValue));
+      
+#if ($neighbors)
+      ReusableEdge<$vertexIdType, $edgeValueType> edge = conf.createReusableEdge();
+#foreach ($neighbor in $neighbors)
+      edge.setTargetVertexId(new $vertexIdType($neighbor.NbrId));
+      edge.setValue(new $edgeValueType($neighbor.edgeValue));
+      vertex.addEdge(edge);
+#end
+#end
+
+      ArrayList<$inMsgType> inMsgs = new ArrayList<>();
+#foreach ($inMsg in $inMsgs)
+      inMsgs.add(new $inMsgType($inMsg));   
+#end
+
+      classUnderTest.compute(vertex, inMsgs);
+
+      // assertEquals(, vertex.getValue().get(), 0.001f);
+
+      // mockEnv.verifyNoMessageSent();
+
+      // $vertexValueType outMessage = new $outMsgType();
+      // mockEnv.verifyMessageSentToAllEdges(vertex, outMessage);
+
+      // $vertexValueType outMessage = new $outMsgType();
+      // mockEnv.verifyMessageSent(new $vertexIdType($vertexId), outMessage);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
