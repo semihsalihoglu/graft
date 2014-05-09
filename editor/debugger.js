@@ -44,6 +44,9 @@ GiraphDebugger.prototype.init = function(options) {
     // Maximum value of superstepNumber - Depends on the job.
     // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
     this.maxSuperstepNumber = 15;
+    // Caches the scenarios to show correct information when going backwards.
+    this.scenarioCache = {};
+
     this.debuggerServerRoot = 'http://localhost:8000';
 
     this.initIds();
@@ -352,6 +355,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     $(this.superstepLabel).html(superstepNumber);
     // Show preloader while AJAX request is in progress.
     this.editor.showPreloader();
+
     // Fetch from the debugger server.
     $.ajax({
         url : this.debuggerServerRoot + '/scenario',

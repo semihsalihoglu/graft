@@ -89,7 +89,6 @@ public abstract class ServerHttpHandler implements HttpHandler {
     Headers headers = this.httpExchange.getResponseHeaders();
     headers.add("Access-Control-Allow-Origin", "*");
     headers.add("Content-Type", this.responseContentType);
-    //headers.add("Content-Disposition", "attachment");
   }
   
   /*
