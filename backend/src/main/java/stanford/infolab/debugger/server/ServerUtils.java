@@ -34,7 +34,7 @@ public class ServerUtils {
   public static final String JOB_ID_KEY = "jobId";
   public static final String VERTEX_ID_KEY = "vertexId";
   public static final String SUPERSTEP_ID_KEY = "superstepId";
-  
+
   /*
    * Returns parameters of the URL in a hash map. For instance,
    * http://localhost:9000/?key1=val1&key2=val2&key3=val3
@@ -51,7 +51,7 @@ public class ServerUtils {
     }
     return paramMap;
   }
-  
+
   /*
    * Returns the HDFS FileSystem reference.
    */
@@ -77,8 +77,8 @@ public class ServerUtils {
     GiraphScenarioWrapper giraphScenarioWrapper = giraphSaverLoader.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
-  
-  public static byte[] readTrace(String jobId, long superstepNo, String vertexId) 
+
+  public static byte[] readTrace(String jobId, long superstepNo, String vertexId)
     throws IOException {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = String.format("/%s/tr_stp_%d_vid_%s.tr", jobId, superstepNo, vertexId);

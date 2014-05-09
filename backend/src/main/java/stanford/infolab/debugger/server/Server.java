@@ -42,8 +42,6 @@ public class Server {
     server.createContext("/scenario", new GetScenario());
     // Creates a default executor.
     server.setExecutor(null);
-    //System.out.println(new String(ServerUtils.readTrace("job_201405061024_0019", 0, "0"), 0));
-    //System.out.println(ServerUtils.readTrace("job_201405061024_0019", 0, "0"));
     server.start();
   }
 
@@ -54,7 +52,7 @@ public class Server {
   static class GetJob extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
-      System.out.println("GetJob received jobId " + jobId);
+      Debug.println("/job", paramMap.toString());
       if (jobId != null) {
         this.statusCode = HttpURLConnection.HTTP_OK;
         this.response = getSuperstepData(jobId);
@@ -126,7 +124,6 @@ public class Server {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       Debug.println("/scenario", paramMap.toString());
-      
       // Check both jobId and superstepId are present
       try {
         if (jobId == null || superstepId == null) {
@@ -151,7 +148,6 @@ public class Server {
           // Split the vertices by comma.
           vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
         }
-
         // Check if raw protocol buffers were requested.
         if (this.responseMimeType == javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM) {
           if (vertexIds.size() > 1) {
@@ -161,8 +157,8 @@ public class Server {
           }
           this.statusCode = HttpURLConnection.HTTP_OK;
           this.responseBytes = ServerUtils.readTrace(jobId, superstepNo, vertexIds.get(0).trim());
+          return;
         }
-
         // Send JSON by default.
         JSONObject scenarioObj = new JSONObject();
         for (String vertexId : vertexIds) {

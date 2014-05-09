@@ -144,23 +144,39 @@
 		<!--Container begins-->
 		<div class="container bs-docs-container">
 			<div class="row"> <!--Row1 begins-->
-				<div class="col-md-4">
-					<!--Form begins-->
-					<form role="form" class="form-inline editor-controls"> 
-						<div class="form-group">
-							<label>
-								<input type="radio" name="options" id="options_directed" class="graph-type form-control" value="directed" checked /> Directed
-							</label>
-						</div>
-						<div class="form-group">
-							<label>
-								<input type="radio" name="options" id="options_undirected" class="graph-type form-control" value="undirected" /> Undirected
-							</label>
-						</div>
-						<button type="button" class="btn btn-primary btn-danger form-control" id="btn-attr-view">Attribute view</button>
-					</form> <!--Form ends-->
+				<!--Column for left side controls-->
+				<div class="col-md-6">
+					<!-- This is a row for the directed/undirected controls-->
+					<div class="row"> 
+						<!--Internal col begins-->
+						<div class="col-md-12">							
+							<!--Form begins-->
+							<form role="form" class="form-inline editor-controls"> 
+								<div class="form-group">
+									<label>
+										<input type="radio" name="options" id="options_directed" class="graph-type form-control" value="directed" checked /> Directed
+									</label>
+								</div>
+								<div class="form-group">
+									<label>
+										<input type="radio" name="options" id="options_undirected" class="graph-type form-control" value="undirected" /> Undirected
+									</label>
+								</div>
+								<button type="button" class="btn btn-primary btn-danger form-control" id="btn-attr-view">Attribute view</button>
+							</form> <!--Form ends-->
+						</div><!--Internal column ends-->
+					</div><!--Directed/Undirected Row ends-->
+					<!-- This is a row for the download buttons-->
+					<div class="row"> 
+					<!--Internal column begins-->
+						<div class="col-md-12">							
+							<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
+							<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
+							<button type="button" class="btn btn-warning" id="btn-node-list-get">Download Node List</button>
+						</div><!--Internal column ends-->
+					</div>
 				</div>
-				<div class="col-md-8">
+				<div class="col-md-6">
 					<!--Debugger Superstep controls container begin-->
 					<div id="controls-container">
 					</div>
@@ -170,10 +186,7 @@
 
 			<!-- Row2 begins-->
 			<div class="row" style="margin-top:20px;">
-				<div class="col-md-12">
-					<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
-					<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
-					<button type="button" class="btn btn-warning" id="btn-node-list-get">Download Node List</button>
+				<div class="col-md-6">
 				</div>
 			</div> <!--Row2 ends-->
 

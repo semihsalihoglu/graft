@@ -53,14 +53,16 @@ public abstract class ServerHttpHandler implements HttpHandler {
       this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
       this.response = "Malformed URL. Given encoding is not supported.";
     }
-
-    // Send response.
-    this.setMandatoryResponseHeaders();
-    Debug.println("xx", this.response);
-    // Write Text Response if responeMimeType is json or if the statusCode is
-    // not OK. In case of an error statusCode, we just write the exception string.
+    // In case of an error statusCode, we just write the exception string.
     // (Consider using JSON).
-    if (this.responseMimeType == MediaType.APPLICATION_JSON
+    if (this.statusCode != HttpURLConnection.HTTP_OK) {
+      this.responseMimeType = MediaType.TEXT_PLAIN;
+    }
+    // Set mandatory Response Headers.
+    this.setMandatoryResponseHeaders();
+    // Write Text Response if responeMimeType is json or if the statusCode is
+    // not OK.
+    if (this.responseMimeType == MediaType.APPLICATION_JSON 
       || this.statusCode != HttpURLConnection.HTTP_OK) {
       this.writeTextResponse();
     } else {

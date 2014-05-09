@@ -128,7 +128,7 @@ text.tid {
 }
 
 #instructions { 
-	margin-top: 50px;
+	margin-top: 20px;
 }
 
 #controls h1, h2, h3, h4 {
@@ -144,6 +144,11 @@ text.tid {
 
 #controls-container {
 	float:right;
+}
+
+#controls-container .form-group {
+	float:right;
+	margin-bottom:10px;
 }
 
 /* Bootstrap overrides */
