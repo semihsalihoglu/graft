@@ -2,9 +2,20 @@ package stanford.infolab.plugin.mock;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
+import org.apache.giraph.utils.WritableUtils;
+import org.apache.hadoop.io.BooleanWritable;
+import org.apache.hadoop.io.ByteWritable;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.velocity.Template;
@@ -23,11 +34,18 @@ import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
  */
 public class TestCaseGenerator {
   
+  @SuppressWarnings("rawtypes")
+  private Set<Class> unsolvedWritableSet = new HashSet<>();
+  
   public TestCaseGenerator() {
     Velocity.setProperty(VelocityEngine.RESOURCE_LOADER, "class");
     Velocity.setProperty("class." + VelocityEngine.RESOURCE_LOADER + ".class", 
         ClasspathResourceLoader.class.getName());
     Velocity.init();
+  }
+  
+  public Set<Class> getUnsolvedWritableSet() {
+    return unsolvedWritableSet;
   }
 
   public <I extends WritableComparable<I>, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable> String generateTest(
@@ -110,9 +128,12 @@ public class TestCaseGenerator {
     }
   }
   
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({"rawtypes"})
   public String generateTestCompute(GiraphScenarioWrapper input) throws VelocityException, IOException {
+    unsolvedWritableSet.clear();
+    
     VelocityContext context = new VelocityContext();
+    context.put("helper", new FormatHelper());
     
     context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
     
@@ -131,6 +152,47 @@ public class TestCaseGenerator {
       Template template = Velocity.getTemplate("TestComputeTemplate.vm");
       template.merge(context, sw);
       return sw.toString();
+    }
+  }
+  
+  public String generateReadWritableFromString(String className) throws VelocityException, IOException {
+    VelocityContext context = new VelocityContext();
+    context.put("class", className);
+    
+    try (StringWriter sw = new StringWriter()) {
+      Template template = Velocity.getTemplate("ReadWritableFromStringTemplate.vm");
+      template.merge(context, sw);
+      return sw.toString();
+    }
+  }
+  
+  public class FormatHelper {
+    
+    public String format(Writable writable) {
+      if (writable instanceof NullWritable) {
+        return "NullWritable.get()";
+      } else if (writable instanceof BooleanWritable) {
+        return String.format("new BooleanWritable(%b)", ((BooleanWritable)writable).get());
+      } else if (writable instanceof ByteWritable) {
+        return String.format("new ByteWritable(%d)", ((ByteWritable)writable).get());
+      } else if (writable instanceof IntWritable) {
+        return String.format("new IntWritable(%d)", ((IntWritable)writable).get());
+      } else if (writable instanceof LongWritable) {
+        return String.format("new LongWritable(%dl)", ((LongWritable)writable).get());
+      } else if (writable instanceof FloatWritable) {
+        BigDecimal bd = new BigDecimal(((FloatWritable)writable).get());
+        return String.format("new FloatWritable(%sf)", bd.toString());
+      } else if (writable instanceof DoubleWritable) {
+        BigDecimal bd = new BigDecimal(((DoubleWritable)writable).get());
+        return String.format("new DoubleWritable(%sd)", bd.toString());
+      } else if (writable instanceof Text) {
+        return String.format("new Text(%s)", ((Text)writable).toString());
+      } else {
+        unsolvedWritableSet.add(writable.getClass());
+        String str = new String(WritableUtils.writeToByteArray(writable));
+        return String.format("(%s)read%sFromString(\"%s\")", writable.getClass().getSimpleName(),
+            writable.getClass().getSimpleName(), str);
+      }
     }
   }
 }

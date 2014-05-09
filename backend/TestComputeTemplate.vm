@@ -2,20 +2,20 @@
   public final void testCompute() {
     try {
       Vertex<$vertexIdType, $vertexValueType, $edgeValueType> vertex = conf.createVertex();
-      vertex.initialize(new $vertexIdType($vertexId), new $vertexValueType($vertexValue));
+      vertex.initialize($helper.format($vertexId), $helper.format($vertexValue));
       
 #if ($neighbors)
       ReusableEdge<$vertexIdType, $edgeValueType> edge = conf.createReusableEdge();
 #foreach ($neighbor in $neighbors)
-      edge.setTargetVertexId(new $vertexIdType($neighbor.NbrId));
-      edge.setValue(new $edgeValueType($neighbor.edgeValue));
+      edge.setTargetVertexId($helper.format($neighbor.NbrId));
+      edge.setValue($helper.format($neighbor.edgeValue));
       vertex.addEdge(edge);
 #end
 #end
 
       ArrayList<$inMsgType> inMsgs = new ArrayList<>();
 #foreach ($inMsg in $inMsgs)
-      inMsgs.add(new $inMsgType($inMsg));   
+      inMsgs.add($helper.format($inMsg));   
 #end
 
       classUnderTest.compute(vertex, inMsgs);

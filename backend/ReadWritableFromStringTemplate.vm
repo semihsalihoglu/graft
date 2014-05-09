@@ -1,0 +1,5 @@
+  private $class read$class#[[FromString]]#(String str) {
+    $class writable = $class#[[.class.newInstance();]]#
+    WritableUtils.readFieldsFromByteArray(str.getBytes(), writable);
+    return writable;
+  }
