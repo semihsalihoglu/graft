@@ -63,6 +63,17 @@ public class ServerUtils {
   }
 
   /*
+   * Returns the file name of the trace file given the three parameters.
+   */
+  public static String getTraceFileName(long superstepNo, String vertexId) {
+    return String.format("tr_stp_%d_vid_%s.tr", superstepNo, vertexId);
+  }
+  
+  public static String getTraceFilePath(String jobId, long superstepNo, String vertexId) {
+    return String.format("/%s/%s", jobId, ServerUtils.getTraceFileName(superstepNo, vertexId));
+  }
+  
+  /*
    * Reads the protocol buffer trace corresponding to the given jobId,
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
    * @param jobId : ID of the job debugged.
@@ -72,7 +83,7 @@ public class ServerUtils {
   public static GiraphScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
     String vertexId) throws IOException, ClassNotFoundException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = String.format("/%s/tr_stp_%d_vid_%s.tr", jobId, superstepNo, vertexId);
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId);
     GiraphScenearioSaverLoader giraphSaverLoader = new GiraphScenearioSaverLoader<>();
     GiraphScenarioWrapper giraphScenarioWrapper = giraphSaverLoader.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
@@ -81,7 +92,7 @@ public class ServerUtils {
   public static byte[] readTrace(String jobId, long superstepNo, String vertexId)
     throws IOException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = String.format("/%s/tr_stp_%d_vid_%s.tr", jobId, superstepNo, vertexId);
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId);
     byte[] data = IOUtils.toByteArray(fs.open(new Path(traceFilePath)));
     return data;
   }

@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -24,7 +26,6 @@ import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.Outg
 import sun.security.ssl.Debug;
 
 import com.google.common.net.HttpHeaders;
-import com.google.common.net.MediaType;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -114,11 +115,10 @@ public class Server {
 
   /*
    * Returns the scenario for a given superstep of a given job.
-   * @URLParams - {jobId, superstepId, [vertexId]}
+   * @URLParams - {jobId, superstepId, [vertexId], [raw]}
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
    * separated list. If it is not supplied, returns the scenario for all
-   * vertices. If Accept:application/octet-stream is supplied in the header,
-   * returns raw protocol buffer data.
+   * vertices. If 'raw' parameter is specified, returns the raw protocol buffer.
    */
   static class GetScenario extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
@@ -150,14 +150,20 @@ public class Server {
           vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
         }
         // Check if raw protocol buffers were requested.
-        if (this.responseMimeType == javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM) {
+        if (paramMap.get("raw") != null) {
           if (vertexIds.size() > 1) {
             this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
             this.response = "Raw protocol Buffers may only be returned with a single vertex.";
             return;
           }
+          String vertexId = vertexIds.get(0).trim();
+          this.responseContentType = MediaType.APPLICATION_OCTET_STREAM;
           this.statusCode = HttpURLConnection.HTTP_OK;
-          this.responseBytes = ServerUtils.readTrace(jobId, superstepNo, vertexIds.get(0).trim());
+          this.responseBytes = ServerUtils.readTrace(jobId, superstepNo, vertexId);
+          // Set this header to force a download with the given filename.
+          String fileName = String.format("%s_%s", jobId, 
+            ServerUtils.getTraceFileName(superstepNo, vertexId));
+          this.setResponseHeader("Content-disposition", "attachment; filename=" + fileName);
           return;
         }
         // Send JSON by default.
