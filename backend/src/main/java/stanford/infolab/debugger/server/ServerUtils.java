@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.File;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -51,17 +53,6 @@ public class ServerUtils {
   }
 
   /*
-   * Add mandatory headers to the HTTP response by the debugger server. MUST be
-   * called before sendResponseHeaders.
-   */
-  public static void setMandatoryResponseHeaders(Headers headers) {
-    // TODO(vikesh): **REMOVE CORS FOR ALL AFTER DECIDING THE DEPLOYMENT
-    // ENVIRONMENT**
-    headers.add("Access-Control-Allow-Origin", "*");
-    headers.add("Content-Type", "application/json");
-  }
-
-  /*
    * Returns the HDFS FileSystem reference.
    */
   public static FileSystem getFileSystem() throws IOException {
@@ -85,6 +76,14 @@ public class ServerUtils {
     GiraphScenearioSaverLoader giraphSaverLoader = new GiraphScenearioSaverLoader<>();
     GiraphScenarioWrapper giraphScenarioWrapper = giraphSaverLoader.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
+  }
+
+  public static byte[] readTrace(String jobId, long superstepNo, String vertexId)
+    throws IOException {
+    FileSystem fs = ServerUtils.getFileSystem();
+    String traceFilePath = String.format("/%s/tr_stp_%d_vid_%s.tr", jobId, superstepNo, vertexId);
+    byte[] data = IOUtils.toByteArray(fs.open(new Path(traceFilePath)));
+    return data;
   }
 
   /*
