@@ -313,6 +313,14 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     try {
       content = generator.generateTestCompute(scenario);
       type.createMethod(content, null, true, null);
+      
+      if (!generator.getUnsolvedWritableSet().isEmpty()) {
+        imports.addImport("org.apache.giraph.utils.WritableUtils");
+        for (Class unsolvedWritableClass : generator.getUnsolvedWritableSet()) {
+          content = generator.generateReadWritableFromString(unsolvedWritableClass.getSimpleName());
+          type.createMethod(content, null, true, null);
+        }
+      }
     } catch (VelocityException | IOException e) {
       e.printStackTrace();
     }
