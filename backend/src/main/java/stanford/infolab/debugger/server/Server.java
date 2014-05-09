@@ -9,8 +9,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.eclipse.jdt.core.dom.ThisExpression;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,7 +21,11 @@ import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+import sun.security.ssl.Debug;
 
+import com.google.common.net.HttpHeaders;
+import com.google.common.net.MediaType;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -44,8 +50,9 @@ public class Server {
    * @URLparams -{jobId}
    */
   static class GetJob extends ServerHttpHandler {
-    public void processRequest(HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
+      Debug.println("/job", paramMap.toString());
       if (jobId != null) {
         this.statusCode = HttpURLConnection.HTTP_OK;
         this.response = getSuperstepData(jobId);
@@ -53,7 +60,6 @@ public class Server {
         this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
         this.response = String.format("Invalid parameters. %s is mandatory parameter.",
           ServerUtils.JOB_ID_KEY);
-        ;
       }
     }
 
@@ -72,7 +78,7 @@ public class Server {
    * @URLParams: {jobId, superstepId}
    */
   static class GetVertices extends ServerHttpHandler {
-    public void processRequest(HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       try {
@@ -111,12 +117,14 @@ public class Server {
    * @URLParams - {jobId, superstepId, [vertexId]}
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
    * separated list. If it is not supplied, returns the scenario for all
-   * vertices.
+   * vertices. If Accept:application/octet-stream is supplied in the header,
+   * returns raw protocol buffer data.
    */
   static class GetScenario extends ServerHttpHandler {
-    public void processRequest(HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
+      Debug.println("/scenario", paramMap.toString());
       // Check both jobId and superstepId are present
       try {
         if (jobId == null || superstepId == null) {
@@ -125,7 +133,8 @@ public class Server {
         Long superstepNo = Long.parseLong(paramMap.get(ServerUtils.SUPERSTEP_ID_KEY));
         if (superstepNo < -1) {
           this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
-          this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
+          this.response = String.format("%s must be an integer >= -1.",
+            ServerUtils.SUPERSTEP_ID_KEY);
           return;
         }
         ArrayList<String> vertexIds = null;
@@ -140,6 +149,18 @@ public class Server {
           // Split the vertices by comma.
           vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
         }
+        // Check if raw protocol buffers were requested.
+        if (this.responseMimeType == javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM) {
+          if (vertexIds.size() > 1) {
+            this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+            this.response = "Raw protocol Buffers may only be returned with a single vertex.";
+            return;
+          }
+          this.statusCode = HttpURLConnection.HTTP_OK;
+          this.responseBytes = ServerUtils.readTrace(jobId, superstepNo, vertexIds.get(0).trim());
+          return;
+        }
+        // Send JSON by default.
         JSONObject scenarioObj = new JSONObject();
         for (String vertexId : vertexIds) {
           GiraphScenarioWrapper giraphScenarioWrapper;
