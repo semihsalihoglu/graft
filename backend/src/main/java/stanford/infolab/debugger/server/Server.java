@@ -114,10 +114,11 @@ public class Server {
 
   /*
    * Returns the scenario for a given superstep of a given job.
-   * @URLParams - {jobId, superstepId, [vertexId], [protoBuf]}
+   * @URLParams - {jobId, superstepId, [vertexId]}
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
    * separated list. If it is not supplied, returns the scenario for all
-   * vertices.
+   * vertices. If Accept:application/octet-stream is supplied in the header,
+   * returns raw protocol buffer data.
    */
   static class GetScenario extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
