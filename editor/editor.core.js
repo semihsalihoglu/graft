@@ -60,10 +60,8 @@ Editor.prototype.init = function() {
     // Handles to link and node element groups.
     this.path = this.svg.append('svg:g').selectAll('path'),
     this.circle = this.svg.append('svg:g').selectAll('g');
-
     // Initializes the force layout.
     this.initForce();
-
     this.restart();
 }
 
@@ -446,10 +444,10 @@ Editor.prototype.enableNode = function(nodeId) {
  * Disabled nodes are shown as slightly transparent with outgoing messages removed.
  */
 Editor.prototype.disableNode = function(nodeId) {
-    this.getNodeWithId(nodeId).enabled = true;
+    this.getNodeWithId(nodeId).enabled = false;
     // Remove the outgoing Messages for this node.
     var toSplice = this.messages.filter(function(message) {
-        return (message.source.id === nodeId);
+        return (message.sender.id === nodeId);
     });
 
     toSplice.map((function(message) {

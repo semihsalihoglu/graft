@@ -18,11 +18,18 @@ function GiraphDebugger(options) {
 
 // TODO(vikesh) Move to a different js file.
 function Utils() {}
+
 /*
- * Returns the name of the trace file on the debugger server.
+ * Counts the number of keys of a JSON object.
  */
-Utils.getTraceFileName = function(jobId, superstepId, vertexId) {
-    return "tr_" + jobId + "_stp_" + superstepId + "_vid_" + vertexId + ".tr";
+Utils.count = function(obj) {
+   var count=0;
+   for(var prop in obj) {
+      if (obj.hasOwnProperty(prop)) {
+         ++count;
+      }
+   }
+   return count;
 }
 
 /*
@@ -45,10 +52,10 @@ GiraphDebugger.prototype.init = function(options) {
     // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
     this.maxSuperstepNumber = 15;
     // Caches the scenarios to show correct information when going backwards.
-    this.scenarioCache = {};
-
+    // Cumulatively builds the state of the graph starting from the first superstep by merging
+    // scenarios on top of each other.
+    this.stateCache = {"-1":{}};
     this.debuggerServerRoot = 'http://localhost:8000';
-
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
     this.nodeAttrContainer = options.nodeAttrContainer;
@@ -341,7 +348,6 @@ GiraphDebugger.prototype.marshallScenarioForEditor = function (data) {
         // single element vertexValues array.
         newData[vertexId]['vertexValues'] = [data[vertexId]['vertexValue']];
     }
-    console.log(newData);
     return newData;
 }
 
@@ -356,28 +362,65 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     // Show preloader while AJAX request is in progress.
     this.editor.showPreloader();
 
-    // Fetch from the debugger server.
-    $.ajax({
-        url : this.debuggerServerRoot + '/scenario',
-        dataType : 'json',
-        data: { 'jobId' : jobId, 'superstepId' : superstepNumber }
-    })
-    .done((function(data) {
-        console.log(data);
-        this.jobData = $.extend(this.jobData, data);
-        this.editor.addToGraph(data);
-        this.editor.updateGraphData(this.marshallScenarioForEditor(data));
-        this.editor.hidePreloader();
-        this.editor.restart();
-        $(this.formFetchJob).hide();
-        $(this.formControls).show();
-    }).bind(this))
-    .fail(function(error) {
-        console.log(error);
-    });
-    this.editor.restart();
+    // If scenario is already cached, don't fetch again.
+    if (superstepNumber in this.stateCache) {
+        this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
+    } else {
+        // Fetch from the debugger server.
+        $.ajax({
+            url : this.debuggerServerRoot + '/scenario',
+            dataType : 'json',
+            data: { 'jobId' : jobId, 'superstepId' : superstepNumber }
+        })
+        .done((function(data) {
+            console.log(data);
+            // Add data to the state cache. 
+            // This method will only be called if this superstepNumber was not
+            // in the cache already. This method just overwrites without check.
+            // If this is the first time the graph is being generated, (count = 1)
+            // start from scratch - build from adjList.
+            if (Utils.count(this.stateCache) === 1) {
+                this.stateCache[superstepNumber] = $.extend({}, data);
+                this.editor.buildGraphFromAdjList(this.marshallScenarioForEditor(data));
+            } else {
+                // Merge this data onto superstepNumber - 1's data 
+                this.stateCache[superstepNumber] = this.mergeStates(this.stateCache[superstepNumber - 1], data);
+                this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
+            }
+            $(this.formFetchJob).hide();
+            $(this.formControls).show();
+        }).bind(this))
+        .fail(function(error) {
+            console.log(error);
+        });
+    }
+    // Superstep changed. Enable/Disable the prev/next buttons.
     $(this.btnNextStep).attr('disabled', superstepNumber === this.maxSuperstepNumber);
     $(this.btnPrevStep).attr('disabled', superstepNumber === this.minSuperstepNumber);
+}
+
+
+/*
+ * Modifies the editor for a given scenario.
+ */
+GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
+    console.log(scenario); 
+    // Add new nodes/links received in this scenario to graph.
+    this.editor.addToGraph(scenario);
+    // Update graph data with this scenario.
+    this.editor.updateGraphData(this.marshallScenarioForEditor(scenario));
+
+    // Disable the nodes that were not traced as part of this scenario.
+    for (var i = 0; i < this.editor.nodes.length; i++) {
+        var nodeId = this.editor.nodes[i].id;
+        if ((nodeId in scenario) && scenario[nodeId].debugged != false) {
+            this.editor.enableNode(nodeId);
+        } else {
+            this.editor.disableNode(nodeId);
+        }
+    }
+    this.editor.hidePreloader();
+    this.editor.restart();
 }
 
 /*
@@ -494,4 +537,25 @@ GiraphDebugger.prototype.showMessages = function(messageData) {
             messageData[nodeId] + '</td>');
         $('#node-attr-messages').append(tr);
     }
+}
+
+/*
+ * Merges deltaState on baseState. Merge implies ->
+ * Keep all the values of baseState but overwrite if deltaState
+ * has them too. If deltaState has some vertices not in baseState, add them.
+ */
+GiraphDebugger.prototype.mergeStates = function(baseState, deltaState) {
+    var newState = $.extend(true, {}, baseState);
+    // Start with marking all nodes in baseState as not debugged.
+    // Only nodes debugged in deltaState will be marked as debugged.
+    for (nodeId in baseState) {
+        newState[nodeId].debugged = false;    
+    }
+    for (nodeId in deltaState) {
+        // Add this node's properties from deltaState
+        newState[nodeId] = $.extend({}, deltaState[nodeId]);
+        // If nodeId was in deltaState, mark as debugged.
+        newState[nodeId].debugged = true;
+    }
+    return newState;
 }

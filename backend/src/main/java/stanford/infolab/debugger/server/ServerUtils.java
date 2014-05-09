@@ -33,6 +33,8 @@ public class ServerUtils {
   public static final String JOB_ID_KEY = "jobId";
   public static final String VERTEX_ID_KEY = "vertexId";
   public static final String SUPERSTEP_ID_KEY = "superstepId";
+  
+  private static final String TRACE_ROOT = "";
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -68,8 +70,18 @@ public class ServerUtils {
     return String.format("reg_stp_%d_vid_%s.tr", superstepNo, vertexId);
   }
   
+  /*
+   * Returns the root directory of the trace file. 
+   * For instance /giraph-traces/job_40/reg_xx_tr.tr
+   * Returns /giraph-traces/job_40
+   */
+  public static String getTraceFileRoot(String jobId, long superstepNo) {
+    return String.format("%s/%s", ServerUtils.TRACE_ROOT, jobId);
+  }
+  
   public static String getTraceFilePath(String jobId, long superstepNo, String vertexId) {
-    return String.format("/%s/%s", jobId, ServerUtils.getTraceFileName(superstepNo, vertexId));
+    return String.format("%s/%s", ServerUtils.getTraceFileRoot(jobId, superstepNo),
+      ServerUtils.getTraceFileName(superstepNo, vertexId));
   }
   
   /*
@@ -132,11 +144,11 @@ public class ServerUtils {
     throws IOException {
     ArrayList<String> vertexIds = new ArrayList<String>();
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceDirectory = String.format("/%s", jobId);
+    String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, superstepNo);
     // Use this regex to match the file name and capture the vertex id.
-    String regex = String.format("tr_stp_%d_vid_(.*?).tr$", superstepNo);
+    String regex = String.format("reg_stp_%d_vid_(.*?).tr$", superstepNo);
     Pattern p = Pattern.compile(regex);
-    Path pt = new Path(traceDirectory);
+    Path pt = new Path(traceFileRoot);
     // Iterate through each file in this directory and match the regex.
     for (FileStatus fileStatus : fs.listStatus(pt)) {
       String fileName = new File(fileStatus.getPath().toString()).toString();
