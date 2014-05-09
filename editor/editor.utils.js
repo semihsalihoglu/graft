@@ -441,12 +441,6 @@ Editor.prototype.restartNodes = function() {
     this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.2; });
     this.addNodes();
 
-    function truncateAttr(attr) {
-        if (attr.length > 9) {
-            
-        }
-    }
-
     // Update node IDs
     var el = this.circle.selectAll('text').text('');
     el.append('tspan')
