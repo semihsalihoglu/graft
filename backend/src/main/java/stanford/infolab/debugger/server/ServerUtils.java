@@ -21,7 +21,6 @@ import org.json.JSONObject;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
-import stanford.infolab.debugger.utils.GiraphScenearioSaverLoader;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
 
 import com.sun.net.httpserver.Headers;
@@ -73,8 +72,8 @@ public class ServerUtils {
     String vertexId) throws IOException, ClassNotFoundException {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = String.format("/%s/tr_stp_%d_vid_%s.tr", jobId, superstepNo, vertexId);
-    GiraphScenearioSaverLoader giraphSaverLoader = new GiraphScenearioSaverLoader<>();
-    GiraphScenarioWrapper giraphScenarioWrapper = giraphSaverLoader.loadFromHDFS(fs, traceFilePath);
+    GiraphScenarioWrapper giraphScenarioWrapper = new GiraphScenarioWrapper();
+//    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
 
