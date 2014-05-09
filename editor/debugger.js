@@ -16,6 +16,15 @@ function GiraphDebugger(options) {
     return this;
 }
 
+// TODO(vikesh) Move to a different js file.
+function Utils() {}
+/*
+ * Returns the name of the trace file on the debugger server.
+ */
+Utils.getTraceFileName = function(jobId, superstepId, vertexId) {
+    return "tr_" + jobId + "_stp_" + superstepId + "_vid_" + vertexId + ".tr";
+}
+
 /*
  * Initializes the graph editor, node attr modal DOM elements.
  */
@@ -35,6 +44,7 @@ GiraphDebugger.prototype.init = function(options) {
     // Maximum value of superstepNumber - Depends on the job.
     // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
     this.maxSuperstepNumber = 15;
+    this.debuggerServerRoot = 'http://localhost:8000';
 
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
@@ -60,7 +70,8 @@ GiraphDebugger.prototype.initIds = function() {
         _btnPrevStep : 'btn-prev-step',
         _btnNextStep : 'btn-next-step',
         _btnEditMode : 'btn-edit-mode',
-        _btnFetchJob : 'btn-fetch-job'
+        _btnFetchJob : 'btn-fetch-job',
+        _btnCaptureScenario : 'btn-capture-scenario'
     };
 }
 
@@ -247,6 +258,26 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         )
         .appendTo(controlsGroup);
 
+    // Capture Scenario group
+    var captureScenarioGroup = $('<div />')
+        .attr('class', 'form-group')
+        .appendTo(this.formControls);
+    
+    // Input text box to input the vertexId
+    this.captureVertexIdInput = $('<input>')
+        .attr('type', 'text')
+        .attr('class', 'form-control ')
+        .attr('placeholder', 'Vertex ID')
+        .appendTo(captureScenarioGroup);
+
+    // Capture Scenario button.
+    this.btnCaptureScenario = $('<button>')
+        .attr('type', 'button')
+        .attr('id', this.ids._btnCaptureScenario)
+        .attr('class', 'btn btn-primary form-control')
+        .html('Capture Scenario')
+        .appendTo(captureScenarioGroup);
+
     // Initialize handlers for events
     this.initSuperstepControlEvents();
 }
@@ -280,6 +311,29 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         this.currentSuperstepNumber -= 1;
         this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
     }).bind(this));
+
+    // Handle the capture scenario button the superstep controls.
+    $(this.btnCaptureScenario).click((function(event){
+        var vertexId = $(this.captureVertexIdInput).val();
+        $.ajax({
+            url :this.debuggerServerRoot + '/scenario',
+            data : { 'jobId' : this.currentJobId, 'superstepId' : this.currentSuperstepNumber, 
+                'vertexId' : vertexId },
+            headers : {
+                'Accept' : 'application/octet-stream'
+            }
+        })
+        .done((function(data) {
+            var pom = document.createElement('a');
+            pom.setAttribute('href', 'data:octect-stream,' + encodeURIComponent(data));
+            pom.setAttribute('download', 
+                Utils.getTraceFileName(this.currentJobId, this.currentSuperstepNumber, vertexId));
+            pom.click();
+        }).bind(this))
+        .fail(function(response) {
+            console.log(response);
+        });
+    }).bind(this));
 }
 
 /*
@@ -293,7 +347,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     this.editor.showPreloader();
     // Fetch from the debugger server.
     $.ajax({
-        url : 'http://localhost:8000/scenario',
+        url : this.debuggerServerRoot + '/scenario',
         dataType : 'json',
         data: { 'jobId' : jobId, 'superstepId' : superstepNumber }
     })

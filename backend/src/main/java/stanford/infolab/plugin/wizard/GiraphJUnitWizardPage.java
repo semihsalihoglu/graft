@@ -40,7 +40,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage;
 
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
-import stanford.infolab.debugger.utils.GiraphScenearioSaverLoader;
 import stanford.infolab.plugin.Activator;
 import stanford.infolab.plugin.mock.TestCaseGenerator;
 
@@ -225,13 +224,11 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
    * Called when the scenario filename changes. Load and validate the new scenario file.
    * @return
    */
+  @SuppressWarnings("rawtypes")
   protected IStatus scenarioFileChanged() {
-    fScenario = null;
-
-    @SuppressWarnings("rawtypes")
-    GiraphScenearioSaverLoader loader = new GiraphScenearioSaverLoader<>();
+    fScenario = new GiraphScenarioWrapper();
     try {
-      fScenario = loader.load(fScenarioFileName);
+      fScenario.load(fScenarioFileName);
     } catch (ClassNotFoundException | IOException e) {
       e.printStackTrace();
       return new Status(ERROR, Activator.PLUGIN_ID, "Can't load the scenario file!", e);

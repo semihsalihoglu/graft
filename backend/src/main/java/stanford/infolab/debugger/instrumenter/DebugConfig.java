@@ -18,7 +18,31 @@ import org.apache.hadoop.io.WritableComparable;
 public abstract class DebugConfig<I extends WritableComparable, V extends Writable,
   E extends Writable, M1 extends Writable, M2 extends Writable> {
 
-  public abstract boolean shouldDebugSuperstep(long superstepNo);
+  public boolean shouldDebugSuperstep(long superstepNo) {
+    return false;
+  }
   
-  public abstract boolean shouldDebugVertex(I vertexId);
+  public boolean shouldDebugVertex(I vertexId) {
+    return false;
+  }
+  
+  public boolean shouldCatchExceptions() {
+    return false;
+  }
+  
+  public boolean shouldCheckMessageIntegrity() {
+    return false;
+  }
+  
+  public boolean isMessageCorrecdt(I srcId, I dstId, M1 message) {
+    return true;
+  }
+
+  public boolean shouldCheckVertexValueIntegrity() {
+    return false;
+  }
+  
+  public boolean isVertexValueCorrect(I vertexId, V value) {
+    return true;
+  }
 }

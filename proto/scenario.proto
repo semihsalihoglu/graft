@@ -15,13 +15,15 @@ message GiraphScenario {
   required string outgoingMessageClass = 6;
   
   required Context context = 10;
+
+  optional Exception exception = 11;
   
   // Each context encapsulates a particular pair of inputs and outputs of Computation.compute().
   message Context {
     required int64 superstepNo = 1;
     required bytes vertexId = 2;
     required bytes vertexValueBefore = 3;
-    required bytes vertexValueAfter = 4;
+    optional bytes vertexValueAfter = 4;
     // TODO: We might have to break neighbor also to
     // neighborsBefore and neighborsAfter.
     repeated Neighbor neighbor = 5;
@@ -38,6 +40,11 @@ message GiraphScenario {
     message Neighbor {
       required bytes neighborId = 1;
       optional bytes edgeValue = 2;
-    }
+    }    
+  }
+  // Information related to the exception thrown.
+  message Exception {
+    required string message = 1;
+    required string stackTrace = 2;
   }
 }
