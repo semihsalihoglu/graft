@@ -14,23 +14,69 @@
     <project.build.targetJdk>1.7</project.build.targetJdk>
   </properties>
 
-<repositories>
-  <repository>
-    <id>my-local-repo</id>
-    <url>file://${top.dir}/my-repo</url>
-  </repository>
-</repositories>
+  <repositories>
+    <repository>
+      <id>my-local-repo</id>
+      <url>file://${top.dir}/my-repo</url>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>
+<!--
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.4</version>
         <configuration>
-          <descriptorRefs>
+//    <descriptors>
+//             <descriptor>assemble.xml</descriptor>
+//          </descriptors>
+
+            
+         <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
+
         </configuration>
       </plugin>
+-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+	      <artifactSet>
+                <excludes>
+		  <exclude>org.apache.velocity:velocity:*:jar</exclude>
+		  <exclude>org.eclipse.ui:*</exclude>
+		  <exclude>org.eclipse.core:*</exclude>
+		  <exclude>org.eclipse.core:*</exclude>
+		  <exclude>org.eclipse.swt.carbon:*</exclude>
+		  <exclude>org.eclipse.jdt:*</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -40,10 +86,11 @@
           <target>${project.build.targetJdk}</target>
         </configuration>
       </plugin>
-      <plugin>
-        <!-- NOTE: We don't need a groupId specification because the group is
-             org.apache.maven.plugins ...which is assumed by default.
-         -->
+
+<!--      <plugin>
+        // NOTE: We don't need a groupId specification because the group is
+        //     org.apache.maven.plugins ...which is assumed by default.
+         //
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.4</version>
         <configuration>
@@ -52,6 +99,7 @@
           </descriptorRefs>
         </configuration>
       </plugin>
+-->
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
@@ -90,17 +138,11 @@
      <groupId>org.apache.giraph</groupId>
      <artifactId>giraph-core-trunk</artifactId>
      <version>1.1.0</version>
-<!--      <scope>system</scope>
-      <systemPath>${giraph.dir}/giraph-core/target/giraph-1.1.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</systemPath>
--->
    </dependency>
    <dependency>
      <groupId>org.apache.giraph</groupId>
      <artifactId>giraph-examples-trunk</artifactId>
      <version>1.1.0</version>
-<!--      <scope>system</scope>
-      <systemPath>${giraph.dir}/giraph-examples/target/giraph-examples-1.1.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar</systemPath>
--->
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
@@ -108,37 +150,40 @@
      <version>1.2.1</version>
    </dependency>
    <dependency>
+     <groupId>org.mockito</groupId>
+     <artifactId>mockito-all</artifactId>
+     <version>1.9.5</version>
+   </dependency>
+   <dependency>
      <groupId>org.apache.velocity</groupId>
      <artifactId>velocity</artifactId>
      <version>1.7</version>
    </dependency>
-<dependency>
-  <groupId>org.eclipse.ui</groupId>
-  <artifactId>ide</artifactId>
-  <version>3.3.0-I20070620</version>
-</dependency>
+   <dependency>
+     <groupId>org.eclipse.ui</groupId>
+     <artifactId>ide</artifactId>
+     <version>3.3.0-I20070620</version>
+   </dependency>
    <dependency>
      <groupId>org.eclipse.core</groupId>
      <artifactId>org.eclipse.core.runtime</artifactId>
      <version>3.7.0</version>
    </dependency>
-<dependency>
-  <groupId>org.eclipse.core</groupId>
-  <artifactId>org.eclipse.core.resources</artifactId>
-  <version>3.7.100</version>
-</dependency>
-<dependency>
-  <groupId>org.eclipse.swt.carbon</groupId>
-  <artifactId>macosx</artifactId>
-  <version>3.3.0-v3346</version>
-</dependency>
-<dependency>
-  <groupId>org.eclipse.jdt</groupId>
-  <artifactId>ui</artifactId>
-  <version>3.3.0-v20070607-0010</version>
-</dependency>
-            
-
+   <dependency>
+     <groupId>org.eclipse.core</groupId>
+     <artifactId>org.eclipse.core.resources</artifactId>
+     <version>3.7.100</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.swt.carbon</groupId>
+     <artifactId>macosx</artifactId>
+     <version>3.3.0-v3346</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.jdt</groupId>
+     <artifactId>ui</artifactId>
+     <version>3.3.0-v20070607-0010</version>
+   </dependency>
    <dependency>
      <groupId>junit</groupId>
      <artifactId>junit</artifactId>

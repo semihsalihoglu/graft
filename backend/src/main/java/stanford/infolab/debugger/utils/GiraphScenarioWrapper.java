@@ -48,7 +48,7 @@ import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.Outg
 public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
   extends BaseWrapper<I> {
 
-  private Class<? extends Computation<I, V, E, M1, M2>> classUnderTest;
+  private Class<?> classUnderTest;
   private Class<V> vertexValueClass;
   private Class<E> edgeValueClass;
   private Class<M1> incomingMessageClass;
@@ -67,7 +67,7 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
       outgoingMessageClass);
   }
   
-  private void initialize(Class<? extends Computation<I, V, E, M1, M2>> classUnderTest,
+  private void initialize(Class<?> classUnderTest,
     Class<I> vertexIdClass, Class<V> vertexValueClass, Class<E> edgeValueClass,
     Class<M1> incomingMessageClass, Class<M2> outgoingMessageClass) {
     super.initialize(vertexIdClass);
@@ -78,7 +78,7 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     this.outgoingMessageClass = outgoingMessageClass;    
   }
 
-  public Class<? extends Computation<I, V, E, M1, M2>> getClassUnderTest() {
+  public Class<?> getClassUnderTest() {
     return classUnderTest;
   }
 
@@ -342,8 +342,13 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
   private void loadGiraphScneario(GiraphScenario giraphScenario)
     throws ClassNotFoundException, IOException {
     Class<?> clazz = Class.forName(giraphScenario.getClassUnderTest());
-    Class<? extends Computation<I, V, E, M1, M2>> classUnderTest = (Class<? extends Computation<I, V, E, M1, M2>>) castClassToUpperBound(
-      clazz, Computation.class);
+    Class<?> classUnderTest = 
+      castClassToUpperBound(clazz,
+        Computation.class);
+
+//    Class<? extends Computation<I, V, E, M1, M2>> classUnderTest = 
+//      (Class<? extends Computation<I, V, E, M1, M2>>) castClassToUpperBound(clazz,
+//        Computation.class);
 
     Class<I> vertexIdClass = (Class<I>) castClassToUpperBound(
       Class.forName(giraphScenario.getVertexIdClass()), WritableComparable.class);
