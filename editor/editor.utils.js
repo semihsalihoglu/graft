@@ -1,10 +1,3 @@
-//TODO(vikesh): Move to Utils
-Array.prototype.remove = function(from, to) {
-  var rest = this.slice((to || from) + 1 || this.length);
-  this.length = from < 0 ? this.length + from : from;
-  return this.push.apply(this, rest);
-};
-
 /*
  * Sets the size of the graph editing window.
  * The graph is always centered in the container according to these dimensions.
@@ -163,7 +156,18 @@ function getRadius(node) {
     // Radius is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    return 16 + Math.max(node.id.length, node.attrs.length > 0 ? node.attrs[0].toString().length : 0) * 3;
+    return 14 + Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
+}
+
+/*
+ * Truncates the attribute value so that it fits propertly on the editor node 
+ * without exploding the circle.
+ */
+function getAttrForDisplay(attr) {
+    if (attr.length > 11) {
+        return attr.slice(0, 4) + "..." + attr.slice(attr.length - 4);    
+    }
+    return attr;
 }
 
 /*
@@ -176,7 +180,7 @@ function getPadding(node) {
     // Offset is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? node.attrs[0].toString().length : 0) * 3;
+    var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
     return [19 + nodeOffset, 12  + nodeOffset];
 }
 
@@ -220,7 +224,7 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
  * @param {string} targetNodeid - Id of the target node in the logical edge.
  */
 Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
-    console.log('Adding edge: ' + sourceNodeId + ' -> ' + targetNodeId);
+    // console.log('Adding edge: ' + sourceNodeId + ' -> ' + targetNodeId);
     // Get the new link object.
     var newLink = this.getNewLink(sourceNodeId, targetNodeId);
     // Check if a link with these source and target Ids already exists.
@@ -434,8 +438,14 @@ Editor.prototype.restartNodes = function() {
         .attr('r', function(d) { return getRadius(d);  });
 
     // If node is not enabled, set its opacity to 0.2    
-    this.circle.style('opacity', function(d) { return d.enabled ? 1 : 0.2; });
+    this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.2; });
     this.addNodes();
+
+    function truncateAttr(attr) {
+        if (attr.length > 9) {
+            
+        }
+    }
 
     // Update node IDs
     var el = this.circle.selectAll('text').text('');
@@ -452,7 +462,7 @@ Editor.prototype.restartNodes = function() {
     // Node value (if present) is added/updated here
     el.append('tspan')
           .text(function(d) {
-              return d.attrs[0];
+              return d.attrs.length > 0 ? getAttrForDisplay(d.attrs[0]) : "";
           })
           .attr('x', 0)
           .attr('dy', function(d) {
