@@ -1,3 +1,10 @@
+//TODO(vikesh): Move to Utils
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
 /*
  * Sets the size of the graph editing window.
  * The graph is always centered in the container according to these dimensions.
@@ -178,7 +185,7 @@ function getPadding(node) {
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
-    return {id : id, reflexive : false, attrs : [], x: 0, y: 0};
+    return {id : id, reflexive : false, attrs : [], x: 0, y: 0, enabled: true};
 }
 
 /*
@@ -330,7 +337,8 @@ Editor.prototype.addNodes = function() {
     var g = this.circle.enter().append('svg:g');
 
     // Draw the new node.
-    g.append('svg:circle')
+    g.attr('class', 'node-container')
+         .append('svg:circle')
          .attr('class', 'node')
          .attr('r', (function(d) {
              return getRadius(d);
@@ -425,6 +433,8 @@ Editor.prototype.restartNodes = function() {
         .classed('reflexive', function(d) { return d.reflexive; })
         .attr('r', function(d) { return getRadius(d);  });
 
+    // If node is not enabled, set its opacity to 0.2    
+    this.circle.style('opacity', function(d) { return d.enabled ? 1 : 0.2; });
     this.addNodes();
 
     // Update node IDs

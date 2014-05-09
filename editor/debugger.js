@@ -44,6 +44,9 @@ GiraphDebugger.prototype.init = function(options) {
     // Maximum value of superstepNumber - Depends on the job.
     // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
     this.maxSuperstepNumber = 15;
+    // Caches the scenarios to show correct information when going backwards.
+    this.scenarioCache = {};
+
     this.debuggerServerRoot = 'http://localhost:8000';
 
     this.initIds();
@@ -315,25 +318,31 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     // Handle the capture scenario button the superstep controls.
     $(this.btnCaptureScenario).click((function(event){
         var vertexId = $(this.captureVertexIdInput).val();
-        $.ajax({
-            url :this.debuggerServerRoot + '/scenario',
-            data : { 'jobId' : this.currentJobId, 'superstepId' : this.currentSuperstepNumber, 
-                'vertexId' : vertexId },
-            headers : {
-                'Accept' : 'application/octet-stream'
-            }
-        })
-        .done((function(data) {
-            var pom = document.createElement('a');
-            pom.setAttribute('href', 'data:octect-stream,' + encodeURIComponent(data));
-            pom.setAttribute('download', 
-                Utils.getTraceFileName(this.currentJobId, this.currentSuperstepNumber, vertexId));
-            pom.click();
-        }).bind(this))
-        .fail(function(response) {
-            console.log(response);
+        var urlParams = $.param({
+                'jobId' : this.currentJobId,
+                'superstepId' : this.currentSuperstepNumber,
+                'vertexId' : vertexId,
+                'raw' : 'dummy'
         });
+        //console.log(urlParams);
+        location.href = this.debuggerServerRoot + "/scenario?" + urlParams;
     }).bind(this));
+}
+
+/*
+ * Marshalls the scenario JSON for the editor. There are minor differences
+ * in the schema of the editor and that returned by the debugger server. */
+GiraphDebugger.prototype.marshallScenarioForEditor = function (data) {
+    // Editor supports multiple attributes on each node, but
+    // debugger server only returns a single vertexValue.
+    var newData = $.extend({}, data);
+    for (vertexId in data) {
+        // Iterating over every vertex returned and creating a 
+        // single element vertexValues array.
+        newData[vertexId]['vertexValues'] = [data[vertexId]['vertexValue']];
+    }
+    console.log(newData);
+    return newData;
 }
 
 /*
@@ -342,9 +351,11 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
  * @param {int} superstepNumber : Superstep to fetch the data for.
  */
 GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
+    console.log("Changing Superstep to : " + superstepNumber);
     $(this.superstepLabel).html(superstepNumber);
     // Show preloader while AJAX request is in progress.
     this.editor.showPreloader();
+
     // Fetch from the debugger server.
     $.ajax({
         url : this.debuggerServerRoot + '/scenario',
@@ -355,7 +366,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
         console.log(data);
         this.jobData = $.extend(this.jobData, data);
         this.editor.addToGraph(data);
-        this.editor.updateGraphData(data);
+        this.editor.updateGraphData(this.marshallScenarioForEditor(data));
         this.editor.hidePreloader();
         this.editor.restart();
         $(this.formFetchJob).hide();

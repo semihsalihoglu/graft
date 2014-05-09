@@ -29,7 +29,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
   // Response status code. Please use HttpUrlConnection final static members.
   protected int statusCode;
   // MimeType of the response. Please use MediaType final static members.
-  protected String responseMimeType;
+  protected String responseContentType;
   // HttpExchange object received in the handle call.
   protected HttpExchange httpExchange;
 
@@ -40,11 +40,11 @@ public abstract class ServerHttpHandler implements HttpHandler {
   public void handle(HttpExchange httpExchange) throws IOException {
     // Assign class members so that subsequent methods can use it.
     this.httpExchange = httpExchange;
-    this.setResponseMimeType();
+    // Set application/json as the default content type.
+    this.responseContentType = MediaType.APPLICATION_JSON;
     String rawUrl = httpExchange.getRequestURI().getQuery();
     HashMap<String, String> paramMap;
     int statusCode;
-
     try {
       paramMap = ServerUtils.getUrlParams(rawUrl);
       // Call the method implemented by inherited classes.
@@ -56,51 +56,27 @@ public abstract class ServerHttpHandler implements HttpHandler {
     // In case of an error statusCode, we just write the exception string.
     // (Consider using JSON).
     if (this.statusCode != HttpURLConnection.HTTP_OK) {
-      this.responseMimeType = MediaType.TEXT_PLAIN;
+      this.responseContentType = MediaType.TEXT_PLAIN;
     }
     // Set mandatory Response Headers.
     this.setMandatoryResponseHeaders();
-    // Write Text Response if responeMimeType is json or if the statusCode is
-    // not OK.
-    if (this.responseMimeType == MediaType.APPLICATION_JSON 
-      || this.statusCode != HttpURLConnection.HTTP_OK) {
-      this.writeTextResponse();
-    } else {
-      this.writeByteResponse();
-    }
+    this.writeResponse();
   }
 
   /*
    * Writes the text response.
    */
-  private void writeTextResponse() throws IOException {
-    this.httpExchange.sendResponseHeaders(this.statusCode, this.response.length());
+  private void writeResponse() throws IOException {
     OutputStream os = this.httpExchange.getResponseBody();
-    os.write(this.response.getBytes());
-    os.close();
-  }
-
-  /*
-   * Writes bytes response.
-   */
-  private void writeByteResponse() throws IOException {
-    this.httpExchange.sendResponseHeaders(this.statusCode, this.responseBytes.length);
-    OutputStream os = this.httpExchange.getResponseBody();
-    os.write(this.responseBytes);
-    os.close();
-  }
-
-  private void setResponseMimeType() {
-    Headers requestHeaders = this.httpExchange.getRequestHeaders();
-    // Set default mime type as application/json
-    this.responseMimeType = MediaType.APPLICATION_JSON;
-    // Set response mime type as octet-stream, if requested.
-    if (requestHeaders.containsKey(HttpHeaders.ACCEPT)) {
-      List<String> contentTypes = requestHeaders.get(HttpHeaders.ACCEPT);
-      if (contentTypes.contains(MediaType.APPLICATION_OCTET_STREAM)) {
-        this.responseMimeType = MediaType.APPLICATION_OCTET_STREAM;
-      }
+    if (this.responseContentType == MediaType.APPLICATION_JSON 
+      || this.responseContentType == MediaType.TEXT_PLAIN) {
+      this.httpExchange.sendResponseHeaders(this.statusCode, this.response.length());
+      os.write(this.response.getBytes());
+    } else if(this.responseContentType == MediaType.APPLICATION_OCTET_STREAM) {
+      this.httpExchange.sendResponseHeaders(this.statusCode, this.responseBytes.length);
+      os.write(this.responseBytes);
     }
+    os.close();
   }
 
   /*
@@ -112,12 +88,25 @@ public abstract class ServerHttpHandler implements HttpHandler {
     // ENVIRONMENT**
     Headers headers = this.httpExchange.getResponseHeaders();
     headers.add("Access-Control-Allow-Origin", "*");
-    headers.add("Content-Type", this.responseMimeType);
+    headers.add("Content-Type", this.responseContentType);
   }
-
+  
+  /*
+   * Sets the given headerKey to the given headerValue.
+   * @param {String} headerKey - Header Key
+   * @param {String} headerValue - Header Value.
+   * @desc - For example, call like this to set the Content-disposition header
+   * setResponseHeader("Content-disposition", "attachment");
+   */
+  protected void setResponseHeader(String headerKey, String headerValue) {
+    Headers responseHeaders = this.httpExchange.getResponseHeaders();
+    responseHeaders.add(headerKey, headerValue);
+  }
   /*
    * Implement this method in inherited classes. This method MUST set statusCode
-   * and response class members appropriately.
+   * and response (or responseBytes) class members appropriately. In case the Content type
+   * is not JSON, must specify the new Content type. Default type is application/json.
+   * Non-200 Status is automatically assigned text/plain. 
    */
   public abstract void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap);
 }

@@ -368,21 +368,21 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
 }
 
 /*
- * Updates graph properties - node attributes and messages from adj list.
- * @param {object} graph - graph has the same format as adjList above,
+ * Updates scenario properties - node attributes and messages from adj list.
+ * @param {object} scenario - scenario has the same format as adjList above,
  * but with 'adj' ignored.
- * **NOTE**: This method assumes the same graph structure,
+ * **NOTE**: This method assumes the same scenario structure,
  * only updates the node attributes and messages exchanged.
  */
-Editor.prototype.updateGraphData = function(graph) {
+Editor.prototype.updateGraphData = function(scenario) {
     // Scan every node in adj list to build the nodes array.
-    for (var nodeId in graph) {
+    for (var nodeId in scenario) {
         var node = this.getNodeWithId(nodeId);
-        if (graph[nodeId]['vertexValues']) {
-            node.attrs = graph[nodeId]['vertexValues'];
+        if (scenario[nodeId]['vertexValues']) {
+            node.attrs = scenario[nodeId]['vertexValues'];
         }
-        var adj = graph[nodeId]['neighbors'];
-        var msgs = graph[nodeId]['outgoingMessages'];
+        var adj = scenario[nodeId]['neighbors'];
+        var msgs = scenario[nodeId]['outgoingMessages'];
         // Build this.messages
         if (msgs) {
             for(var receiverId in msgs) {
@@ -432,4 +432,27 @@ Editor.prototype.showPreloader = function() {
 Editor.prototype.hidePreloader = function() {
     this.svg.selectAll('g').transition().style('opacity', 1);
     this.preloader.transition().style('opacity', 0);
+}
+
+/*
+ * Enables the given node. Enabled nodes are shown as opaque.
+ */
+Editor.prototype.enableNode = function(nodeId) {
+    this.getNodeWithId(nodeId).enabled = true;
+}
+
+/*
+ * Disables the given node. 
+ * Disabled nodes are shown as slightly transparent with outgoing messages removed.
+ */
+Editor.prototype.disableNode = function(nodeId) {
+    this.getNodeWithId(nodeId).enabled = true;
+    // Remove the outgoing Messages for this node.
+    var toSplice = this.messages.filter(function(message) {
+        return (message.source.id === nodeId);
+    });
+
+    toSplice.map((function(message) {
+        this.messages.splice(this.messages.indexOf(message), 1);
+    }).bind(this));
 }
