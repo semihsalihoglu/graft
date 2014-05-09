@@ -13,6 +13,7 @@
 
     mockEnv = new MockedEnvironment<>();
     GraphState graphState = mockEnv.getGraphState();
+    when(graphState.getSuperstep()).thenReturn($superstepNo#[[l]]#);
     classUnderTest.initialize(graphState, mockEnv.getWorkerClientRequestProcessor(), null, null,
         null);
   }

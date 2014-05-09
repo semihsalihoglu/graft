@@ -115,6 +115,8 @@ public class TestCaseGenerator {
     context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
     context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
     context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
+    
+    context.put("superstepNo", input.getContextWrapper().getSuperstepNoWrapper());
 
     context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
     context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
