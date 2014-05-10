@@ -9,8 +9,8 @@
   <version>0.0-SNAPSHOT</version>
 
   <properties>
-    <top.dir>/Users/semihsalihoglu/projects/distributed_graph_debugger</top.dir>
-    <giraph.dir>/Users/semihsalihoglu/projects/giraph</giraph.dir>
+    <top.dir>${user.dir}/..</top.dir>
+    <giraph.dir>${user.dir}/../../giraph</giraph.dir>
     <project.build.targetJdk>1.7</project.build.targetJdk>
   </properties>
 
@@ -156,6 +156,11 @@
      <artifactId>junit</artifactId>
      <version>4.8.1</version>
      <scope>test</scope>
+   </dependency>
+   <dependency>
+     <groupId>javassist</groupId>
+     <artifactId>javassist</artifactId>
+     <version>3.12.1.GA</version>
    </dependency>
   </dependencies>
 </project>
