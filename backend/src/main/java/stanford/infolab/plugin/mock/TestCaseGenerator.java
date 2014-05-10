@@ -194,19 +194,19 @@ public class TestCaseGenerator {
       if (writable instanceof NullWritable) {
         return "NullWritable.get()";
       } else if (writable instanceof BooleanWritable) {
-        return String.format("new BooleanWritable(%s)", format(((BooleanWritable)writable).get()));
+        return String.format("new BooleanWritable(%s)", format(((BooleanWritable) writable).get()));
       } else if (writable instanceof ByteWritable) {
-        return String.format("new ByteWritable(%s)", format(((ByteWritable)writable).get()));
+        return String.format("new ByteWritable(%s)", format(((ByteWritable) writable).get()));
       } else if (writable instanceof IntWritable) {
-        return String.format("new IntWritable(%s)", format(((IntWritable)writable).get()));
+        return String.format("new IntWritable(%s)", format(((IntWritable) writable).get()));
       } else if (writable instanceof LongWritable) {
-        return String.format("new LongWritable(%s)", format(((LongWritable)writable).get()));
+        return String.format("new LongWritable(%s)", format(((LongWritable) writable).get()));
       } else if (writable instanceof FloatWritable) {
-        return String.format("new FloatWritable(%s)", format(((FloatWritable)writable).get()));
+        return String.format("new FloatWritable(%s)", format(((FloatWritable) writable).get()));
       } else if (writable instanceof DoubleWritable) {
-        return String.format("new DoubleWritable(%s)", format(((DoubleWritable)writable).get()));
+        return String.format("new DoubleWritable(%s)", format(((DoubleWritable) writable).get()));
       } else if (writable instanceof Text) {
-        return String.format("new Text(%s)", ((Text)writable).toString());
+        return String.format("new Text(%s)", ((Text) writable).toString());
       } else {
         unsolvedWritableSet.add(writable.getClass());
         String str = new String(WritableUtils.writeToByteArray(writable));
@@ -224,7 +224,7 @@ public class TestCaseGenerator {
       } else if (input instanceof Float) {
         return decimalFormat.format(input) + "f";
       } else if (input instanceof Double) {
-        double val = ((Double)input).doubleValue();
+        double val = ((Double) input).doubleValue();
         if (val == Double.MAX_VALUE)
           return "Double.MAX_VALUE";
         else if (val == Double.MIN_VALUE)
@@ -254,10 +254,6 @@ public class TestCaseGenerator {
     
     public Writable getValue() {
       return value;
-    }
-    
-    public String getClassName() {
-      return key.getClass().getName();
     }
   }
   
