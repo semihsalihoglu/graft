@@ -263,6 +263,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     imports.addImport("org.apache.giraph.edge.ReusableEdge");
     imports.addImport("org.apache.giraph.graph.GraphState");
     imports.addImport("org.apache.giraph.graph.Vertex");
+    imports.addImport("org.apache.giraph.worker.WorkerAggregatorUsage");
     imports.addImport("org.apache.giraph.utils.MockUtils.MockedEnvironment");
 
     HashSet<Class> usedTypes = new LinkedHashSet<>(6);

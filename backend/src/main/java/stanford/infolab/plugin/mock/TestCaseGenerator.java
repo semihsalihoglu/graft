@@ -3,8 +3,11 @@ package stanford.infolab.plugin.mock;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.giraph.utils.WritableUtils;
@@ -44,6 +47,7 @@ public class TestCaseGenerator {
     Velocity.init();
   }
   
+  @SuppressWarnings("rawtypes")
   public Set<Class> getUnsolvedWritableSet() {
     return unsolvedWritableSet;
   }
@@ -107,6 +111,7 @@ public class TestCaseGenerator {
   @SuppressWarnings("rawtypes")
   public String generateSetUp(GiraphScenarioWrapper input) throws VelocityException, IOException {
     VelocityContext context = new VelocityContext();
+    context.put("helper", new FormatHelper());
 
     context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
 
@@ -117,7 +122,20 @@ public class TestCaseGenerator {
     context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
     
     context.put("superstepNo", input.getContextWrapper().getSuperstepNoWrapper());
-
+    //TODO(brian): Use default values for now, change when data are available
+    context.put("nVertices", 1);
+    context.put("nEdges", 1);
+    
+    //TODO(brian): Use default values for now, change when data are available
+    List<Aggregator> aggregators = Arrays.asList(new Aggregator("testAggr", 
+        new DoubleWritable(1.0)));
+    context.put("aggregators", aggregators);
+    
+    //TODO(brian): Use default values for now, change when data are available
+    List<Config> configs = Arrays.asList(new Config("Epsilon", 0.01f), new Config("MaxSteps", 100), 
+        new Config("MaxError", 655.36f));
+    context.put("configs", configs);
+    
     context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
     context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
     context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
@@ -170,23 +188,23 @@ public class TestCaseGenerator {
   
   public class FormatHelper {
     
-    public String format(Writable writable) {
+    private DecimalFormat decimalFormat = new DecimalFormat("#.#####");
+    
+    public String formatWritable(Writable writable) {
       if (writable instanceof NullWritable) {
         return "NullWritable.get()";
       } else if (writable instanceof BooleanWritable) {
-        return String.format("new BooleanWritable(%b)", ((BooleanWritable)writable).get());
+        return String.format("new BooleanWritable(%s)", format(((BooleanWritable)writable).get()));
       } else if (writable instanceof ByteWritable) {
-        return String.format("new ByteWritable(%d)", ((ByteWritable)writable).get());
+        return String.format("new ByteWritable(%s)", format(((ByteWritable)writable).get()));
       } else if (writable instanceof IntWritable) {
-        return String.format("new IntWritable(%d)", ((IntWritable)writable).get());
+        return String.format("new IntWritable(%s)", format(((IntWritable)writable).get()));
       } else if (writable instanceof LongWritable) {
-        return String.format("new LongWritable(%dl)", ((LongWritable)writable).get());
+        return String.format("new LongWritable(%s)", format(((LongWritable)writable).get()));
       } else if (writable instanceof FloatWritable) {
-        BigDecimal bd = new BigDecimal(((FloatWritable)writable).get());
-        return String.format("new FloatWritable(%sf)", bd.toString());
+        return String.format("new FloatWritable(%s)", format(((FloatWritable)writable).get()));
       } else if (writable instanceof DoubleWritable) {
-        BigDecimal bd = new BigDecimal(((DoubleWritable)writable).get());
-        return String.format("new DoubleWritable(%sd)", bd.toString());
+        return String.format("new DoubleWritable(%s)", format(((DoubleWritable)writable).get()));
       } else if (writable instanceof Text) {
         return String.format("new Text(%s)", ((Text)writable).toString());
       } else {
@@ -195,6 +213,83 @@ public class TestCaseGenerator {
         return String.format("(%s)read%sFromString(\"%s\")", writable.getClass().getSimpleName(),
             writable.getClass().getSimpleName(), str);
       }
+    }
+    
+    public String format(Object input) {
+      if (input instanceof Boolean || input instanceof Byte || input instanceof Character ||
+          input instanceof Short || input instanceof Integer) {
+        return input.toString();
+      } else if (input instanceof Long) {
+        return input.toString() + "l";
+      } else if (input instanceof Float) {
+        return decimalFormat.format(input) + "f";
+      } else if (input instanceof Double) {
+        double val = ((Double)input).doubleValue();
+        if (val == Double.MAX_VALUE)
+          return "Double.MAX_VALUE";
+        else if (val == Double.MIN_VALUE)
+          return "Double.MIN_VALUE";
+        else {
+          BigDecimal bd = new BigDecimal(val);
+          return bd.toEngineeringString() + "d";
+        }
+      } else {
+        return input.toString();
+      }
+    }
+  }
+  
+  public static class Aggregator {
+    private String key;
+    private Writable value;
+    
+    public Aggregator(String key, Writable value) {
+      this.key = key;
+      this.value = value;
+    }
+    
+    public String getKey() {
+      return key;
+    }
+    
+    public Writable getValue() {
+      return value;
+    }
+    
+    public String getClassName() {
+      return key.getClass().getName();
+    }
+  }
+  
+  public static class Config {
+    private String key;
+    private Object value;
+    
+    public Config(String key, Object value) {
+      this.key = key;
+      this.value = value;
+    }
+    
+    public String getKey() {
+      return key;
+    }
+    
+    public Object getValue() {
+      return value;
+    }
+    
+    public String getClassStr() {
+      // TODO(brian):additional cases can be added up to the input
+      if (value instanceof Integer)
+        return "Int";
+      else if (value instanceof Long)
+        return "Long";
+      else if (value instanceof Float)
+        return "Float";
+      else if (value instanceof Boolean)
+        return "Boolean";
+      else 
+        return "";
     }
   }
 }
