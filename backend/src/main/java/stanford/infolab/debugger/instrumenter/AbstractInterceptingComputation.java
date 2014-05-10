@@ -63,6 +63,8 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private I vertexId;
   private static FileSystem fileSystem = null;
   private static int NUM_VIOLATIONS_TO_LOG = 10;
+
+private Class<? extends Computation<I,V,E,? extends Writable,? extends Writable>> computationClass;
   
   @SuppressWarnings("unchecked")
   @Override
@@ -74,6 +76,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     super.initialize(graphState, workerClientRequestProcessor, graphTaskManager,
       workerAggregatorUsage, workerContext);
 
+    computationClass = graphTaskManager.getConf().getComputationClass();
     String debugConfigFileName = DEBUG_CONFIG_CLASS.get(getConf());
     System.out.println("debugConfigFileName: " + debugConfigFileName);
     Class<?> clazz;
@@ -94,10 +97,14 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       throw new RuntimeException(e);
     }
   }
+  
+  public abstract void computeFurther(Vertex<I, V, E> vertex, Iterable<M1> messages)
+		  throws IOException;
 
-  public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
+  public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
     // We first figure out whether we should be debugging this vertex in this iteration.
     // Other calls will use the value of shouldDebugVertex later on.
+	  LOG.info("compute " + vertex + " " + messages);
     initDebugData(vertex, messages);
     try {
       computeFurther(vertex, messages);
@@ -158,8 +165,6 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       ExceptionUtils.getStackTrace(e)));
     saveGiraphWrapper(vertex, true /* is exception vertex */);
   }
-  public abstract void computeFurther(Vertex<I, V, E> vertex, Iterable<M1> messages)
-    throws IOException;
   
   /**
    * First intercepts the sent message if necessary and calls and then
@@ -265,5 +270,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     }
   }
   
-  public abstract Class<? extends Computation<I, V, E, M1, M2>> getActualTestedClass();
+  public Class<? extends Computation<I,V,E,? extends Writable,? extends Writable>> getActualTestedClass() {
+	  return computationClass;
+  }
 }
