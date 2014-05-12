@@ -1,20 +1,43 @@
-.valpanel-arrow-right {
-	margin: 10px;
-	float: right;
-}
-
-.valpanel-arrow-container {
-	height: 40px;
+.valpanel-icons-container {
+	height: 30px;
 	width: 100%;
+	margin: 5px 10px 5px 0px;
 }
 
-.btn-valpanel {
-	border-radius: 0;
-	margin: 5px 10px 5px 5px;
-	min-width: 40px;
-	text-align:center;
+.valpanel-icons-container * {
+	margin: 5px;
+	float:right;
 }
 
 .valpanel-btn-container {
 	margin : 2px 10px 10px 5px;
+	float: left;
+}
+
+.valpanel-btn-container button {
+	border-radius: 0;
+	margin: 5px 10px 5px 5px;
+	text-align: left;
+	width: 100%;
+	max-width: 140px; /* Must match .preview, .expand width */
+}
+
+.valpanel-btn-container.compact {
+	width : 40px;
+}
+
+.valpanel-btn-container.preview, .expand {
+	width : 140px;
+}
+
+.valpanel-btn-close {
+	cursor:pointer;
+}
+
+.valpanel-content-container {
+	overflow-y: auto;
+	width: 85%;
+	height: 85%;
+	margin-left: 10px;
+	float: left;
 }

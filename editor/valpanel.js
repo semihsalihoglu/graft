@@ -33,8 +33,8 @@ function ValidationPanel(options) {
     this.container = options.container;
     
     $(this.container).css('height', this.height + 'px')
-        .css('width', this.compactWidth + 'px');
     this.initElements();
+    this.compact();
 }
 
 ValidationPanel.StateEnum = {
@@ -47,30 +47,51 @@ ValidationPanel.StateEnum = {
  * Creates HTML elements for valpanel.
  */
 ValidationPanel.prototype.initElements = function() {
+    // Div to host the right arrow and close button on the top right.
+    var iconsContainer = $('<div />')
+                            .attr('class', 'valpanel-icons-container')
+                            .appendTo(this.container)
+
     // Create a right-pointed arrow
-    var rightArrow = $('<span />')
-        .attr('class', 'glyphicon glyphicon-circle-arrow-right valpanel-arrow-right')
-        .appendTo(
-            $("<div />")
-                .attr('class', 'valpanel-arrow-container')
-                .appendTo(this.container)
-        );
+    this.rightArrow = $('<span />')
+        .attr('class', 'glyphicon glyphicon-circle-arrow-right')
+        .appendTo(iconsContainer);
+
+    // Create a close button - Clicking it will compact the panel.
+    this.btnClose = $('<span />')
+        .attr('class', 'glyphicon glyphicon-remove valpanel-btn-close')
+        .click((function() { 
+            this.compact(); 
+        }).bind(this))
+        .hide()
+        .appendTo(iconsContainer);
 
     // Create all the buttons.
-    var buttonList = $("<ul />")
+    this.btnContainer = $('<ul />')
         .attr('class', 'list-unstyled valpanel-btn-container')    
         .appendTo(this.container);
 
+    // This is the container for the main content.
+    this.contentContainer = $('<div />')
+        .attr('class', 'valpanel-content-container')
+        .hide()
+        .appendTo(this.container);
+
     for (var label in this.buttonData) {
-        var button = $("<button />")
+        var button = $('<button />')
                         .attr('class', 'btn btn-success btn-valpanel')
                         .attr('id', this.btnLabelToId(label))
-                        .data('label', label)
-                        .html(label)
                         .click(this.buttonData[label]['clickHandler']);
+        var iconSpan = $('<span />')
+            .appendTo(button);
+        var textSpan = $("<span />")
+            .html(' ' + label)
+            .appendTo(button);
         // Associate this physical button element with the cache entry.
         this.buttonData[label].button = button;
-        $(buttonList).append(
+        this.buttonData[label].iconSpan = iconSpan;
+        this.buttonData[label].textSpan = textSpan;
+        $(this.btnContainer).append(
             $("<li />").append(button)
         );
     }
@@ -84,13 +105,20 @@ ValidationPanel.prototype.btnLabelToId = function(label) {
  * Expands the width of the panel to show full names of each of the buttons.
  */
 ValidationPanel.prototype.preview = function() {
-    // Set state to preview.
-    this.state = ValidationPanel.StateEnum.PREVIEW;
-    $(this.container).animate({ width: this.previewWidth + 'px'}, 300);
-    // Expand names to full names 
-    for (var label in this.buttonData) {
-        var buttonData = this.buttonData[label];
-        $(buttonData['button']).html(buttonData['fullName']);
+    if (!$(this.container).is(':animated')) {
+        // Set state to preview.
+        this.btnContainer.removeClass(this.state);
+        this.state = ValidationPanel.StateEnum.PREVIEW;
+        this.btnContainer.addClass(this.state);
+        $(this.btnClose).hide();
+        $(this.contentContainer).hide();
+        $(this.container).animate({ width: this.previewWidth + 'px'}, 300);
+
+        // Expand names to full names 
+        for (var label in this.buttonData) {
+            var buttonData = this.buttonData[label];
+            $(buttonData.textSpan).html(buttonData.fullName);
+        }
     }
 }
 
@@ -98,25 +126,40 @@ ValidationPanel.prototype.preview = function() {
  * Compacts the width of the panel to show only the labels of the buttons.
  */
 ValidationPanel.prototype.compact = function() {
-    this.state = ValidationPanel.StateEnum.COMPACT;
-    $(this.container).animate({ width: this.compactWidth + 'px'}, 300,
-        (function() {
-        // Expand names to full names 
-        for (var label in this.buttonData) {
-            var buttonData = this.buttonData[label];
-            $(buttonData['button']).html(label);
-        }    
-    }).bind(this));
+    if (!$(this.container).is(':animated')) {
+        var prevState = this.state;
+        this.state = ValidationPanel.StateEnum.COMPACT;
+        $(this.btnClose).hide();
+        $(this.rightArrow).show();
+        $(this.contentContainer).hide();
+        $(this.container).animate({ width: this.compactWidth + 'px'}, 300,
+            (function() {
+                // Compact names to labels.
+                for (var label in this.buttonData) {
+                    var buttonData = this.buttonData[label];
+                    $(buttonData.textSpan).html(label);
+                }    
+                this.btnContainer.removeClass(prevState);
+                this.btnContainer.addClass(this.state);
+        }).bind(this));
+    }
 }
 
 ValidationPanel.prototype.expand = function() {
+    this.btnContainer.removeClass(this.state);
     this.state = ValidationPanel.StateEnum.EXPAND;
+    this.btnContainer.addClass(this.state);
+    // Show close button, hide right arrow, show content.
+    $(this.btnClose).show();
+    $(this.rightArrow).hide();
     $(this.container).animate({ width: this.expandWidth + '%'}, 500,
-        function() {
-            console.log('hell');
-    });
+        (function() {
+            $(this.contentContainer).show('slow');
+        }).bind(this));
 }
 
 ValidationPanel.prototype.dummy = function() {
     this.expand();
+    this.contentContainer.empty();
+    this.contentContainer.html("Hello WOrld");
 }
