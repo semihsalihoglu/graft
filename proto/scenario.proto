@@ -1,5 +1,7 @@
 package stanford.infolab.debugger;
 
+import "giraph_aggregator.proto";
+
 message GiraphScenario {
   // The class under test. Must implement org.apache.giraph.graph.Computation interface.
   required string classUnderTest = 1;
@@ -13,6 +15,7 @@ message GiraphScenario {
   required string incomingMessageClass = 5;
   // The outgoing message class (usually denoted as M2). Must implement org.apache.hadoop.io.Writable.
   required string outgoingMessageClass = 6;
+  required bytes conf = 9;
   
   required Context context = 10;
 
@@ -21,15 +24,18 @@ message GiraphScenario {
   // Each context encapsulates a particular pair of inputs and outputs of Computation.compute().
   message Context {
     required int64 superstepNo = 1;
-    required bytes vertexId = 2;
-    required bytes vertexValueBefore = 3;
-    optional bytes vertexValueAfter = 4;
+    required int64 totalNumVertices = 2;
+    required int64 totalNumEdges = 3;  
+    required bytes vertexId = 4;
+    required bytes vertexValueBefore = 5;
+    optional bytes vertexValueAfter = 6;
     // TODO: We might have to break neighbor also to
     // neighborsBefore and neighborsAfter.
-    repeated Neighbor neighbor = 5;
-    repeated bytes inMessage = 6;
-    repeated OutMsg outMessage = 7;    
-    
+    repeated Neighbor neighbor = 7;
+    repeated bytes inMessage = 8;
+    repeated OutMsg outMessage = 9;    
+    repeated AggregatedValue previousAggregatedValue = 10;
+     
     // Messages sent by the current vertex.
     message OutMsg {
       required bytes destinationId = 1;

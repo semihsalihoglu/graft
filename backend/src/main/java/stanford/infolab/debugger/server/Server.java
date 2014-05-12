@@ -184,7 +184,7 @@ public class Server {
       } catch (ClassNotFoundException e) {
         this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
         this.response = "Internal Server Error";
-      } catch (IOException e) {
+      } catch (IOException|InstantiationException|IllegalAccessException e) {
         this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
         this.response = "Could not read the debug trace for this vertex.";
       } catch (JSONException e) {

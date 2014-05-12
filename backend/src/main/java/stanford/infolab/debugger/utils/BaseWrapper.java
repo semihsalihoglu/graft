@@ -2,8 +2,10 @@ package stanford.infolab.debugger.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.giraph.utils.ReflectionUtils;
 import org.apache.giraph.utils.WritableUtils;
@@ -11,34 +13,17 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-
-import stanford.infolab.debugger.Scenario.GiraphScenario;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;
 
-public abstract class BaseWrapper<I extends WritableComparable> {
-  Class<I> vertexIdClass;
+/** 
+ * Base class for all wrapper classes that wrap a protobuf.
+ * 
+ * @author semihsalihoglu
+ */
+public abstract class BaseWrapper {
 
-  BaseWrapper() {};
-  public BaseWrapper(Class<I> vertexIdClass) {
-    initialize(vertexIdClass);
-  }
-  
-  public void initialize(Class<I> vertexIdClass) {
-    this.vertexIdClass = vertexIdClass;
-  }
-
-  public Class<I> getVertexIdClass() {
-    return vertexIdClass;
-  }
-  
-  @Override
-  public String toString() {
-    return "\nvertexIdClass: " + getVertexIdClass().getCanonicalName();
-  }
-  
   <T extends Writable> T makeCloneOf(T actualWritable, Class<T> clazz) {
     T idCopy = newInstance(clazz);
     // Return value is null if clazz is assignable to NullWritable.
@@ -103,4 +88,18 @@ public abstract class BaseWrapper<I extends WritableComparable> {
   
   public abstract GeneratedMessage buildProtoObject();
 
+  public void load(String fileName) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+    loadFromProto(parseProtoFromInputStream(new FileInputStream(fileName)));
+  }
+
+  public void loadFromHDFS(FileSystem fs, String fileName) throws ClassNotFoundException,
+    IOException, InstantiationException, IllegalAccessException {
+    loadFromProto(parseProtoFromInputStream(fs.open(new Path(fileName))));
+  }
+  
+  public abstract GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+    throws IOException ;
+
+  public abstract void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
+    IOException, InstantiationException, IllegalAccessException;
 }

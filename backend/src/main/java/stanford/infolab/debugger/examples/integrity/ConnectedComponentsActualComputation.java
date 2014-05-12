@@ -43,14 +43,10 @@ public class ConnectedComponentsActualComputation extends
     int currentComponent = vertex.getValue().get();
 
     if (getSuperstep() == 0) {
-        vertex.setValue(new IntWritable(currentComponent));
-        for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
-          IntWritable neighbor = edge.getTargetVertexId();
-          if (neighbor.get() > currentComponent) {
-            sendMessage(neighbor, vertex.getValue());
-          }
+      vertex.setValue(new IntWritable(currentComponent));
+      for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
+        sendMessage(edge.getTargetVertexId(), vertex.getValue());
       }
-
       vertex.voteToHalt();
       return;
     }
@@ -61,6 +57,8 @@ public class ConnectedComponentsActualComputation extends
       int candidateComponent = message.get();
       // INTENTIONAL BUG: in the original algorithm the value of the comparison sign should be <.
       if (candidateComponent > currentComponent) {
+        System.out.println("changing value in superstep: " + getSuperstep() + " vertex.id: "
+          + vertex.getId() +  " newComponent: "+ candidateComponent);
         currentComponent = candidateComponent;
         changed = true;
       }
@@ -69,7 +67,9 @@ public class ConnectedComponentsActualComputation extends
     // propagate new component id to the neighbors
     if (changed) {
       vertex.setValue(new IntWritable(currentComponent));
-      sendMessageToAllEdges(vertex, vertex.getValue());
+      for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
+        sendMessage(edge.getTargetVertexId(), vertex.getValue());        
+      }
     }
     vertex.voteToHalt();
   }

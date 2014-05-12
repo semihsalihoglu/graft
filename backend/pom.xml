@@ -78,7 +78,8 @@
                <mkdir dir="target/generated-sources"/>
                <exec executable="protoc">
                  <arg value="--java_out=target/generated-sources"/>
-                 <arg value="--proto_path=${top.dir}/proto/"/>
+                 <arg value="--proto_path=${top.dir}/proto/"/> 
+                 <arg value="${top.dir}/proto/giraph_aggregator.proto"/>
                  <arg value="${top.dir}/proto/scenario.proto"/>
                  <arg value="${top.dir}/proto/integrity.proto"/>
                <!-- mvn compile assembly:single;  -->

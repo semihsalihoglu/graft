@@ -229,7 +229,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     fScenario = new GiraphScenarioWrapper();
     try {
       fScenario.load(fScenarioFileName);
-    } catch (ClassNotFoundException | IOException e) {
+    } catch (ClassNotFoundException|IOException|InstantiationException|IllegalAccessException e) {
       e.printStackTrace();
       return new Status(ERROR, Activator.PLUGIN_ID, "Can't load the scenario file!", e);
     }

@@ -2,6 +2,7 @@
 package stanford.infolab.debugger.examples.simpledebug;
 
 import org.apache.giraph.Algorithm;
+import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.conf.LongConfOption;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
@@ -47,10 +48,19 @@ public class SimpleShortestPathsActualComputation extends BasicComputation<
   public void compute(
       Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
       Iterable<DoubleWritable> messages) throws IOException {
-    if (getSuperstep() == 0) {
-      vertex.setValue(new DoubleWritable(Double.MAX_VALUE));
+    // We do a dummy read of the aggregator below because for now we only intercept an aggregator
+    // if at least one vertex reads it.
+    LongSumAggregator aggregator = getAggregatedValue(
+      SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    if (aggregator != null) {
+      System.out.println("NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR: "
+        + aggregator.getAggregatedValue().get());
     }
-    double minDist = isSource(vertex) ? 0d : Double.MAX_VALUE;
+    if (getSuperstep() == 0) {
+      vertex.setValue(new DoubleWritable(isSource(vertex) ? 0d : Double.MAX_VALUE));
+    }
+    double previousValue = vertex.getValue().get();
+    double minDist = previousValue;
     for (DoubleWritable message : messages) {
       minDist = Math.min(minDist, message.get());
     }
@@ -70,6 +80,10 @@ public class SimpleShortestPathsActualComputation extends BasicComputation<
         // we send the vertex value.
         sendMessage(edge.getTargetVertexId(), new DoubleWritable(minDist));
       }
+    }
+    if (previousValue > 3 && minDist <= 3) {
+      aggregate(SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR, 
+        new LongWritable(1));
     }
     vertex.voteToHalt();
   }
