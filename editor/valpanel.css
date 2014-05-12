@@ -1,0 +1,20 @@
+.valpanel-arrow-right {
+	margin: 10px;
+	float: right;
+}
+
+.valpanel-arrow-container {
+	height: 40px;
+	width: 100%;
+}
+
+.btn-valpanel {
+	border-radius: 0;
+	margin: 5px 10px 5px 5px;
+	min-width: 40px;
+	text-align:center;
+}
+
+.valpanel-btn-container {
+	margin : 2px 10px 10px 5px;
+}

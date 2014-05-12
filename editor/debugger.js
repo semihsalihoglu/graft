@@ -4,8 +4,8 @@
 
 /*
  * Debugger is a class that encapsulates the graph editor and debugging controls.
- * @param {editorContainer, nodeAttrContainer} options - Initialize debugger with these options.
- * @param options.editorContainer - Selector for the container of the graph editor.
+ * @param {debuggerContainer, nodeAttrContainer} options - Initialize debugger with these options.
+ * @param options.debuggerContainer - Selector for the container of the main debugger area. (Editor & Valpanel)
  * @param options.nodeAttrContainer - Selector for the container of the node attr modal.
  * @param options.superstepControlsContainer - Selector for the container of the superstep controls.
  * @constructor
@@ -36,10 +36,29 @@ Utils.count = function(obj) {
  * Initializes the graph editor, node attr modal DOM elements.
  */
 GiraphDebugger.prototype.init = function(options) {
+    this.editorContainerId = 'editor-container';
+    this.valpanelId = 'valpanel-container';
+
+    // Create divs for valpanel and editor.
+    var valpanelContainer = $('<div />')
+        .attr('class', 'valpanel debug-control')
+        .attr('id', this.valpanelId)
+        .appendTo(options.debuggerContainer);
+
+    var editorContainer = $('<div />')
+        .attr('id', this.editorContainerId)
+        .attr('class', 'debug-control')
+        .appendTo(options.debuggerContainer);
+
     // Instantiate the editor object.
     this.editor = new Editor({
-        'container' : options.editorContainer,
+        'container' : '#' + this.editorContainerId,
         'dblnode' : this.openNodeAttrs.bind(this)
+    });
+
+    // Instantiate the valpanel object.
+    this.valpanel = new ValidationPanel({
+            'container' : '#' + this.valpanelId
     });
 
     // Initialize current superstep to -2 (Not in debug mode)
@@ -453,6 +472,19 @@ GiraphDebugger.prototype.initElements = function() {
             this.editor.getMessagesSentByNode(this.selectedNodeId) :
             this.editor.getMessagesReceivedByNode(this.selectedNodeId);
         this.showMessages(messageData);
+    }).bind(this));
+    // Attach mouseenter event for valpanel - Preview (Expand to the right)
+    $(this.valpanel.container).mouseenter((function(event) {
+        if (this.valpanel.state === ValidationPanel.StateEnum.COMPACT) {
+            this.valpanel.preview();
+        }
+    }).bind(this));
+    // Attach mouseleave event for valpanel - Compact (Compact to the left)
+    $(this.valpanel.container).mouseleave((function(event) {
+        // The user must click the close button to compact from the expanded mode.
+        if (this.valpanel.state != ValidationPanel.StateEnum.EXPAND) {
+            this.valpanel.compact();
+        }
     }).bind(this));
 }
 
