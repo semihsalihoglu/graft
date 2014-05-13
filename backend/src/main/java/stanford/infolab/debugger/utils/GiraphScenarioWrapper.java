@@ -476,6 +476,7 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     giraphScenarioBuilder.setEdgeValueClass(getEdgeValueClass().getName());
     giraphScenarioBuilder.setIncomingMessageClass(getIncomingMessageClass().getName());
     giraphScenarioBuilder.setOutgoingMessageClass(getOutgoingMessageClass().getName());
+    giraphScenarioBuilder.setConf(toByteString(immutableClassesConfig));
 
     GiraphScenarioWrapper<I, V, E, M1, M2>.ContextWrapper contextWrapper = getContextWrapper();
     Context.Builder contextBuilder = Context.newBuilder();
@@ -522,7 +523,6 @@ public class GiraphScenarioWrapper<I extends WritableComparable, V extends Writa
     }
 
     giraphScenarioBuilder.setContext(contextBuilder.build());
-    giraphScenarioBuilder.setConf(toByteString(immutableClassesConfig));
     if (hasExceptionWrapper()) {
       GiraphScenario.Exception.Builder exceptionBuilder = GiraphScenario.Exception.newBuilder();
       exceptionBuilder.setMessage(getExceptionWrapper().getErrorMessage());
