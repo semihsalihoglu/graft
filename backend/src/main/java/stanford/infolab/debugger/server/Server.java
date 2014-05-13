@@ -130,7 +130,7 @@ public class Server {
         if (jobId == null) {
           throw new IllegalArgumentException("Missing mandatory params.");
         }
-        ArrayList<String> superstepIds = null;
+        ArrayList<Long> superstepIds = null;
         // May throw IOException. Handled below.
         superstepIds = ServerUtils.getSuperstepsDebugged(jobId);
         this.statusCode = HttpURLConnection.HTTP_OK;

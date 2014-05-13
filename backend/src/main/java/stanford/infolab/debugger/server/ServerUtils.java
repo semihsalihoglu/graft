@@ -311,8 +311,8 @@ public class ServerUtils {
    * Returns the list of supersteps for which there is an exception or
    * regular trace.
    */
-  public static ArrayList<String> getSuperstepsDebugged(String jobId) throws IOException {
-      ArrayList<String> superstepIds = new ArrayList<String>();
+  public static ArrayList<Long> getSuperstepsDebugged(String jobId) throws IOException {
+      ArrayList<Long> superstepIds = new ArrayList<Long>();
       FileSystem fs = ServerUtils.getFileSystem();
       String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, DebugTrace.REGULAR);
       // Use this regex to match the file name and capture the vertex id.
@@ -325,7 +325,7 @@ public class ServerUtils {
         Matcher m = p.matcher(fileName);
         // Add this vertex id if there is a match.
         if (m.find()) {
-          superstepIds.add(m.group(2));
+          superstepIds.add(Long.parseLong(m.group(2)));
         }
       }
       return superstepIds;

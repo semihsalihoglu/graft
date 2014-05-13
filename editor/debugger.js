@@ -372,6 +372,15 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     // Update data of the valpanel
     this.valpanel.setData(jobId, superstepNumber);
 
+    // Fetch the max number of supersteps again. (Online case)
+    $.ajax({
+            url : this.debuggerServerRoot + "/supersteps",
+            data : {'jobId' : this.currentJobId}
+    })
+    .done((function(response) {
+        this.maxSuperstepNumber = Math.max.apply(Math, response);
+    }).bind(this));
+
     // If scenario is already cached, don't fetch again.
     if (superstepNumber in this.stateCache) {
         this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
