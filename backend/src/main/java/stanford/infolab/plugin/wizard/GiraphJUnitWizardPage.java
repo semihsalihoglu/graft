@@ -258,6 +258,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     imports.addStaticImport("org.mockito.Mockito", "*", false);
     imports.addImport("java.io.IOException");
     imports.addImport("java.util.ArrayList");
+    imports.addImport("org.apache.giraph.comm.WorkerClientRequestProcessor");
     imports.addImport("org.apache.giraph.conf.GiraphConfiguration");
     imports.addImport("org.apache.giraph.conf.ImmutableClassesGiraphConfiguration");
     imports.addImport("org.apache.giraph.edge.ReusableEdge");
@@ -296,6 +297,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
       type.createField(generator.generateClassUnderTestField(scenario), null, true, null);
       type.createField(generator.generateConfField(scenario), null, true, null);
       type.createField(generator.generateMockEnvField(scenario), null, true, null);
+      type.createField(generator.generateProcessorField(scenario), null, true, null);
 
       content = generator.generateSetUp(scenario);
       type.createMethod(content, null, true, null);

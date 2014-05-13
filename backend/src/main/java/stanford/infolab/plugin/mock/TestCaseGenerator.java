@@ -4,10 +4,14 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.giraph.utils.WritableUtils;
@@ -29,6 +33,7 @@ import org.apache.velocity.exception.VelocityException;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
+import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
 
 /**
  * This is a code generator which can generate the JUnit test cases for a Giraph.
@@ -107,6 +112,13 @@ public class TestCaseGenerator {
         scenario.getVertexIdClass().getSimpleName(), scenario.getVertexValueClass().getSimpleName(),
         scenario.getEdgeValueClass().getSimpleName(), scenario.getOutgoingMessageClass().getSimpleName());
   }
+  
+  @SuppressWarnings("rawtypes")
+  public String generateProcessorField(GiraphScenarioWrapper scenario) {
+    return String.format("private WorkerClientRequestProcessor<%s, %s, %s> processor;", 
+        scenario.getVertexIdClass().getSimpleName(), scenario.getVertexValueClass().getSimpleName(),
+        scenario.getEdgeValueClass().getSimpleName());
+  }
 
   @SuppressWarnings("rawtypes")
   public String generateSetUp(GiraphScenarioWrapper input) throws VelocityException, IOException {
@@ -122,18 +134,22 @@ public class TestCaseGenerator {
     context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
     
     context.put("superstepNo", input.getContextWrapper().getSuperstepNoWrapper());
-    //TODO(brian): Use default values for now, change when data are available
-    context.put("nVertices", 1);
-    context.put("nEdges", 1);
+    context.put("nVertices", input.getContextWrapper().getTotalNumVerticesWrapper());
+    context.put("nEdges", input.getContextWrapper().getTotalNumEdgesWrapper());
+    
+//    List<Aggregator> aggregators = Arrays.asList(new Aggregator("testAggr", 
+//        new DoubleWritable(1.0)));
+    context.put("aggregators", input.getContextWrapper().getPreviousAggregatedValues());
     
     //TODO(brian): Use default values for now, change when data are available
-    List<Aggregator> aggregators = Arrays.asList(new Aggregator("testAggr", 
-        new DoubleWritable(1.0)));
-    context.put("aggregators", aggregators);
-    
-    //TODO(brian): Use default values for now, change when data are available
-    List<Config> configs = Arrays.asList(new Config("Epsilon", 0.01f), new Config("MaxSteps", 100), 
-        new Config("MaxError", 655.36f));
+//    List<Config> configs = Arrays.asList(new Config("Epsilon", 0.01f), new Config("MaxSteps", 100), 
+//        new Config("MaxError", 655.36f));
+    List<Config> configs = new ArrayList<>();
+    for (Iterator<Entry<String,String>> configIter = input.getConfig().iterator();
+        configIter.hasNext(); ) {
+      Entry<String,String> entry = configIter.next();
+      configs.add(new Config(entry.getKey(), entry.getValue()));
+    }
     context.put("configs", configs);
     
     context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
@@ -148,7 +164,7 @@ public class TestCaseGenerator {
     }
   }
   
-  @SuppressWarnings({"rawtypes"})
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public String generateTestCompute(GiraphScenarioWrapper input) throws VelocityException, IOException {
     unsolvedWritableSet.clear();
     
@@ -165,8 +181,19 @@ public class TestCaseGenerator {
     
     context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
     context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
+    context.put("vertexValueAfter", input.getContextWrapper().getVertexValueAfterWrapper());
     context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
     context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
+    
+    HashMap<OutgoingMessageWrapper, OutMsg> outMsgMap = new HashMap<>();
+    for (OutgoingMessageWrapper msg : 
+        (Collection<OutgoingMessageWrapper>)input.getContextWrapper().getOutgoingMessageWrappers()) {
+      if (outMsgMap.containsKey(msg))
+        outMsgMap.get(msg).incrementTimes();
+      else
+        outMsgMap.put(msg, new OutMsg(msg));
+    }
+    context.put("outMsgs", outMsgMap.values());
     
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("TestComputeTemplate.vm");
@@ -239,24 +266,6 @@ public class TestCaseGenerator {
     }
   }
   
-  public static class Aggregator {
-    private String key;
-    private Writable value;
-    
-    public Aggregator(String key, Writable value) {
-      this.key = key;
-      this.value = value;
-    }
-    
-    public String getKey() {
-      return key;
-    }
-    
-    public Writable getValue() {
-      return value;
-    }
-  }
-  
   public static class Config {
     private String key;
     private Object value;
@@ -271,7 +280,10 @@ public class TestCaseGenerator {
     }
     
     public Object getValue() {
-      return value;
+      if (value instanceof String)
+        return "\"" + value + '"';
+      else
+        return value;
     }
     
     public String getClassStr() {
@@ -286,6 +298,29 @@ public class TestCaseGenerator {
         return "Boolean";
       else 
         return "";
+    }
+  }
+  
+  @SuppressWarnings("rawtypes")
+  public static class OutMsg {
+    private OutgoingMessageWrapper msg;
+    private int times;
+    
+    public OutMsg(OutgoingMessageWrapper msg) {
+      this.msg = msg;
+      this.times = 1;
+    }
+    
+    public OutgoingMessageWrapper getMsg() {
+      return msg;
+    }
+    
+    public int getTimes() {
+      return times;
+    }
+    
+    public void incrementTimes() {
+      this.times++;
     }
   }
 }
