@@ -34,7 +34,7 @@ public abstract class DebugConfig<I extends WritableComparable, V extends Writab
     return false;
   }
   
-  public boolean isMessageCorrecdt(I srcId, I dstId, M1 message) {
+  public boolean isMessageCorrect(I srcId, I dstId, M1 message) {
     return true;
   }
 

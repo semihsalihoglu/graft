@@ -1,13 +1,11 @@
 package stanford.infolab.debugger.utils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -27,7 +25,7 @@ import com.google.protobuf.GeneratedMessage;
  */
 @SuppressWarnings("rawtypes")
 public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 extends Writable> 
-  extends BaseWrapper<I>{
+  extends BaseScenarioAndIntegrityWrapper<I>{
 
   private Class<M2> outgoingMessageClass;
   private List<ExtendedOutgoingMessageWrapper> msgWrappers = new ArrayList<>();
@@ -121,22 +119,10 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
     return messageIntegrityViolationBuilder.build();
   }
 
-  public void load(String fileName) throws ClassNotFoundException, IOException {
-    MessageIntegrityViolation msgIntegrityViolation = MessageIntegrityViolation.parseFrom(
-      new FileInputStream(fileName));
-    loadFromMsgIntegrityViolation(msgIntegrityViolation);
-  }
-
-  public void loadFromHDFS(FileSystem fs, String fileName) throws ClassNotFoundException,
-    IOException {
-    MessageIntegrityViolation msgIntegrityViolation = MessageIntegrityViolation.parseFrom(
-      fs.open(new Path(fileName)));
-    loadFromMsgIntegrityViolation(msgIntegrityViolation);
-  }
-
   @SuppressWarnings("unchecked")
-  private void loadFromMsgIntegrityViolation(MessageIntegrityViolation msgIntegrityViolation)
-    throws ClassNotFoundException, IOException {
+  public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
+    IOException {
+    MessageIntegrityViolation msgIntegrityViolation = (MessageIntegrityViolation) generatedMessage;
     Class<I> vertexIdClass = (Class<I>) castClassToUpperBound(
       Class.forName(msgIntegrityViolation.getVertexIdClass()), WritableComparable.class);
 
@@ -155,5 +141,10 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
       fromByteString(outmsg.getMsgData(), msg);
       addMsgWrapper(srcId, destinationId, msg);
     }
+  }
+
+  @Override
+  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+    return MessageIntegrityViolation.parseFrom(inputStream);
   }
 }

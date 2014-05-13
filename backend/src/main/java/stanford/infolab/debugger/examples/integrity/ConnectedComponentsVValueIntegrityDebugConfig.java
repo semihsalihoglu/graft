@@ -12,7 +12,7 @@ import stanford.infolab.debugger.instrumenter.DebugConfig;
  * 
  * @author semihsalihoglu
  */
-public class CopyOfConnectedComponentsVValueIntegrityDebugConfig extends DebugConfig<IntWritable,
+public class ConnectedComponentsVValueIntegrityDebugConfig extends DebugConfig<IntWritable,
   IntWritable, NullWritable, IntWritable, IntWritable> {
 
   @Override
@@ -22,6 +22,6 @@ public class CopyOfConnectedComponentsVValueIntegrityDebugConfig extends DebugCo
   
   @Override
   public boolean isVertexValueCorrect(IntWritable vertexId, IntWritable value) {
-    return false; //value.get() < vertexId.get();
+    return value.get() <= vertexId.get();
   }
 }

@@ -14,8 +14,8 @@ import org.apache.hadoop.fs.Path;
  */
 public class GiraphDebugTraceReader {
 
-  public static void main(String[] args) throws IOException, ClassNotFoundException {
-    String traceDir = "/giraph-debug-traces/job_201405072208_0009/";
+  public static void main(String[] args) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+    String traceDir = "/giraph-debug-traces/job_201405120024_0010/";
     System.out.println("traceDir: " + traceDir);
     String coreSitePath = "/Users/semihsalihoglu/projects/hadoop-1.2.1/conf/core-site.xml";
     Configuration configuration = new Configuration();
@@ -25,8 +25,8 @@ public class GiraphDebugTraceReader {
     for (FileStatus fileStatus: fs.listStatus(pt)) {
 //      System.out.println("reading trace: " + fileStatus.getPath());
       GiraphScenarioWrapper scenarioWrapper = new GiraphScenarioWrapper();
-      scenarioWrapper.load("/Users/semihsalihoglu/Downloads/tr_job0_stp_0_vid_0.tr");
-//      scenarioWrapper.loadFromHDFS(fs, fileStatus.getPath().toString());
+//      scenarioWrapper.load("/Users/semihsalihoglu/Downloads/download");
+      scenarioWrapper.loadFromHDFS(fs, fileStatus.getPath().toString());
       System.out.println(scenarioWrapper);
 
 //      MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = new MsgIntegrityViolationWrapper();

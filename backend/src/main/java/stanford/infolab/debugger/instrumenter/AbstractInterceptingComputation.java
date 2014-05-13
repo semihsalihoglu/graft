@@ -3,6 +3,7 @@ package stanford.infolab.debugger.instrumenter;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
@@ -23,6 +24,7 @@ import org.apache.log4j.Logger;
 
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ExceptionWrapper;
+import stanford.infolab.debugger.utils.AggregatedValueWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
 import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
 
@@ -59,10 +61,17 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private GiraphScenarioWrapper<I, V, E, M1, M2> giraphScenarioWrapper;
   private MsgIntegrityViolationWrapper<I, M2> msgIntegrityViolationWrapper;
   private VertexValueIntegrityViolationWrapper<I, V> vertexValueIntegrityViolationWrapper;
-  // We store it here in case some functions need it.
+  // We store the vertexId here in case some functions need it.
   private I vertexId;
   private static FileSystem fileSystem = null;
+  // Contains previous aggregators that are available in the beginning of the superstep.
+  // In Giraph, these aggregators are immutable.
+  // NOTE: We currently only capture aggregators that are read by at least one vertex.
+  // If we want to capture all aggregators we need to change Giraph code to be get access to them.
+  private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
   private static int NUM_VIOLATIONS_TO_LOG = 10;
+
+private Class<? extends Computation<I,V,E,? extends Writable,? extends Writable>> computationClass;
   
   @SuppressWarnings("unchecked")
   @Override
@@ -74,6 +83,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     super.initialize(graphState, workerClientRequestProcessor, graphTaskManager,
       workerAggregatorUsage, workerContext);
 
+    computationClass = graphTaskManager.getConf().getComputationClass();
     String debugConfigFileName = DEBUG_CONFIG_CLASS.get(getConf());
     System.out.println("debugConfigFileName: " + debugConfigFileName);
     Class<?> clazz;
@@ -94,10 +104,14 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       throw new RuntimeException(e);
     }
   }
+  
+  public abstract void computeFurther(Vertex<I, V, E> vertex, Iterable<M1> messages)
+		  throws IOException;
 
-  public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
+  public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
     // We first figure out whether we should be debugging this vertex in this iteration.
     // Other calls will use the value of shouldDebugVertex later on.
+	  LOG.info("compute " + vertex + " " + messages);
     initDebugData(vertex, messages);
     try {
       computeFurther(vertex, messages);
@@ -135,10 +149,14 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
 
   private void initGiraphScenario() {
     giraphScenarioWrapper = new GiraphScenarioWrapper(getActualTestedClass(),
-      (Class<I>) vertexIdClazz, 
-      (Class<V>) vertexValueClazz, (Class<E>) edgeValueClazz, (Class<M1>) incomingMessageClazz,
-      (Class<M2>) outgoingMessageClazz);
+      (Class<I>) vertexIdClazz, (Class<V>) vertexValueClazz, (Class<E>) edgeValueClazz,
+      (Class<M1>) incomingMessageClazz, (Class<M2>) outgoingMessageClazz);
+    giraphScenarioWrapper.setConfig(getConf());
     giraphScenarioWrapper.setContextWrapper(giraphScenarioWrapper.new ContextWrapper());
+    giraphScenarioWrapper.getContextWrapper().setPreviousAggregatedValues(
+      previousAggregatedValueWrappers);
+    giraphScenarioWrapper.getContextWrapper().setTotalNumVerticesWrapper(getTotalNumVertices());
+    giraphScenarioWrapper.getContextWrapper().setTotalNumEdgesWrapper(getTotalNumEdges());
   }
 
   private void saveGiraphWrapper(Vertex<I, V, E> vertex, boolean isExceptionVertex)
@@ -158,8 +176,6 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       ExceptionUtils.getStackTrace(e)));
     saveGiraphWrapper(vertex, true /* is exception vertex */);
   }
-  public abstract void computeFurther(Vertex<I, V, E> vertex, Iterable<M1> messages)
-    throws IOException;
   
   /**
    * First intercepts the sent message if necessary and calls and then
@@ -175,9 +191,8 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       giraphScenarioWrapper.getContextWrapper().addOutgoingMessageWrapper(id, message);
     }
     if (debugConfig.shouldCheckMessageIntegrity() &&
-      !debugConfig.isMessageCorrecdt(id, vertexId, message) &&
+      !debugConfig.isMessageCorrect(id, vertexId, message) &&
       msgIntegrityViolationWrapper.numMsgWrappers() <= NUM_VIOLATIONS_TO_LOG) {
-      System.out.println("adding a message to msgIntegrityViolationWrapper");
       msgIntegrityViolationWrapper.addMsgWrapper(vertexId, id, message);
     }
     super.sendMessage(id, message);
@@ -225,6 +240,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
         throw new RuntimeException(e);
       }
     }
+    previousAggregatedValueWrappers = new ArrayList<AggregatedValueWrapper>();
     if (debugConfig.shouldCheckMessageIntegrity()) {
       System.out.println("creating a msgIntegrityViolationWrapper. superstepNo: " + getSuperstep());
       msgIntegrityViolationWrapper = new MsgIntegrityViolationWrapper<>((Class<I>) vertexIdClazz,
@@ -265,5 +281,26 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     }
   }
   
-  public abstract Class<? extends Computation<I, V, E, M1, M2>> getActualTestedClass();
+  public Class<? extends Computation<I,V,E,? extends Writable,? extends Writable>> getActualTestedClass() {
+	  return computationClass;
+  }
+
+  @Override
+  public <A extends Writable> A getAggregatedValue(String name) {
+    A retVal = super.<A>getAggregatedValue(name);
+    if (getPreviousAggregatedValueWrapper(name) == null && retVal != null) {
+      previousAggregatedValueWrappers.add(new AggregatedValueWrapper(name, retVal));
+    }
+    return retVal;
+  }
+
+  private AggregatedValueWrapper getPreviousAggregatedValueWrapper(String key) {
+    for (AggregatedValueWrapper previousAggregatedValueWrapper
+      : previousAggregatedValueWrappers) {
+      if (key.equals(previousAggregatedValueWrapper.getKey())) {
+        return previousAggregatedValueWrapper;
+      }
+    }
+    return null;
+  }
 }

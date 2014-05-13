@@ -229,7 +229,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     fScenario = new GiraphScenarioWrapper();
     try {
       fScenario.load(fScenarioFileName);
-    } catch (ClassNotFoundException | IOException e) {
+    } catch (ClassNotFoundException|IOException|InstantiationException|IllegalAccessException e) {
       e.printStackTrace();
       return new Status(ERROR, Activator.PLUGIN_ID, "Can't load the scenario file!", e);
     }
@@ -263,6 +263,7 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     imports.addImport("org.apache.giraph.edge.ReusableEdge");
     imports.addImport("org.apache.giraph.graph.GraphState");
     imports.addImport("org.apache.giraph.graph.Vertex");
+    imports.addImport("org.apache.giraph.worker.WorkerAggregatorUsage");
     imports.addImport("org.apache.giraph.utils.MockUtils.MockedEnvironment");
 
     HashSet<Class> usedTypes = new LinkedHashSet<>(6);
@@ -313,6 +314,14 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     try {
       content = generator.generateTestCompute(scenario);
       type.createMethod(content, null, true, null);
+      
+      if (!generator.getUnsolvedWritableSet().isEmpty()) {
+        imports.addImport("org.apache.giraph.utils.WritableUtils");
+        for (Class unsolvedWritableClass : generator.getUnsolvedWritableSet()) {
+          content = generator.generateReadWritableFromString(unsolvedWritableClass.getSimpleName());
+          type.createMethod(content, null, true, null);
+        }
+      }
     } catch (VelocityException | IOException e) {
       e.printStackTrace();
     }

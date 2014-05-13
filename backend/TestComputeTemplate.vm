@@ -2,20 +2,20 @@
   public final void testCompute() {
     try {
       Vertex<$vertexIdType, $vertexValueType, $edgeValueType> vertex = conf.createVertex();
-      vertex.initialize(new $vertexIdType($vertexId), new $vertexValueType($vertexValue));
+      vertex.initialize($helper.formatWritable($vertexId), $helper.formatWritable($vertexValue));
       
 #if ($neighbors)
       ReusableEdge<$vertexIdType, $edgeValueType> edge = conf.createReusableEdge();
 #foreach ($neighbor in $neighbors)
-      edge.setTargetVertexId(new $vertexIdType($neighbor.NbrId));
-      edge.setValue(new $edgeValueType($neighbor.edgeValue));
+      edge.setTargetVertexId($helper.formatWritable($neighbor.NbrId));
+      edge.setValue($helper.formatWritable($neighbor.edgeValue));
       vertex.addEdge(edge);
 #end
 #end
 
       ArrayList<$inMsgType> inMsgs = new ArrayList<>();
 #foreach ($inMsg in $inMsgs)
-      inMsgs.add(new $inMsgType($inMsg));   
+      inMsgs.add($helper.formatWritable($inMsg));   
 #end
 
       classUnderTest.compute(vertex, inMsgs);
@@ -28,7 +28,7 @@
       // mockEnv.verifyMessageSentToAllEdges(vertex, outMessage);
 
       // $vertexValueType outMessage = new $outMsgType();
-      // mockEnv.verifyMessageSent(new $vertexIdType($vertexId), outMessage);
+      // mockEnv.verifyMessageSent($helper.formatWritable($vertexId), outMessage);
     } catch (IOException e) {
       e.printStackTrace();
     }

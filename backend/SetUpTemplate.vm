@@ -7,12 +7,25 @@
     GiraphConfiguration.EDGE_VALUE_CLASS.set(config, $edgeValueType#[[.class]]#);
     GiraphConfiguration.INCOMING_MESSAGE_VALUE_CLASS.set(config, $inMsgType#[[.class]]#);
     GiraphConfiguration.OUTGOING_MESSAGE_VALUE_CLASS.set(config, $outMsgType#[[.class]]#);
+#foreach( $config in $configs )
+    conf.set#evaluate($config.classStr)("$config.key", $helper.format($config.value));
+#end
     conf = new ImmutableClassesGiraphConfiguration<>(config);
 
     classUnderTest = ($classUnderTestName) conf.createComputation();
 
     mockEnv = new MockedEnvironment<>();
     GraphState graphState = mockEnv.getGraphState();
-    classUnderTest.initialize(graphState, mockEnv.getWorkerClientRequestProcessor(), null, null,
+    when(graphState.getSuperstep()).thenReturn($superstepNo#[[l]]#);
+    when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
+    when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
+    
+    WorkerAggregatorUsage aggr = mock(WorkerAggregatorUsage.class);
+#foreach ($aggr in $aggregators)
+    when(aggr.getAggregatedValue("$aggr.key")).thenReturn($helper.formatWritable($aggr.value));
+#end
+
+    classUnderTest.initialize(graphState, mockEnv.getWorkerClientRequestProcessor(), null, aggr,
         null);
+        
   }

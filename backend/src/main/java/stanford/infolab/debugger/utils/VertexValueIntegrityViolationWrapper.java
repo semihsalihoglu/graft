@@ -1,13 +1,11 @@
 package stanford.infolab.debugger.utils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -27,7 +25,7 @@ import com.google.protobuf.GeneratedMessage;
  */
 @SuppressWarnings("rawtypes")
 public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, V extends Writable> 
-  extends BaseWrapper<I>{
+  extends BaseScenarioAndIntegrityWrapper<I>{
 
   private Class<V> vertexValueClass;
   private List<VertexIdValuePairWrapper> vertexIdValuePairWrappers = new ArrayList<>();
@@ -116,23 +114,18 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
     return vertexValueIntegrityViolationBuilder.build();
   }
 
-  public void load(String fileName) throws ClassNotFoundException, IOException {
-    VertexValueIntegrityViolation vertexValueIntegrityViolation = VertexValueIntegrityViolation
-      .parseFrom(new FileInputStream(fileName));
-    loadFromVertexValueIntegrityViolation(vertexValueIntegrityViolation);
-  }
-
-  public void loadFromHDFS(FileSystem fs, String fileName) throws ClassNotFoundException,
-    IOException {
-    VertexValueIntegrityViolation vertexValueIntegrityViolation = VertexValueIntegrityViolation
-      .parseFrom(fs.open(new Path(fileName)));
-    loadFromVertexValueIntegrityViolation(vertexValueIntegrityViolation);
+  @Override
+  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+    return VertexValueIntegrityViolation.parseFrom(inputStream);
   }
 
   @SuppressWarnings("unchecked")
-  private void loadFromVertexValueIntegrityViolation(
-    VertexValueIntegrityViolation vertexValueIntegrityViolation) throws ClassNotFoundException,
+  @Override
+  public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
     IOException {
+    VertexValueIntegrityViolation vertexValueIntegrityViolation =
+      (VertexValueIntegrityViolation) protoObject;
+    
     Class<I> vertexIdClass = (Class<I>) castClassToUpperBound(
       Class.forName(vertexValueIntegrityViolation.getVertexIdClass()), WritableComparable.class);
 

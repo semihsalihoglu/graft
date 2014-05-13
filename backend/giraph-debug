@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# giraph-debug -- a script for launching Giraph jar with our debugger
+# 
+# To debug your Giraph computation, simply run:
+# 
+#   giraph-debug DEBUG_CONFIG_CLASS \
+#       JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
+#       COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
+# 
+# Instead of running GiraphRunner with the hadoop jar command:
+# 
+#   hadoop jar \
+#       JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
+#       COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
+# 
+#
+# Author: Jaeho Shin <netj@cs.stanford.edu>
+# Created: 2014-05-09
+set -eu
+
+# XXX default option for testing
+#opts=(
+#    target/backend-0.0-SNAPSHOT.jar
+#    org.apache.giraph.GiraphRunner
+#    #stanford.infolab.debugger.examples.simpledebug.SimpleShortestPathsActualComputation
+#    org.apache.giraph.examples.SimpleShortestPathsComputation
+#    -vif org.apache.giraph.io.formats.JsonLongDoubleFloatDoubleVertexInputFormat
+#    -vip g
+#    -vof org.apache.giraph.io.formats.IdWithValueTextOutputFormat
+#    -op out/giraph_debugger_output/tiny_graph_sssp.$$
+#    -w 1
+#    -ca giraph.SplitMasterWorker=false,dbgcfg=stanford.infolab.debugger.examples.simpledebug.SimpleShortestPathsDebugConfig
+#)
+#[ $# -gt 0 ] || set -- "${opts[@]}"
+
+
+# show usage unless we have enough arguments
+usage() { sed -n '2,/^#$/ s/^# //p' <"$0"; }
+if [ $# -lt 3 ]; then
+    usage
+    exit 1
+fi
+
+# parse arguments
+debugConfigClassName=$1; shift
+# TODO provide a default and make debugConfigClassName optional? by detecting whether it's a file or not?
+jarFile=$1; shift
+giraphRunnerClass=$1
+case $giraphRunnerClass in
+    org.apache.giraph.GiraphRunner) ;;
+    *)
+        #usage
+        echo >&2 "Error: Unrecognized way to start Giraph job"
+        echo >&2 "Only the following form is supported:"
+        echo >&2
+        echo >&2 "  $0 CONFIG_CLASSNAME JARFILE org.apache.giraph.GiraphRunner COMPUTATION_CLASSNAME ..."
+        echo >&2
+        exit 1
+esac
+# skip hadoop jar options
+hadoopJarOpts=(
+$giraphRunnerClass
+-D dbgcfg="$debugConfigClassName" # pass the class name for debug configuration
+)
+while shift; do
+    case $1 in
+        -conf|-D|-fs|-jt|-files|-libjars|-archives)
+            hadoopJarOpts+=("$1"); shift ;;
+        -D?*) ;;
+        *) break
+    esac
+    hadoopJarOpts+=("$1")
+done
+origClassName=$1; shift
+
+set -x # XXX REMOVE ME LATER
+
+# set up environment
+export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
+
+# first, instrument the given class
+classNameSuffix=
+tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/InstrumentJar.XXXXXX")
+trap 'rm -rf "$tmpDir"' EXIT
+java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" -Dgiraph.debugger.classNameSuffix="$classNameSuffix" \
+    stanford.infolab.debugger.instrumenter.InstrumentJar \
+        "$origClassName" "$tmpDir"/classes
+instrumentedClassName="$origClassName$classNameSuffix"
+
+# next, create a new jar that contains all the instrumented code
+instrumentedJarFile="$tmpDir/$(basename "$jarFile" .jar)-instrumented.jar"
+cp -f "$jarFile" "$instrumentedJarFile"
+jar uf "$instrumentedJarFile" -C "$tmpDir"/classes .
+runJar=$instrumentedJarFile
+# TODO can we create a thin new jar and send it with -libjars to shadow the original classes?
+#jar cf "$instrumentedJarFile" -C "$tmpDir"/classes .
+#runJar=$jarFile
+#hadoopJarOpts+=(-libjars "$instrumentedJarFile")
+
+# submit a job to run the new instrumented jar with the original
+HADOOP_CLASSPATH="$runJar:$HADOOP_CLASSPATH"
+hadoop jar "$runJar" "${hadoopJarOpts[@]}" \
+    "$instrumentedClassName" "$@"

@@ -24,6 +24,7 @@ import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.Neig
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
 
 import com.sun.net.httpserver.Headers;
+
 import java.util.regex.Matcher;
 
 /*
@@ -34,7 +35,7 @@ public class ServerUtils {
   public static final String VERTEX_ID_KEY = "vertexId";
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   
-  private static final String TRACE_ROOT = "";
+  private static final String TRACE_ROOT = "/giraph-debug-traces";
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -57,7 +58,7 @@ public class ServerUtils {
    * Returns the HDFS FileSystem reference.
    */
   public static FileSystem getFileSystem() throws IOException {
-    String coreSitePath = "/usr/local/hadoop/conf/core-site.xml";
+    String coreSitePath = "/Users/semihsalihoglu/projects/hadoop-1.2.1/conf/core-site.xml";
     Configuration configuration = new Configuration();
     configuration.addResource(new Path(coreSitePath));
     return FileSystem.get(configuration);
@@ -92,7 +93,8 @@ public class ServerUtils {
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
    */
   public static GiraphScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
-    String vertexId) throws IOException, ClassNotFoundException {
+    String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
+    IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId);
     GiraphScenarioWrapper giraphScenarioWrapper = new GiraphScenarioWrapper();
