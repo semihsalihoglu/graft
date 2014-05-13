@@ -4,8 +4,8 @@
 
 /*
  * Debugger is a class that encapsulates the graph editor and debugging controls.
- * @param {editorContainer, nodeAttrContainer} options - Initialize debugger with these options.
- * @param options.editorContainer - Selector for the container of the graph editor.
+ * @param {debuggerContainer, nodeAttrContainer} options - Initialize debugger with these options.
+ * @param options.debuggerContainer - Selector for the container of the main debugger area. (Editor & Valpanel)
  * @param options.nodeAttrContainer - Selector for the container of the node attr modal.
  * @param options.superstepControlsContainer - Selector for the container of the superstep controls.
  * @constructor
@@ -16,32 +16,10 @@ function GiraphDebugger(options) {
     return this;
 }
 
-// TODO(vikesh) Move to a different js file.
-function Utils() {}
-
-/*
- * Counts the number of keys of a JSON object.
- */
-Utils.count = function(obj) {
-   var count=0;
-   for(var prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
-         ++count;
-      }
-   }
-   return count;
-}
-
 /*
  * Initializes the graph editor, node attr modal DOM elements.
  */
 GiraphDebugger.prototype.init = function(options) {
-    // Instantiate the editor object.
-    this.editor = new Editor({
-        'container' : options.editorContainer,
-        'dblnode' : this.openNodeAttrs.bind(this)
-    });
-
     // Initialize current superstep to -2 (Not in debug mode)
     this.currentSuperstepNumber = -2;
     // ID of the job currently being debugged.
@@ -56,6 +34,36 @@ GiraphDebugger.prototype.init = function(options) {
     // scenarios on top of each other.
     this.stateCache = {"-1":{}};
     this.debuggerServerRoot = 'http://localhost:8000';
+
+    this.editorContainerId = 'editor-container';
+    this.valpanelId = 'valpanel-container';
+
+    // Create divs for valpanel and editor.
+    var valpanelContainer = $('<div />')
+        .attr('class', 'valpanel debug-control')
+        .attr('id', this.valpanelId)
+        .appendTo(options.debuggerContainer);
+
+    var editorContainer = $('<div />')
+        .attr('id', this.editorContainerId)
+        .attr('class', 'debug-control')
+        .appendTo(options.debuggerContainer);
+
+    // Instantiate the editor object.
+    this.editor = new Editor({
+        'container' : '#' + this.editorContainerId,
+        'dblnode' : this.openNodeAttrs.bind(this)
+    });
+
+    // Instantiate the valpanel object.
+    this.valpanel = new ValidationPanel({
+        'container' : '#' + this.valpanelId,
+        'debuggerServerRoot' : this.debuggerServerRoot,
+        'resizeCallback' : (function() {
+            this.editor.restart();
+        }).bind(this)
+    });
+
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
     this.nodeAttrContainer = options.nodeAttrContainer;
@@ -361,6 +369,17 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     $(this.superstepLabel).html(superstepNumber);
     // Show preloader while AJAX request is in progress.
     this.editor.showPreloader();
+    // Update data of the valpanel
+    this.valpanel.setData(jobId, superstepNumber);
+
+    // Fetch the max number of supersteps again. (Online case)
+    $.ajax({
+            url : this.debuggerServerRoot + "/supersteps",
+            data : {'jobId' : this.currentJobId}
+    })
+    .done((function(response) {
+        this.maxSuperstepNumber = Math.max.apply(Math, response);
+    }).bind(this));
 
     // If scenario is already cached, don't fetch again.
     if (superstepNumber in this.stateCache) {
@@ -453,6 +472,19 @@ GiraphDebugger.prototype.initElements = function() {
             this.editor.getMessagesSentByNode(this.selectedNodeId) :
             this.editor.getMessagesReceivedByNode(this.selectedNodeId);
         this.showMessages(messageData);
+    }).bind(this));
+    // Attach mouseenter event for valpanel - Preview (Expand to the right)
+    $(this.valpanel.container).mouseenter((function(event) {
+        if (this.valpanel.state === ValidationPanel.StateEnum.COMPACT) {
+            this.valpanel.preview();
+        }
+    }).bind(this));
+    // Attach mouseleave event for valpanel - Compact (Compact to the left)
+    $(this.valpanel.container).mouseleave((function(event) {
+        // The user must click the close button to compact from the expanded mode.
+        if (this.valpanel.state != ValidationPanel.StateEnum.EXPAND) {
+            this.valpanel.compact();
+        }
     }).bind(this));
 }
 

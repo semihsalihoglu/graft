@@ -65,7 +65,7 @@ text.tid {
 }
 
 #editor-container {
-	width:100%;
+	overflow: hidden;
 	height:450px;
 	border-bottom: solid black 1px;
 	border-top: solid black 1px;
@@ -149,6 +149,28 @@ text.tid {
 #controls-container .form-group {
 	float:right;
 	margin-bottom:10px;
+}
+
+.valpanel {
+	float: left;
+	height: 100%;
+	border: black 1px solid;
+	border-right: black 2px solid;
+	box-shadow: rgb(136, 136, 136) 5px 0px 15px;
+	background-color:white;
+}
+
+/* Applies to main controls of debugger window
+ * like graph editor and validation panel
+ */
+.debug-control {
+	height: 100%;
+}
+
+
+#debugger-container {
+	height: 450px;
+	margin-bottom: 20px;
 }
 
 /* Bootstrap overrides */

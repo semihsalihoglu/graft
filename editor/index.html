@@ -6,13 +6,17 @@
 		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
 		<link rel="stylesheet" href="app.css">
+		<link rel="stylesheet" href="valpanel.css">
 		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 		<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		<script src="utils.js"></script>
 		<script src="editor.core.js"></script>
 		<script src="editor.utils.js"></script>
+		<script src="valpanel.js"></script>
 		<script src="debugger.js"></script>
 
 		<script type="text/javascript">
@@ -20,6 +24,17 @@
 			var currentSuperstep = -1;
 
 			$(document).ready(function(){
+					// Test
+					$("#integrity-container").mouseenter(function() {
+						//$("#integrity-container").css('width', "200px");
+						$("#integrity-container").animate({ width: "150px"}, 250);
+					});	
+					
+					$("#integrity-container").mouseleave(function() {
+						//$("#integrity-container").css('width', "200px");
+						$("#integrity-container").animate({ width: "45px"}, 500);
+					});	
+
 					$("#node-attr-id").keyup(function(event){
 						if(event.keyCode===13){
 							$("#btn-node-attr-save").click();
@@ -49,7 +64,7 @@
 					});
 
 					giraphDebugger = new GiraphDebugger({
-								'editorContainer' : '#editor-container',
+								'debuggerContainer' : '#debugger-container',
 								'nodeAttrContainer' : '#node-attr-container',
 								'superstepControlsContainer' : '#controls-container'
 							});
@@ -139,7 +154,8 @@
 			<h1>Graft <small>In-browser graph editor</small></h1>
 		</div>
 
-		<div id="editor-container"></div>
+		<div id="debugger-container">
+		</div>
 
 		<!--Container begins-->
 		<div class="container bs-docs-container">

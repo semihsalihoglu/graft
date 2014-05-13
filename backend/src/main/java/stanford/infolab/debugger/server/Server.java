@@ -1,5 +1,6 @@
 package stanford.infolab.debugger.server;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -19,10 +20,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import stanford.infolab.debugger.server.ServerUtils.DebugTrace;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
+import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
 import sun.security.ssl.Debug;
 
 import com.google.common.net.HttpHeaders;
@@ -40,7 +44,9 @@ public class Server {
     // Attach JobHandler instance to handle /job GET call.
     server.createContext("/job", new GetJob());
     server.createContext("/vertices", new GetVertices());
+    server.createContext("/supersteps", new GetSupersteps());
     server.createContext("/scenario", new GetScenario());
+    server.createContext("/integrity", new GetIntegrity());
     // Creates a default executor.
     server.setExecutor(null);
     server.start();
@@ -94,10 +100,42 @@ public class Server {
           throw new NumberFormatException("Superstep must be integer >= -1.");
         }
         // May throw IOException. Handled below.
-        vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo);
+        vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo, DebugTrace.REGULAR);
         this.statusCode = HttpURLConnection.HTTP_OK;
         // Returns output as an array ["id1", "id2", "id3" .... ]
         this.response = new JSONArray(vertexIds).toString();
+      } catch (NumberFormatException e) {
+        this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+        this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
+      } catch (IllegalArgumentException e) {
+        this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+        this.response = String.format("Invalid parameters. %s is a mandatory parameter.",
+          ServerUtils.JOB_ID_KEY);
+      } catch (IOException e) {
+        // IOException is unexpected in this case. Return Internal Server Error.
+        this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
+        this.response = "Internal Server Error.";
+      }
+    }
+  }
+  
+  /*
+   * Returns the number of supersteps traced for the given job.
+   */
+  static class GetSupersteps extends ServerHttpHandler {
+    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+      String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
+      try {
+        // jobId and superstepId are mandatory. Validate.
+        if (jobId == null) {
+          throw new IllegalArgumentException("Missing mandatory params.");
+        }
+        ArrayList<Long> superstepIds = null;
+        // May throw IOException. Handled below.
+        superstepIds = ServerUtils.getSuperstepsDebugged(jobId);
+        this.statusCode = HttpURLConnection.HTTP_OK;
+        // Returns output as an array ["id1", "id2", "id3" .... ]
+        this.response = new JSONArray(superstepIds).toString();
       } catch (NumberFormatException e) {
         this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
         this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
@@ -111,7 +149,7 @@ public class Server {
         this.response = "Internal Server Error.";
       }
     }
-  }
+ }
 
   /*
    * Returns the scenario for a given superstep of a given job.
@@ -144,7 +182,7 @@ public class Server {
         if (rawVertexIds == null) {
           // Read scenario for all vertices.
           // May throw IOException. Handled below.
-          vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo);
+          vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo, DebugTrace.REGULAR);
         } else {
           // Split the vertices by comma.
           vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
@@ -162,7 +200,7 @@ public class Server {
           this.responseBytes = ServerUtils.readTrace(jobId, superstepNo, vertexId);
           // Set this header to force a download with the given filename.
           String fileName = String.format("%s_%s", jobId, 
-            ServerUtils.getTraceFileName(superstepNo, vertexId));
+            ServerUtils.getTraceFileName(superstepNo, ServerUtils.DebugTrace.REGULAR, vertexId));
           this.setResponseHeader("Content-disposition", "attachment; filename=" + fileName);
           return;
         }
@@ -181,15 +219,91 @@ public class Server {
         this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
         this.response = String.format("Invalid parameters. %s and %s are mandatory parameter.",
           ServerUtils.JOB_ID_KEY, ServerUtils.SUPERSTEP_ID_KEY);
-      } catch (ClassNotFoundException e) {
+      } catch (ClassNotFoundException|JSONException e) {
         this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
         this.response = "Internal Server Error";
       } catch (IOException|InstantiationException|IllegalAccessException e) {
         this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
         this.response = "Could not read the debug trace for this vertex.";
-      } catch (JSONException e) {
+      }
+    }
+  }
+  
+  /*
+   * Returns the integrity violations based on the requested parameter.
+   * The requested parameter (type) may be one of M, E or V.
+   */
+  static class GetIntegrity extends ServerHttpHandler {
+    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+      String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
+      String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
+      String violationType = paramMap.get(ServerUtils.INTEGRITY_VIOLATION_TYPE_KEY);
+      Debug.println("/integrity", paramMap.toString());
+      // Check both jobId and superstepId are present
+      try {
+        if (jobId == null || superstepId == null || violationType == null) {
+          throw new IllegalArgumentException("Missing mandatory parameters");
+        }  
+        Long superstepNo = Long.parseLong(paramMap.get(ServerUtils.SUPERSTEP_ID_KEY));
+        if (superstepNo < -1) {
+          this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+          this.response = String.format("%s must be an integer >= -1.",
+            ServerUtils.SUPERSTEP_ID_KEY);
+          return;
+        }
+        // Message violation
+        if(violationType.equals("M")) {
+          MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 
+            ServerUtils.readMsgIntegrityViolationFromTrace(jobId, superstepNo);
+          JSONObject scenarioObj = ServerUtils.msgIntegrityToJson(msgIntegrityViolationWrapper);
+          this.response = scenarioObj.toString();
+          this.statusCode = this.statusCode = HttpURLConnection.HTTP_OK;
+        } else if(violationType.equals("V")) {
+          VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper =
+            ServerUtils.readVertexIntegrityViolationFromTrace(jobId, superstepNo);
+          JSONObject scenarioObj = ServerUtils.vertexIntegrityToJson(
+            vertexValueIntegrityViolationWrapper);
+          this.response = scenarioObj.toString();
+          this.statusCode = this.statusCode = HttpURLConnection.HTTP_OK;
+        } else if(violationType.equals("E")) {
+          ArrayList<String> vertexIds = null;
+          // Get the single vertexId or the list of vertexIds (comma-separated).
+          String rawVertexIds = paramMap.get(ServerUtils.VERTEX_ID_KEY);
+          // No vertex Id supplied. Return exceptions for all vertices.
+          if (rawVertexIds == null) {
+            // Read exceptions for all vertices.
+            vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo, DebugTrace.EXCEPTION);
+          } else {
+            // Split the vertices by comma.
+            vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
+          }
+          // Send JSON by default.
+          JSONObject scenarioObj = new JSONObject();
+          for (String vertexId : vertexIds) {
+            GiraphScenarioWrapper giraphScenarioWrapper;
+            giraphScenarioWrapper = ServerUtils.readExceptionFromTrace(jobId, superstepNo,
+              vertexId.trim());
+            scenarioObj.put(vertexId, ServerUtils.scenarioToJSON(giraphScenarioWrapper));
+          }
+          // Set status as OK and convert JSONObject to string.
+          this.statusCode = HttpURLConnection.HTTP_OK;
+          this.response = scenarioObj.toString();
+        }
+      } catch (IllegalArgumentException e) {
+        this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+        this.response = String.format("Invalid parameters. %s, %s and %s are mandatory parameter.",
+          ServerUtils.JOB_ID_KEY, ServerUtils.SUPERSTEP_ID_KEY, 
+          ServerUtils.INTEGRITY_VIOLATION_TYPE_KEY);
+      } catch(FileNotFoundException e) {
+        // If file is not found, send an empty OK response.
+        this.statusCode = HttpURLConnection.HTTP_OK;
+        this.response = new JSONObject().toString();
+      } catch (IOException|InstantiationException|IllegalAccessException e) {
+        this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+        this.response = "Could not read the debug trace for this vertex.";
+      } catch (ClassNotFoundException|JSONException e) {
         this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
-        this.response = "Server error.";
+        this.response = "Internal Server Error";
       }
     }
   }
