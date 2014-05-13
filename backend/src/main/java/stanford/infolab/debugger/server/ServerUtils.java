@@ -22,6 +22,9 @@ import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
+import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper.ExtendedOutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
 
 import com.sun.net.httpserver.Headers;
 
@@ -31,11 +34,19 @@ import java.util.regex.Matcher;
  * Utility methods for Debugger Server.
  */
 public class ServerUtils {
+  public enum DebugTrace {
+    REGULAR,
+    MESSAGE_INTEGRITY,
+    VERTEX_INTEGRITY,
+    EXCEPTION
+  }
+  
   public static final String JOB_ID_KEY = "jobId";
   public static final String VERTEX_ID_KEY = "vertexId";
   public static final String SUPERSTEP_ID_KEY = "superstepId";
+  public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
   
-  private static final String TRACE_ROOT = "/giraph-debug-traces";
+  private static final String TRACE_ROOT = "";
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -44,12 +55,15 @@ public class ServerUtils {
   public static HashMap<String, String> getUrlParams(String rawUrl)
     throws UnsupportedEncodingException {
     HashMap<String, String> paramMap = new HashMap<String, String>();
-    String[] params = rawUrl.split("&");
-    for (String param : params) {
-      String[] parts = param.split("=");
-      String paramKey = URLDecoder.decode(parts[0], "UTF-8");
-      String paramValue = URLDecoder.decode(parts[1], "UTF-8");
-      paramMap.put(paramKey, paramValue);
+    
+    if(rawUrl!=null) {
+      String[] params = rawUrl.split("&");
+      for (String param : params) {
+        String[] parts = param.split("=");
+        String paramKey = URLDecoder.decode(parts[0], "UTF-8");
+        String paramValue = URLDecoder.decode(parts[1], "UTF-8");
+        paramMap.put(paramKey, paramValue);
+      }
     }
     return paramMap;
   }
@@ -58,7 +72,7 @@ public class ServerUtils {
    * Returns the HDFS FileSystem reference.
    */
   public static FileSystem getFileSystem() throws IOException {
-    String coreSitePath = "/Users/semihsalihoglu/projects/hadoop-1.2.1/conf/core-site.xml";
+    String coreSitePath = "/usr/local/hadoop/conf/core-site.xml";
     Configuration configuration = new Configuration();
     configuration.addResource(new Path(coreSitePath));
     return FileSystem.get(configuration);
@@ -66,9 +80,21 @@ public class ServerUtils {
 
   /*
    * Returns the file name of the trace file given the three parameters.
+   * Pass arbitrary vertexId for traces which do not require a vertexId.
    */
-  public static String getTraceFileName(long superstepNo, String vertexId) {
-    return String.format("reg_stp_%d_vid_%s.tr", superstepNo, vertexId);
+  public static String getTraceFileName(long superstepNo, String vertexId, DebugTrace debugTrace) {
+    switch(debugTrace) {
+      case REGULAR:
+        return String.format("reg_stp_%d_vid_%s.tr", superstepNo, vertexId);
+      case MESSAGE_INTEGRITY:
+        return String.format("msg_intgrty_stp_%d.tr", superstepNo);
+      case VERTEX_INTEGRITY:
+        return String.format("vv_intgrty_stp_%d.tr", superstepNo);
+      case EXCEPTION:
+        return String.format("err_intgrty_stp_%d_vid_%s.tr", superstepNo, vertexId);
+      default:
+        throw new IllegalArgumentException("DebugTrace not supported.");
+    }
   }
   
   /*
@@ -80,9 +106,27 @@ public class ServerUtils {
     return String.format("%s/%s", ServerUtils.TRACE_ROOT, jobId);
   }
   
-  public static String getTraceFilePath(String jobId, long superstepNo, String vertexId) {
-    return String.format("%s/%s", ServerUtils.getTraceFileRoot(jobId, superstepNo),
-      ServerUtils.getTraceFileName(superstepNo, vertexId));
+  /*
+   * Returns the path of the trace file on HDFS.
+   */
+  public static String getTraceFilePath(String jobId, long superstepNo, String vertexId, 
+    DebugTrace debugTrace) {
+      switch(debugTrace) {
+        case REGULAR:
+          return String.format("%s/%s", ServerUtils.getTraceFileRoot(jobId, superstepNo),
+            ServerUtils.getTraceFileName(superstepNo, vertexId, DebugTrace.REGULAR));
+        case MESSAGE_INTEGRITY:
+          return String.format("%s/integrity_traces/%s", ServerUtils.getTraceFileRoot(jobId, superstepNo),
+            ServerUtils.getTraceFileName(superstepNo, vertexId, DebugTrace.MESSAGE_INTEGRITY));
+        case VERTEX_INTEGRITY:
+          return String.format("%s/integrity_traces/%s", ServerUtils.getTraceFileRoot(jobId, superstepNo),
+            ServerUtils.getTraceFileName(superstepNo, vertexId, DebugTrace.VERTEX_INTEGRITY));
+        case EXCEPTION:
+          return String.format("%s/exception_traces/%s", ServerUtils.getTraceFileRoot(jobId, superstepNo),
+            ServerUtils.getTraceFileName(superstepNo, vertexId, DebugTrace.EXCEPTION));
+        default:
+          throw new IllegalArgumentException("DebugTrace not supported.");
+      }
   }
   
   /*
@@ -96,16 +140,65 @@ public class ServerUtils {
     String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
     IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId);
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId, 
+      DebugTrace.REGULAR);
     GiraphScenarioWrapper giraphScenarioWrapper = new GiraphScenarioWrapper();
     giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
 
+  /*
+   * Returns the MessageIntegrityViolationWrapper from trace file.
+   */
+  public static MsgIntegrityViolationWrapper readMsgIntegrityViolationFromTrace(String jobId, 
+    long superstepNo) throws IOException, ClassNotFoundException, InstantiationException,
+    IllegalAccessException {
+    FileSystem fs = ServerUtils.getFileSystem();
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, 
+      null, DebugTrace.MESSAGE_INTEGRITY);
+    MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 
+      new MsgIntegrityViolationWrapper();
+    msgIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
+    return msgIntegrityViolationWrapper;
+  }
+  
+  /*
+   * Returns the MessageIntegrityViolationWrapper from trace file.
+   */
+  public static VertexValueIntegrityViolationWrapper readVertexIntegrityViolationFromTrace(String jobId, 
+    long superstepNo) throws IOException, ClassNotFoundException, InstantiationException,
+    IllegalAccessException {
+    FileSystem fs = ServerUtils.getFileSystem();
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, 
+      null, DebugTrace.VERTEX_INTEGRITY);
+    VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper = 
+      new VertexValueIntegrityViolationWrapper();
+    vertexValueIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
+    return vertexValueIntegrityViolationWrapper;
+  }
+  
+  /*
+   * Returns the MessageIntegrityViolationWrapper from trace file.
+   */
+  public static GiraphScenarioWrapper readExceptionFromTrace(String jobId, 
+    long superstepNo, String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
+    IllegalAccessException {
+    FileSystem fs = ServerUtils.getFileSystem();
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, 
+      vertexId, DebugTrace.EXCEPTION);
+    GiraphScenarioWrapper giraphScenarioWrapper = 
+      new GiraphScenarioWrapper();
+    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+    return giraphScenarioWrapper;
+  }
+  
+  /*
+   * Returns the raw bytes of the debug trace file.
+   */
   public static byte[] readTrace(String jobId, long superstepNo, String vertexId)
     throws IOException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId);
+    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, vertexId, DebugTrace.REGULAR);
     byte[] data = IOUtils.toByteArray(fs.open(new Path(traceFilePath)));
     return data;
   }
@@ -134,6 +227,24 @@ public class ServerUtils {
     }
     scenarioObj.put("outgoingMessages", outgoingMessagesObj);
     scenarioObj.put("neighbors", neighborsList);
+    return scenarioObj;
+  }
+  
+  public static JSONObject msgIntegrityToJson(MsgIntegrityViolationWrapper 
+    msgIntegrityViolationWrapper) throws JSONException {
+    JSONObject scenarioObj = new JSONObject();
+    ArrayList<JSONObject> violationsList = new ArrayList<JSONObject>();
+    scenarioObj.put("superstepId", msgIntegrityViolationWrapper.getSuperstepNo());
+    for(Object msgWrapper : msgIntegrityViolationWrapper.getExtendedOutgoingMessageWrappers()) {
+      ExtendedOutgoingMessageWrapper extendedOutgoingMessgeWrapper =
+        (ExtendedOutgoingMessageWrapper) msgWrapper;
+      JSONObject violationObj = new JSONObject();
+      violationObj.put("srcId", extendedOutgoingMessgeWrapper.srcId);
+      violationObj.put("destinationId", extendedOutgoingMessgeWrapper.destinationId);
+      violationObj.put("message", extendedOutgoingMessgeWrapper.message);
+      violationsList.add(violationObj);
+    }
+    scenarioObj.put("violations", violationsList);
     return scenarioObj;
   }
 

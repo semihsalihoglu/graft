@@ -58,7 +58,10 @@ GiraphDebugger.prototype.init = function(options) {
 
     // Instantiate the valpanel object.
     this.valpanel = new ValidationPanel({
-            'container' : '#' + this.valpanelId
+            'container' : '#' + this.valpanelId,
+            'resizeCallback' : (function() {
+                this.editor.restart();
+        }).bind(this)
     });
 
     // Initialize current superstep to -2 (Not in debug mode)

@@ -36,8 +36,8 @@
 
 .valpanel-content-container {
 	overflow-y: auto;
-	width: 85%;
+	overflow-x: hidden;
+	padding: 0px 10px 10px 5px;
 	height: 85%;
 	margin-left: 10px;
-	float: left;
 }

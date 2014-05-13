@@ -1,9 +1,9 @@
 /*
  * ValidationPanel is a class that abstracts the message, vertex 
  * and exception details. It has three view modes - compact, preview and expanded.
- * @param {container, height} options - Initialize panel with these options.
+ * @param {container, resizeCallback} options - Initialize panel with these options.
  * @param options.validationPanelContainer - Container of the panel.
- * @param {int} options.height - Height of the panel. Use integral value without px suffix.
+ * @param {callback} options.resizeCallback - Called when manual resize of the panel is complete.
  */
 function ValidationPanel(options) {
     // JSON object of the buttons appearing.
@@ -29,10 +29,16 @@ function ValidationPanel(options) {
     // This is in %
     this.expandWidth = 95;
     this.state = ValidationPanel.StateEnum.COMPACT;
-    this.height = options.height;
     this.container = options.container;
+    this.resizeCallback = options.resizeCallback;
     
     $(this.container).css('height', this.height + 'px')
+    // Make it resizable horizontally
+    $(this.container).resizable({ handles : 'e', minWidth : this.compactWidth,
+        stop: (function(event, ui) {
+            this.resizeCallback();
+        }).bind(this)
+    });
     this.initElements();
     this.compact();
 }
@@ -112,7 +118,10 @@ ValidationPanel.prototype.preview = function() {
         this.btnContainer.addClass(this.state);
         $(this.btnClose).hide();
         $(this.contentContainer).hide();
-        $(this.container).animate({ width: this.previewWidth + 'px'}, 300);
+        $(this.container).animate({ width: this.previewWidth + 'px'}, 300, 
+            (function() { 
+                this.resizeCallback(); 
+        }).bind(this));
 
         // Expand names to full names 
         for (var label in this.buttonData) {
@@ -141,6 +150,7 @@ ValidationPanel.prototype.compact = function() {
                 }    
                 this.btnContainer.removeClass(prevState);
                 this.btnContainer.addClass(this.state);
+                this.resizeCallback(); 
         }).bind(this));
     }
 }
