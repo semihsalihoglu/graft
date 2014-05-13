@@ -16,26 +16,25 @@ function GiraphDebugger(options) {
     return this;
 }
 
-// TODO(vikesh) Move to a different js file.
-function Utils() {}
-
-/*
- * Counts the number of keys of a JSON object.
- */
-Utils.count = function(obj) {
-   var count=0;
-   for(var prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
-         ++count;
-      }
-   }
-   return count;
-}
-
 /*
  * Initializes the graph editor, node attr modal DOM elements.
  */
 GiraphDebugger.prototype.init = function(options) {
+    // Initialize current superstep to -2 (Not in debug mode)
+    this.currentSuperstepNumber = -2;
+    // ID of the job currently being debugged.
+    this.currentJobId = null;
+    // Minimum value of superstepNumber
+    this.minSuperstepNumber = -1;
+    // Maximum value of superstepNumber - Depends on the job.
+    // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
+    this.maxSuperstepNumber = 15;
+    // Caches the scenarios to show correct information when going backwards.
+    // Cumulatively builds the state of the graph starting from the first superstep by merging
+    // scenarios on top of each other.
+    this.stateCache = {"-1":{}};
+    this.debuggerServerRoot = 'http://localhost:8000';
+
     this.editorContainerId = 'editor-container';
     this.valpanelId = 'valpanel-container';
 
@@ -58,26 +57,13 @@ GiraphDebugger.prototype.init = function(options) {
 
     // Instantiate the valpanel object.
     this.valpanel = new ValidationPanel({
-            'container' : '#' + this.valpanelId,
-            'resizeCallback' : (function() {
-                this.editor.restart();
+        'container' : '#' + this.valpanelId,
+        'debuggerServerRoot' : this.debuggerServerRoot,
+        'resizeCallback' : (function() {
+            this.editor.restart();
         }).bind(this)
     });
 
-    // Initialize current superstep to -2 (Not in debug mode)
-    this.currentSuperstepNumber = -2;
-    // ID of the job currently being debugged.
-    this.currentJobId = null;
-    // Minimum value of superstepNumber
-    this.minSuperstepNumber = -1;
-    // Maximum value of superstepNumber - Depends on the job.
-    // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
-    this.maxSuperstepNumber = 15;
-    // Caches the scenarios to show correct information when going backwards.
-    // Cumulatively builds the state of the graph starting from the first superstep by merging
-    // scenarios on top of each other.
-    this.stateCache = {"-1":{}};
-    this.debuggerServerRoot = 'http://localhost:8000';
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
     this.nodeAttrContainer = options.nodeAttrContainer;

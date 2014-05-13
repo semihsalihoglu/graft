@@ -41,3 +41,17 @@
 	height: 85%;
 	margin-left: 10px;
 }
+
+.valpanel-preloader {
+	background-image: url('img/preloader.gif');
+	position: absolute;
+	top: 35%;
+	left: 50%;
+	margin: 0 auto;
+	width: 128px;
+	height: 128px;
+}
+
+.valpanel-content-container table th {
+	text-align: center;
+}

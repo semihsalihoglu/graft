@@ -11,7 +11,7 @@ function ValidationPanel(options) {
     this.buttonData = {
         'M' : {
             fullName : 'Message Integrity',
-            clickHandler : this.dummy.bind(this)
+            clickHandler : this.showMessageViolations.bind(this)
         },
         'E' : {
             fullName : 'Exceptions',
@@ -19,7 +19,7 @@ function ValidationPanel(options) {
         },
         'V' : {
             fullName : 'Vertex Integrity',
-            clickHandler : this.dummy
+            clickHandler : this.showVertexViolations.bind(this)
         }
     }
 
@@ -27,18 +27,20 @@ function ValidationPanel(options) {
     this.compactWidth = 60;
     this.previewWidth = 170;
     // This is in %
-    this.expandWidth = 95;
+    this.expandWidth = 55;
     this.state = ValidationPanel.StateEnum.COMPACT;
     this.container = options.container;
     this.resizeCallback = options.resizeCallback;
+    this.debuggerServerRoot = options.debuggerServerRoot;
     
     $(this.container).css('height', this.height + 'px')
     // Make it resizable horizontally
-    $(this.container).resizable({ handles : 'e', minWidth : this.compactWidth,
+    $(this.container).resizable({ handles : 'e', minWidth : this.previewWidth,
         stop: (function(event, ui) {
             this.resizeCallback();
         }).bind(this)
     });
+    this.setData({'jobId' : 'job0', 'superstepId' : 1});
     this.initElements();
     this.compact();
 }
@@ -80,6 +82,12 @@ ValidationPanel.prototype.initElements = function() {
     // This is the container for the main content.
     this.contentContainer = $('<div />')
         .attr('class', 'valpanel-content-container')
+        .hide()
+        .appendTo(this.container);
+
+    // Preloader reference.
+    this.preloader = $('<div />')
+        .attr('class', 'valpanel-preloader')
         .hide()
         .appendTo(this.container);
 
@@ -165,11 +173,90 @@ ValidationPanel.prototype.expand = function() {
     $(this.container).animate({ width: this.expandWidth + '%'}, 500,
         (function() {
             $(this.contentContainer).show('slow');
+            this.resizeCallback();
         }).bind(this));
 }
 
-ValidationPanel.prototype.dummy = function() {
+/*
+ * Fetch the message integrity violations from the debugger server
+ * and construct a table to show the data.
+ */
+ValidationPanel.prototype.showMessageViolations = function() {
     this.expand();
-    this.contentContainer.empty();
-    this.contentContainer.html("Hello WOrld");
+    this.showPreloader();
+    $.ajax({
+            url: this.debuggerServerRoot + '/integrity',
+            data: {'jobId' : this.jobId, 'superstepId' : this.superstepId,
+                'type' : 'M'}
+    })
+    .done((function(response) {
+        violations = response['violations'];
+        // Empty the content container and add violations table.
+        // TODO(vikesh) Better visualization/search.
+        this.contentContainer.empty();
+        var table = $("<table />")
+            .attr('class', 'table')
+            .html('<tr><th>Source</th><th>Destination</th><th>Message</th></tr>')
+            .appendTo(this.contentContainer);
+
+        for (var i = 0; i < violations.length; ++i) {
+            var violation = violations[i];
+            table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(violation.srcId, violation.destinationId, violation.message)));
+        }
+    }).bind(this))
+    .always((function(response) {
+        this.hidePreloader(); 
+    }).bind(this));
+}
+
+/*
+ * Fetch vertex value violations from the server and
+ * construct a table to show the data.
+ */
+ValidationPanel.prototype.showVertexViolations = function() {
+    this.expand();
+    this.showPreloader();
+    $.ajax({
+            url: this.debuggerServerRoot + '/integrity',
+            data: {'jobId' : this.jobId, 'superstepId' : this.superstepId,
+                'type' : 'V'}
+    })
+    .done((function(response) {
+        violations = response['violations'];
+        // Empty the content container and add violations table.
+        // TODO(vikesh) Better visualization/search.
+        this.contentContainer.empty();
+        var table = $("<table />")
+            .attr('class', 'table')
+            .html('<tr><th>Vertex ID</th><th>Destination</th></tr>')
+            .appendTo(this.contentContainer);
+
+        for (var i = 0; i < violations.length; ++i) {
+            var violation = violations[i];
+            table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
+        }
+    }).bind(this))
+    .always((function(response) {
+        this.hidePreloader(); 
+    }).bind(this));
+}
+
+/*
+ * Sets the current jobId and superstepId. Expected to called by the 
+ * orchestrator (debugger.js) while stepping through the job.
+ * @param {jobId, superstepId} data
+ * @param data.jobId - Current jobId
+ * @param data.superstepId - Current superstepId
+ */
+ValidationPanel.prototype.setData = function(data) {
+    this.jobId = data.jobId;
+    this.superstepId = data.superstepId;
+}
+
+ValidationPanel.prototype.showPreloader = function() {
+    this.preloader.show('slow');
+}
+
+ValidationPanel.prototype.hidePreloader = function() {
+    this.preloader.hide('slow');
 }
