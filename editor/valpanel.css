@@ -26,6 +26,17 @@
 	width : 40px;
 }
 
+.valpanel-btn-container button:disabled {
+	background-color: #ebebeb;
+	color:black;
+	opacity: 0.4;
+	border: none;
+}
+
+.valpanel-btn-container button.btn-success {
+	pointer-events:none;
+}
+
 .valpanel-btn-container.preview, .expand {
 	width : 140px;
 }
@@ -54,4 +65,8 @@
 
 .valpanel-content-container table th {
 	text-align: center;
+}
+
+.valpanel-content-container table {
+	table-layout: fixed;
 }

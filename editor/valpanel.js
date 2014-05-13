@@ -15,7 +15,7 @@ function ValidationPanel(options) {
         },
         'E' : {
             fullName : 'Exceptions',
-            clickHandler : this.dummy
+            clickHandler : this.showExceptions.bind(this)
         },
         'V' : {
             fullName : 'Vertex Integrity',
@@ -40,8 +40,8 @@ function ValidationPanel(options) {
             this.resizeCallback();
         }).bind(this)
     });
-    this.setData({'jobId' : 'job0', 'superstepId' : 1});
     this.initElements();
+    this.setData('job0', 1);
     this.compact();
 }
 
@@ -183,30 +183,20 @@ ValidationPanel.prototype.expand = function() {
  */
 ValidationPanel.prototype.showMessageViolations = function() {
     this.expand();
-    this.showPreloader();
-    $.ajax({
-            url: this.debuggerServerRoot + '/integrity',
-            data: {'jobId' : this.jobId, 'superstepId' : this.superstepId,
-                'type' : 'M'}
-    })
-    .done((function(response) {
-        violations = response['violations'];
-        // Empty the content container and add violations table.
-        // TODO(vikesh) Better visualization/search.
-        this.contentContainer.empty();
-        var table = $("<table />")
-            .attr('class', 'table')
-            .html('<tr><th>Source</th><th>Destination</th><th>Message</th></tr>')
-            .appendTo(this.contentContainer);
+    // Empty the content container and add violations table.
+    // TODO(vikesh) Better visualization/search.
+    this.contentContainer.empty();
+    // The data should already be present in the buttonData cache.
+    violations = this.buttonData['M'].data.violations;
+    var table = $("<table />")
+        .attr('class', 'table')
+        .html('<tr><th>Source</th><th>Destination</th><th>Message</th></tr>')
+        .appendTo(this.contentContainer);
 
-        for (var i = 0; i < violations.length; ++i) {
-            var violation = violations[i];
-            table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(violation.srcId, violation.destinationId, violation.message)));
-        }
-    }).bind(this))
-    .always((function(response) {
-        this.hidePreloader(); 
-    }).bind(this));
+    for (var i = 0; i < violations.length; ++i) {
+        var violation = violations[i];
+        table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(violation.srcId, violation.destinationId, violation.message)));
+    }
 }
 
 /*
@@ -215,30 +205,58 @@ ValidationPanel.prototype.showMessageViolations = function() {
  */
 ValidationPanel.prototype.showVertexViolations = function() {
     this.expand();
-    this.showPreloader();
-    $.ajax({
-            url: this.debuggerServerRoot + '/integrity',
-            data: {'jobId' : this.jobId, 'superstepId' : this.superstepId,
-                'type' : 'V'}
-    })
-    .done((function(response) {
-        violations = response['violations'];
-        // Empty the content container and add violations table.
-        // TODO(vikesh) Better visualization/search.
-        this.contentContainer.empty();
-        var table = $("<table />")
-            .attr('class', 'table')
-            .html('<tr><th>Vertex ID</th><th>Destination</th></tr>')
-            .appendTo(this.contentContainer);
+    violations = this.buttonData['V'].data.violations;
+    // Empty the content container and add violations table.
+    // TODO(vikesh) Better visualization/search.
+    this.contentContainer.empty();
+    var table = $("<table />")
+        .attr('class', 'table')
+        .html('<tr><th>Vertex ID</th><th>Destination</th></tr>')
+        .appendTo(this.contentContainer);
 
-        for (var i = 0; i < violations.length; ++i) {
-            var violation = violations[i];
-            table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
+    for (var i = 0; i < violations.length; ++i) {
+        var violation = violations[i];
+        table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
+    }
+}
+
+/*
+ * Show exceptions for this superstep.
+ */
+ValidationPanel.prototype.showExceptions = function() {
+    this.expand();
+    // Empty the content container and add violations table.
+    // TODO(vikesh) Better visualization/search.
+    this.contentContainer.empty();
+    var table = $("<table />")
+        .attr('class', 'table')
+        .html('<tr><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr>')
+        .appendTo(this.contentContainer);
+    var data = this.buttonData['E'].data; 
+    for (vertexId in data) {
+        table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(vertexId, 
+                    data[vertexId].exception.message, data[vertexId].exception.stackTrace)));
+    }
+}
+
+
+
+/*
+ * Handle the received data from the debugger server.
+ */
+ValidationPanel.prototype.onReceiveData = function(buttonType) {
+    return (function(response) {
+        this.buttonData[buttonType].data = response;
+        this.buttonData[buttonType].button.attr('disabled', false);
+        // No violations.
+        if($.isEmptyObject(response)) {
+            this.buttonData[buttonType].button.addClass('btn-success');
+            this.buttonData[buttonType].button.removeClass('btn-danger');
+        } else {
+            this.buttonData[buttonType].button.addClass('btn-danger');
+            this.buttonData[buttonType].button.removeClass('btn-success');
         }
-    }).bind(this))
-    .always((function(response) {
-        this.hidePreloader(); 
-    }).bind(this));
+    }).bind(this);
 }
 
 /*
@@ -248,9 +266,23 @@ ValidationPanel.prototype.showVertexViolations = function() {
  * @param data.jobId - Current jobId
  * @param data.superstepId - Current superstepId
  */
-ValidationPanel.prototype.setData = function(data) {
-    this.jobId = data.jobId;
-    this.superstepId = data.superstepId;
+ValidationPanel.prototype.setData = function(jobId, superstepId) {
+    this.jobId = jobId;
+    this.superstepId = superstepId;
+
+    // setData makes AJAX calls to the debugger server for each button type
+    for (var type in this.buttonData) {
+        // Disable all buttons to begin with
+        this.buttonData[type].button.attr('disabled', true);
+        $.ajax({
+                url: this.debuggerServerRoot + '/integrity',
+                data: {'jobId' : this.jobId, 'superstepId' : this.superstepId, 'type' : type}
+        })
+        .done(this.onReceiveData(type))
+        .fail(function(response) {
+            console.log('Failed to fetch valpanel data - ' + response);
+        });
+    }
 }
 
 ValidationPanel.prototype.showPreloader = function() {

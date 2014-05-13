@@ -369,6 +369,8 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     $(this.superstepLabel).html(superstepNumber);
     // Show preloader while AJAX request is in progress.
     this.editor.showPreloader();
+    // Update data of the valpanel
+    this.valpanel.setData(jobId, superstepNumber);
 
     // If scenario is already cached, don't fetch again.
     if (superstepNumber in this.stateCache) {
