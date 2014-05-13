@@ -20,14 +20,13 @@
     when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
     when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
 
-	processor = mockEnv.getWorkerClientRequestProcessor();
+    processor = mockEnv.getWorkerClientRequestProcessor();
 
     WorkerAggregatorUsage aggr = mock(WorkerAggregatorUsage.class);
 #foreach ($aggr in $aggregators)
     when(aggr.getAggregatedValue("$aggr.key")).thenReturn($helper.formatWritable($aggr.value));
 #end
 
-    classUnderTest.initialize(graphState, processor, null, aggr,
-        null);
+    classUnderTest.initialize(graphState, processor, null, aggr, null);
         
   }
