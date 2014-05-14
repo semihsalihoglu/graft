@@ -211,7 +211,7 @@ ValidationPanel.prototype.showVertexViolations = function() {
     this.contentContainer.empty();
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<tr><th>Vertex ID</th><th>Destination</th></tr>')
+        .html('<tr><th>Vertex ID</th><th>Vertex Value</th></tr>')
         .appendTo(this.contentContainer);
 
     for (var i = 0; i < violations.length; ++i) {
