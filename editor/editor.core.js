@@ -12,6 +12,10 @@
 function Editor(options) {
     this.container = 'body';
     this.undirected = false;
+    // Data for the graph nodes and edges.
+    this.nodes = [];
+    this.links = [];
+    this.numNodes = 0;
 
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
@@ -22,18 +26,6 @@ function Editor(options) {
     }
 
     this.setSize();
-
-    this.nodes = [
-            this.getNewNode('1'),
-            this.getNewNode('2'),
-            this.getNewNode('3')
-        ],
-    this.numNodes = 3,
-    this.links = [
-            {source : this.nodes[0], target : this.nodes[1], left : false, right : true },
-            {source : this.nodes[1], target : this.nodes[2], left : false, right : true }
-        ];
-
     // {sender: senderNodeObj, receiver: receiverNodeObj, message: message}
     this.messages  = [];
 
@@ -45,7 +37,6 @@ function Editor(options) {
  * Initializes the SVG elements, force layout and event bindings.
  */
 Editor.prototype.init = function() {
-
     // Initializes the SVG elements.
     this.initElements();
 
@@ -60,6 +51,13 @@ Editor.prototype.init = function() {
     // Handles to link and node element groups.
     this.path = this.svg.append('svg:g').selectAll('path'),
     this.circle = this.svg.append('svg:g').selectAll('g');
+
+    // Start with a sample graph.
+    for(var i=0;i<3;i++) {
+        this.addNode();
+    }
+    this.addEdge('1', '2');
+    this.addEdge('2', '3');
     // Initializes the force layout.
     this.initForce();
     this.restart();
@@ -453,4 +451,32 @@ Editor.prototype.disableNode = function(nodeId) {
     toSplice.map((function(message) {
         this.messages.splice(this.messages.indexOf(message), 1);
     }).bind(this));
+}
+
+/*
+ * Colors the given node ids with the given color. Use this method to uncolor 
+ * all the nodes (reset to default color) by calling colorNodes([], 'random', true);
+ * @param {array} nodeIds - List of node ids.
+ * @param {color} color - Color of these nodes.
+ * @param {bool} [uncolorRest] - Optional parameter to reset the color of other nodes to default.
+ */
+Editor.prototype.colorNodes = function(nodeIds, color, uncolorRest) {
+    // Set the color property of each node in this array. restart will reflect changes.
+    for(var i = 0; i < nodeIds.length; i++) {
+        var node = this.getNodeWithId(nodeIds[i]);
+        if (node) {
+            node.color = color;
+        }
+    }
+    
+    // If uncolorRest is specified
+    if (uncolorRest) {
+        for (var i = 0; i < this.nodes.length; i++) {
+            // Not in nodeIds, uncolor it.
+            if ($.inArray(this.nodes[i].id, nodeIds) === -1) {
+                this.nodes[i].color = this.defaultColor;
+            }
+        }
+    }
+    this.restart();
 }

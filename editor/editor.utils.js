@@ -22,6 +22,7 @@ Editor.prototype.resizeForce = function() {
 Editor.prototype.initElements = function() {
     // Initialize colors for nodes
     this.colors = d3.scale.category10();
+    this.defaultColor = '#FFFDDB'
 
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
@@ -189,7 +190,7 @@ function getPadding(node) {
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
-    return {id : id, reflexive : false, attrs : [], x: 0, y: 0, enabled: true};
+    return {id : id, reflexive : false, attrs : [], x: 0, y: 0, enabled: true, color: this.defaultColor};
 }
 
 /*
@@ -347,7 +348,7 @@ Editor.prototype.addNodes = function() {
          .attr('r', (function(d) {
              return getRadius(d);
          }).bind(this))
-         .style('fill', '#FFFDDB')
+         .style('fill', this.defaultColor)
          .style('stroke', '#000000')
          .classed('reflexive', function(d) { return d.reflexive; })
          .on('mouseover', (function(d) {
@@ -433,7 +434,7 @@ Editor.prototype.restartNodes = function() {
 
     // Update existing nodes (reflexive & selected visual states)
     this.circle.selectAll('circle')
-        .style('fill', '#FFFDDB')
+        .style('fill', function(d) { return d.color; })
         .classed('reflexive', function(d) { return d.reflexive; })
         .attr('r', function(d) { return getRadius(d);  });
 
