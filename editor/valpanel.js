@@ -4,6 +4,7 @@
  * @param {container, resizeCallback} options - Initialize panel with these options.
  * @param options.validationPanelContainer - Container of the panel.
  * @param {callback} options.resizeCallback - Called when manual resize of the panel is complete.
+ * @param {object} options.editor - Reference to the graph editor object.
  */
 function ValidationPanel(options) {
     // JSON object of the buttons appearing.
@@ -32,6 +33,7 @@ function ValidationPanel(options) {
     this.container = options.container;
     this.resizeCallback = options.resizeCallback;
     this.debuggerServerRoot = options.debuggerServerRoot;
+    this.editor = options.editor;
     
     $(this.container).css('height', this.height + 'px')
     // Make it resizable horizontally
@@ -214,10 +216,16 @@ ValidationPanel.prototype.showVertexViolations = function() {
         .html('<tr><th>Vertex ID</th><th>Vertex Value</th></tr>')
         .appendTo(this.contentContainer);
 
+    var violationIds = [];
     for (var i = 0; i < violations.length; ++i) {
         var violation = violations[i];
+        violationIds.push(violation.vertexId);
         table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
     }
+
+    // Color the vertices with violations
+    // TODO(vikesh) - Dont hardcode color here. Use the same error color for all violation types.
+    this.editor.colorNodes(violationIds, '#FF9494', true);
 }
 
 /*

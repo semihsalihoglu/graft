@@ -12,10 +12,14 @@
 function Editor(options) {
     this.container = 'body';
     this.undirected = false;
+    // Readonly editor does not let users
+    // add new nodes/links.
+    this.readonly = false;
     // Data for the graph nodes and edges.
+    this.defaultColor = '#FFFDDB'
     this.nodes = [];
     this.links = [];
-    this.numNodes = 0;
+    this.messages = [];
 
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
@@ -24,13 +28,37 @@ function Editor(options) {
             this.dblnode = options['dblnode'];
         }
     }
-
     this.setSize();
-    // {sender: senderNodeObj, receiver: receiverNodeObj, message: message}
-    this.messages  = [];
-
     this.lastKeyDown = -1;
     this.init();
+    this.buildSample();
+}
+
+/*
+ * Build a sample graph with three nodes and two edges.
+ */
+Editor.prototype.buildSample = function() {
+    this.empty();
+    // Start with a sample graph.
+    for(var i = 0; i < 3; i++) {
+        this.addNode();
+    }
+    this.addEdge('1', '2');
+    this.addEdge('2', '3');
+    this.restart();
+}
+
+/*
+ * Empties the graph by deleting all nodes and links.
+ */
+Editor.prototype.empty = function() {
+    // NOTE : Don't use this.nodes = [] to empty the array
+    // This creates a new reference and messes up this.force.nodes
+    this.nodes.length = 0;
+    this.links.length = 0;
+    this.messages.length = 0;
+    this.numNodes = 0;
+    this.restart();
 }
 
 /*
@@ -39,25 +67,15 @@ function Editor(options) {
 Editor.prototype.init = function() {
     // Initializes the SVG elements.
     this.initElements();
-
     // Binds events and initializes variables used to track selected nodes/links.
     this.initEvents();
-
     // Line displayed when dragging an edge off a node
     this.drag_line = this.svg.append('svg:path')
                                  .attr('class', 'link dragline hidden')
                                  .attr('d', 'M0,0L0,0');
-
     // Handles to link and node element groups.
     this.path = this.svg.append('svg:g').selectAll('path'),
     this.circle = this.svg.append('svg:g').selectAll('g');
-
-    // Start with a sample graph.
-    for(var i=0;i<3;i++) {
-        this.addNode();
-    }
-    this.addEdge('1', '2');
-    this.addEdge('2', '3');
     // Initializes the force layout.
     this.initForce();
     this.restart();
@@ -69,9 +87,11 @@ Editor.prototype.init = function() {
  */
 Editor.prototype.restart = function() {
     this.resizeForce();
-    this.restartLinks();
     this.restartNodes();
+    this.restartLinks();
 
+    // Set the background to light gray if editor is readonly.
+    this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
     // Set the graph in motion
     this.force.start();
 }
@@ -81,12 +101,13 @@ Editor.prototype.restart = function() {
  * Insert a new node if CTRL key is not pressed. Otherwise, drag the graph.
  */
 Editor.prototype.mousedown = function() {
+    if (this.readonly === true) {
+        return;
+    }
     this.svg.classed('active', true);
-
     if (d3.event.ctrlKey || this.mousedown_node || this.mousedown_link) {
         return;
     }
-
     // Insert new node at point.
     var point = d3.mouse(d3.event.target),
         node =  this.addNode();
@@ -200,17 +221,18 @@ Editor.prototype.getNodeList  = function() {
  * Ignores otherwise.
  */
 Editor.prototype.mousemove = function() {
+    if (this.readonly) {
+        return;
+    }
     // This indicates if the mouse is pressed at present.
     if (!this.mousedown_node) {
         return;
     }
-
     // Update drag line.
     this.drag_line.attr('d', 'M' + this.mousedown_node.x + ',' +
         this.mousedown_node.y + 'L' + d3.mouse(this.svg[0][0])[0] + ',' +
         d3.mouse(this.svg[0][0])[1]
     );
-
     this.restart();
 }
 
@@ -335,10 +357,7 @@ Editor.prototype.keyup = function() {
  * }
  */
 Editor.prototype.buildGraphFromAdjList = function(adjList) {
-    this.links = [];
-    this.nodes = [];
-    this.numNodes = 0;
-
+    this.empty();
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in adjList) {
         var node = this.getNodeWithId(nodeId);
@@ -359,7 +378,6 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         }
     }
     this.updateGraphData(adjList);
-    this.init();
     this.restart();
 }
 
@@ -428,6 +446,7 @@ Editor.prototype.showPreloader = function() {
 Editor.prototype.hidePreloader = function() {
     this.svg.selectAll('g').transition().style('opacity', 1);
     this.preloader.transition().style('opacity', 0);
+    this.restart();
 }
 
 /*
@@ -468,7 +487,6 @@ Editor.prototype.colorNodes = function(nodeIds, color, uncolorRest) {
             node.color = color;
         }
     }
-    
     // If uncolorRest is specified
     if (uncolorRest) {
         for (var i = 0; i < this.nodes.length; i++) {
