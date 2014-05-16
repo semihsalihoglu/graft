@@ -1,4 +1,4 @@
-package stanford.infolab.plugin.mock;
+package stanford.infolab.debugger.mock;
 
 import java.io.IOException;
 import java.io.StringWriter;
