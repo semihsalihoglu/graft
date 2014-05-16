@@ -28,5 +28,4 @@
 #end
 
     classUnderTest.initialize(graphState, processor, null, aggr, null);
-        
   }
