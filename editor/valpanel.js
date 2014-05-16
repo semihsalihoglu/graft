@@ -4,6 +4,7 @@
  * @param {container, resizeCallback} options - Initialize panel with these options.
  * @param options.validationPanelContainer - Container of the panel.
  * @param {callback} options.resizeCallback - Called when manual resize of the panel is complete.
+ * @param {object} options.editor - Reference to the graph editor object.
  */
 function ValidationPanel(options) {
     // JSON object of the buttons appearing.
@@ -32,6 +33,9 @@ function ValidationPanel(options) {
     this.container = options.container;
     this.resizeCallback = options.resizeCallback;
     this.debuggerServerRoot = options.debuggerServerRoot;
+    this.editor = options.editor;
+    // Which label is currently being shown
+    this.currentLabel = null;
     
     $(this.container).css('height', this.height + 'px')
     // Make it resizable horizontally
@@ -146,6 +150,8 @@ ValidationPanel.prototype.compact = function() {
     if (!$(this.container).is(':animated')) {
         var prevState = this.state;
         this.state = ValidationPanel.StateEnum.COMPACT;
+        // Uncolor all editor nodes
+        this.editor.colorNodes([], null /* not required */, true);
         $(this.btnClose).hide();
         $(this.rightArrow).show();
         $(this.contentContainer).hide();
@@ -183,19 +189,22 @@ ValidationPanel.prototype.expand = function() {
  */
 ValidationPanel.prototype.showMessageViolations = function() {
     this.expand();
+    this.currentLabel = 'M';
     // Empty the content container and add violations table.
     // TODO(vikesh) Better visualization/search.
     this.contentContainer.empty();
     // The data should already be present in the buttonData cache.
-    violations = this.buttonData['M'].data.violations;
+    violations = this.buttonData[this.currentLabel].data.violations;
     var table = $("<table />")
         .attr('class', 'table')
         .html('<tr><th>Source</th><th>Destination</th><th>Message</th></tr>')
         .appendTo(this.contentContainer);
 
-    for (var i = 0; i < violations.length; ++i) {
-        var violation = violations[i];
-        table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(violation.srcId, violation.destinationId, violation.message)));
+    if (violations) {
+        for (var i = 0; i < violations.length; ++i) {
+            var violation = violations[i];
+            table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(violation.srcId, violation.destinationId, violation.message)));
+        }
     }
 }
 
@@ -205,7 +214,8 @@ ValidationPanel.prototype.showMessageViolations = function() {
  */
 ValidationPanel.prototype.showVertexViolations = function() {
     this.expand();
-    violations = this.buttonData['V'].data.violations;
+    this.currentLabel = 'V';
+    violations = this.buttonData[this.currentLabel].data.violations;
     // Empty the content container and add violations table.
     // TODO(vikesh) Better visualization/search.
     this.contentContainer.empty();
@@ -213,11 +223,17 @@ ValidationPanel.prototype.showVertexViolations = function() {
         .attr('class', 'table')
         .html('<tr><th>Vertex ID</th><th>Vertex Value</th></tr>')
         .appendTo(this.contentContainer);
-
-    for (var i = 0; i < violations.length; ++i) {
-        var violation = violations[i];
-        table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
+    var violationIds = [];
+    if (violations) {
+        for (var i = 0; violations && i < violations.length; ++i) {
+            var violation = violations[i];
+            violationIds.push(violation.vertexId);
+            table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
+        }
     }
+    // Color the vertices with violations
+    // TODO(vikesh) - Dont hardcode color here. Use the same error color for all violation types.
+    this.editor.colorNodes(violationIds, this.editor.errorColor, true);
 }
 
 /*
@@ -225,6 +241,7 @@ ValidationPanel.prototype.showVertexViolations = function() {
  */
 ValidationPanel.prototype.showExceptions = function() {
     this.expand();
+    this.currentLabel = 'E';
     // Empty the content container and add violations table.
     // TODO(vikesh) Better visualization/search.
     this.contentContainer.empty();
@@ -232,11 +249,15 @@ ValidationPanel.prototype.showExceptions = function() {
         .attr('class', 'table')
         .html('<tr><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr>')
         .appendTo(this.contentContainer);
-    var data = this.buttonData['E'].data; 
+    var data = this.buttonData[this.currentLabel].data; 
+    var violationIds = [];
     for (vertexId in data) {
         table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(vertexId, 
                     data[vertexId].exception.message, data[vertexId].exception.stackTrace)));
+        violationIds.push(vertexId);
     }
+    // Color the nodes with exception.
+    this.editor.colorNodes(violationIds, this.editor.errorColor, true);
 }
 
 
@@ -246,6 +267,7 @@ ValidationPanel.prototype.showExceptions = function() {
  */
 ValidationPanel.prototype.onReceiveData = function(buttonType) {
     return (function(response) {
+        // Data is set here. The click handlers will simply use this data.
         this.buttonData[buttonType].data = response;
         this.buttonData[buttonType].button.attr('disabled', false);
         // No violations.
@@ -255,6 +277,10 @@ ValidationPanel.prototype.onReceiveData = function(buttonType) {
         } else {
             this.buttonData[buttonType].button.addClass('btn-danger');
             this.buttonData[buttonType].button.removeClass('btn-success');
+        }
+        // If this is the currently selected label, update the contents.
+        if (buttonType === this.currentLabel) {
+            this.buttonData[buttonType].clickHandler(); 
         }
     }).bind(this);
 }

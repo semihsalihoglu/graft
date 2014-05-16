@@ -22,7 +22,6 @@ Editor.prototype.resizeForce = function() {
 Editor.prototype.initElements = function() {
     // Initialize colors for nodes
     this.colors = d3.scale.category10();
-
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
@@ -105,7 +104,7 @@ Editor.prototype.initForce = function() {
                               .links(this.links)
                               .size([this.width, this.height])
                               .linkDistance(150)
-                              .charge( -500 )
+                              .charge(-500 )
                               .on('tick', this.tick.bind(this))
 }
 
@@ -189,7 +188,7 @@ function getPadding(node) {
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
-    return {id : id, reflexive : false, attrs : [], x: 0, y: 0, enabled: true};
+    return {id : id, reflexive : false, attrs : [], x: Math.random(), y: Math.random(), enabled: true, color: this.defaultColor};
 }
 
 /*
@@ -340,14 +339,13 @@ Editor.prototype.addNodes = function() {
     // that is not present in this.circle already.
     var g = this.circle.enter().append('svg:g');
 
-    // Draw the new node.
     g.attr('class', 'node-container')
          .append('svg:circle')
          .attr('class', 'node')
          .attr('r', (function(d) {
              return getRadius(d);
          }).bind(this))
-         .style('fill', '#FFFDDB')
+         .style('fill', this.defaultColor)
          .style('stroke', '#000000')
          .classed('reflexive', function(d) { return d.reflexive; })
          .on('mouseover', (function(d) {
@@ -365,7 +363,7 @@ Editor.prototype.addNodes = function() {
              d3.select(d3.event.target).attr('transform', '');
          }).bind(this))
          .on('mousedown', (function(d) {
-             if (d3.event.ctrlKey) {
+             if (d3.event.ctrlKey || this.readonly) {
                  return;
              }
              // Select node.
@@ -430,17 +428,16 @@ Editor.prototype.restartNodes = function() {
     // Set the circle group's data to this.nodes.
     // Note that nodes are identified by id, not their index in the array.
     this.circle = this.circle.data(this.nodes, function(d) { return d.id; });
-
+    // NOTE: addNodes must only be called after .data is set to the latest
+    // this.nodes. This is done at the beginning of this method.
+    this.addNodes();
     // Update existing nodes (reflexive & selected visual states)
     this.circle.selectAll('circle')
-        .style('fill', '#FFFDDB')
+        .style('fill', function(d) { return d.color; })
         .classed('reflexive', function(d) { return d.reflexive; })
         .attr('r', function(d) { return getRadius(d);  });
-
     // If node is not enabled, set its opacity to 0.2    
     this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.2; });
-    this.addNodes();
-
     // Update node IDs
     var el = this.circle.selectAll('text').text('');
     el.append('tspan')
@@ -452,7 +449,6 @@ Editor.prototype.restartNodes = function() {
               return d.attrs.length > 0 ? '-8' : '0 ';
           })
           .attr('class', 'id');
-
     // Node value (if present) is added/updated here
     el.append('tspan')
           .text(function(d) {
@@ -463,8 +459,7 @@ Editor.prototype.restartNodes = function() {
               return d.attrs.length > 0 ? '18' : '0';
           })
           .attr('class', 'vval');
-
-   // remove old nodes
+    // remove old nodes
     this.circle.exit().remove();
 }
 

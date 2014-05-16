@@ -11,30 +11,28 @@
  * @constructor
  */
 function GiraphDebugger(options) {
+    // Initialize (and reset) variables for jobs.
+    this.resetVars();
+    this.debuggerServerRoot = 'http://localhost:8000';
+    this.mode = GiraphDebugger.ModeEnum.EDIT;
     this.init(options);
-    this.selectedNodeId = null; // Node that is currently double clicked;
     return this;
+}
+
+/* 
+ * Denotes the mode
+ * Debug Mode - Editor is in readonly, walking through the supersteps of a giraph job.
+ * Edit Mode - Create new graphs in the editor.
+ */
+GiraphDebugger.ModeEnum = {
+    DEBUG : 'debug',
+    EDIT : 'edit'
 }
 
 /*
  * Initializes the graph editor, node attr modal DOM elements.
  */
 GiraphDebugger.prototype.init = function(options) {
-    // Initialize current superstep to -2 (Not in debug mode)
-    this.currentSuperstepNumber = -2;
-    // ID of the job currently being debugged.
-    this.currentJobId = null;
-    // Minimum value of superstepNumber
-    this.minSuperstepNumber = -1;
-    // Maximum value of superstepNumber - Depends on the job.
-    // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
-    this.maxSuperstepNumber = 15;
-    // Caches the scenarios to show correct information when going backwards.
-    // Cumulatively builds the state of the graph starting from the first superstep by merging
-    // scenarios on top of each other.
-    this.stateCache = {"-1":{}};
-    this.debuggerServerRoot = 'http://localhost:8000';
-
     this.editorContainerId = 'editor-container';
     this.valpanelId = 'valpanel-container';
 
@@ -58,6 +56,7 @@ GiraphDebugger.prototype.init = function(options) {
     // Instantiate the valpanel object.
     this.valpanel = new ValidationPanel({
         'container' : '#' + this.valpanelId,
+        'editor' : this.editor,
         'debuggerServerRoot' : this.debuggerServerRoot,
         'resizeCallback' : (function() {
             this.editor.restart();
@@ -69,6 +68,27 @@ GiraphDebugger.prototype.init = function(options) {
     this.nodeAttrContainer = options.nodeAttrContainer;
     this.superstepControlsContainer = options.superstepControlsContainer;
     this.initElements(options);
+}
+
+/*
+ * Reset job-related vars to the initial state. 
+ */
+GiraphDebugger.prototype.resetVars = function() { 
+    // Node that is currently double clicked.
+    this.selectedNodeId = null;
+    // Initialize current superstep to -2 (Not in debug mode)
+    this.currentSuperstepNumber = -2;
+    // ID of the job currently being debugged.
+    this.currentJobId = null;
+    // Minimum value of superstepNumber
+    this.minSuperstepNumber = -1;
+    // Maximum value of superstepNumber - Depends on the job.
+    // TODO(vikesh): Fetch from debugger server in some AJAX call. Replace constant below.
+    this.maxSuperstepNumber = 15;
+    // Caches the scenarios to show correct information when going backwards.
+    // Cumulatively builds the state of the graph starting from the first superstep by merging
+    // scenarios on top of each other.
+    this.stateCache = {"-1": {}};
 }
 
 /*
@@ -310,13 +330,11 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         this.currentJobId = $(this.fetchJobIdInput).val();
         this.currentSuperstepNumber = 0;
         this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
+        this.toggleMode();
     }).bind(this));
     // On clicking the edit mode button, hide the superstep controls and show fetch form.
     $(this.btnEditMode).click((function(event) {
-        this.editor.init();
-        this.editor.restart();
-        $(this.formControls).hide();
-        $(this.formFetchJob).show();
+        this.toggleMode();
     }).bind(this));
 
     // Handle the next and previous buttons on the superstep controls.
@@ -339,7 +357,6 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
                 'vertexId' : vertexId,
                 'raw' : 'dummy'
         });
-        //console.log(urlParams);
         location.href = this.debuggerServerRoot + "/scenario?" + urlParams;
     }).bind(this));
 }
@@ -367,8 +384,6 @@ GiraphDebugger.prototype.marshallScenarioForEditor = function (data) {
 GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     console.log("Changing Superstep to : " + superstepNumber);
     $(this.superstepLabel).html(superstepNumber);
-    // Show preloader while AJAX request is in progress.
-    this.editor.showPreloader();
     // Update data of the valpanel
     this.valpanel.setData(jobId, superstepNumber);
 
@@ -385,6 +400,8 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
     if (superstepNumber in this.stateCache) {
         this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
     } else {
+        // Show preloader while AJAX request is in progress.
+        this.editor.showPreloader();
         // Fetch from the debugger server.
         $.ajax({
             url : this.debuggerServerRoot + '/scenario',
@@ -406,12 +423,14 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
                 this.stateCache[superstepNumber] = this.mergeStates(this.stateCache[superstepNumber - 1], data);
                 this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
             }
-            $(this.formFetchJob).hide();
-            $(this.formControls).show();
         }).bind(this))
         .fail(function(error) {
             console.log(error);
-        });
+        })
+        .always((function() {
+            // Hide Editor's preloader.
+            this.editor.hidePreloader();
+        }).bind(this));
     }
     // Superstep changed. Enable/Disable the prev/next buttons.
     $(this.btnNextStep).attr('disabled', superstepNumber === this.maxSuperstepNumber);
@@ -438,7 +457,6 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
             this.editor.disableNode(nodeId);
         }
     }
-    this.editor.hidePreloader();
     this.editor.restart();
 }
 
@@ -590,4 +608,28 @@ GiraphDebugger.prototype.mergeStates = function(baseState, deltaState) {
         newState[nodeId].debugged = true;
     }
     return newState;
+}
+
+/*
+ * Toggles between the debug and edit modes.
+ */
+GiraphDebugger.prototype.toggleMode = function() {
+    if (this.mode === GiraphDebugger.ModeEnum.DEBUG) {
+        this.mode = GiraphDebugger.ModeEnum.EDIT;
+        // Start with a sample graph as usual.
+        this.editor.readonly = false;
+        this.editor.buildSample();
+        // Show Fetch Job and hide controls
+        $(this.formControls).hide();
+        $(this.formFetchJob).show();
+        // Reset vars
+        this.resetVars();
+    } else {
+        this.mode = GiraphDebugger.ModeEnum.DEBUG;
+        // Set the editor in readonly mode.
+        this.editor.readonly = true;
+        // Show Form controls and hide fetch job.
+        $(this.formControls).show();
+        $(this.formFetchJob).hide();
+    }
 }
