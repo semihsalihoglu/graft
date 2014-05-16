@@ -17,6 +17,9 @@ function Editor(options) {
     this.readonly = false;
     // Data for the graph nodes and edges.
     this.defaultColor = '#FFFDDB'
+    // Useful options. Not required by the editor class itself.
+    this.errorColor = '#FF9494';
+
     this.nodes = [];
     this.links = [];
     this.messages = [];
@@ -272,7 +275,7 @@ Editor.prototype.keydown = function() {
         this.svg.classed('ctrl', true);
     }
 
-    if (!this.selected_node && !this.selected_link) {
+    if (!this.selected_node && !this.selected_link || this.readonly) {
         return;
     }
 
