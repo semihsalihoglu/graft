@@ -331,7 +331,7 @@ Editor.prototype.restartLinks = function() {
                      }).bind(this));
     // Add edge value labels for the new edges.
     // Note that two tspans are required for 
-    // left and right links (represented by the same 'link' object
+    // left and right links (represented by the same 'link' object)
     var textPaths = this.pathLabels.enter()
         .append('svg:text')
         .append('svg:textPath')
