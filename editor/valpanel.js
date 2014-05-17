@@ -149,6 +149,7 @@ ValidationPanel.prototype.preview = function() {
 ValidationPanel.prototype.compact = function() {
     if (!$(this.container).is(':animated')) {
         var prevState = this.state;
+        this.currentLabel = null;
         this.state = ValidationPanel.StateEnum.COMPACT;
         // Uncolor all editor nodes
         this.editor.colorNodes([], null /* not required */, true);
@@ -232,7 +233,6 @@ ValidationPanel.prototype.showVertexViolations = function() {
         }
     }
     // Color the vertices with violations
-    // TODO(vikesh) - Dont hardcode color here. Use the same error color for all violation types.
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
 }
 

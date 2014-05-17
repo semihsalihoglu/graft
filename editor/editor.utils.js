@@ -212,7 +212,12 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
         target = sourceNodeId;
         direction = 'left';
     }
-    link = {source: this.getNodeWithId(source), target: this.getNodeWithId(target), left: false, right: false};
+    // Every link has an ID - Added to the SVG element to show edge value as textPath
+    if (!this.maxLinkId) {
+        this.maxLinkId = 0;
+    }
+    link = {source : this.getNodeWithId(source), target : this.getNodeWithId(target), 
+        id : this.maxLinkId++, leftValue : null, rightValue : null,  left : false, right : false};
     link[direction] = true;
     return link;
 }
@@ -270,6 +275,7 @@ Editor.prototype.addNode = function(nodeId) {
 Editor.prototype.restartLinks = function() {
     // path (link) group
     this.path = this.path.data(this.links);
+    this.pathLabels = this.pathLabels.data(this.links);
 
     // Update existing links
     this.path.classed('selected', (function(d) {
@@ -293,6 +299,7 @@ Editor.prototype.restartLinks = function() {
     this.path.enter()
                  .append('svg:path')
                      .attr('class', 'link')
+                     .attr('id', function(d) { return d.id })
                      .classed('selected', (function(d) {
                          return d === this.selected_link;
                      }).bind(this))
@@ -312,7 +319,6 @@ Editor.prototype.restartLinks = function() {
                          if (d3.event.ctrlKey) {
                              return;
                          }
-
                          // Select link
                          this.mousedown_link = d;
                          if (this.mousedown_link === this.selected_link) {
@@ -323,9 +329,32 @@ Editor.prototype.restartLinks = function() {
                          this.selected_node = null;
                          this.restart();
                      }).bind(this));
+    // Add edge value labels for the new edges.
+    // Note that two tspans are required for 
+    // left and right links (represented by the same 'link' object
+    var textPaths = this.pathLabels.enter()
+        .append('svg:text')
+        .append('svg:textPath')
+        .attr('xlink:href', function(d) { return '#' + d.id })
+        .attr('startOffset', '35%');
 
+    textPaths.append('tspan')
+        .attr('dy', -6)
+        .attr('data-orientation', 'right')
+    textPaths.append('tspan')
+        .attr('dy', 20)
+        .attr('x', 5)
+        .attr('data-orientation', 'left')
+
+    // Update the tspans with the edge value
+    this.pathLabels.selectAll('tspan').text(function(d) {
+        return $(this).attr('data-orientation') === 'right' 
+            ? ( d.right ? d.rightValue : null ) 
+            : ( d.left ? d.leftValue : null );
+    });
     // Remove old links.
     this.path.exit().remove();
+    this.pathLabels.exit().remove();
 }
 
 /*

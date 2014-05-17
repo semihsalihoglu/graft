@@ -77,7 +77,9 @@ Editor.prototype.init = function() {
                                  .attr('class', 'link dragline hidden')
                                  .attr('d', 'M0,0L0,0');
     // Handles to link and node element groups.
-    this.path = this.svg.append('svg:g').selectAll('path'),
+    this.pathContainer = this.svg.append('svg:g')
+    this.path = this.pathContainer.selectAll('path');
+    this.pathLabels = this.pathContainer.selectAll('text');
     this.circle = this.svg.append('svg:g').selectAll('g');
     // Initializes the force layout.
     this.initForce();
