@@ -57,9 +57,8 @@ public class TestCaseGenerator {
   }
 
   @SuppressWarnings("rawtypes")
-  public String generateTest(
-      GiraphScenarioWrapper input, String testPackage) throws VelocityException,
-      IOException {
+  public String generateTest(GiraphScenarioWrapper input, String testPackage) 
+      throws VelocityException, IOException {
     VelocityContext context = buildContext(input);
 
     try (StringWriter sw = new StringWriter()) {
