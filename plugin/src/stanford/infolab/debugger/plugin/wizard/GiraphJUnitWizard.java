@@ -1,4 +1,4 @@
-package stanford.infolab.plugin.wizard;
+package stanford.infolab.debugger.plugin.wizard;
 
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -16,7 +16,7 @@ import org.eclipse.ui.actions.WorkspaceModifyDelegatingOperation;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
 
-import stanford.infolab.plugin.Activator;
+import stanford.infolab.debugger.plugin.Activator;
 
 public class GiraphJUnitWizard extends Wizard implements INewWizard {
 

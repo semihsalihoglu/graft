@@ -9,7 +9,7 @@
  * Test Dialog -- allow Enums Kris De Volder <kris.de.volder@gmail.com> - Allow changing the default
  * superclass in NewTestCaseWizardPageOne - https://bugs.eclipse.org/312204
  *******************************************************************************/
-package stanford.infolab.plugin.wizard;
+package stanford.infolab.debugger.plugin.wizard;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -40,8 +40,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage;
 
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
-import stanford.infolab.plugin.Activator;
-import stanford.infolab.plugin.mock.TestCaseGenerator;
+import stanford.infolab.debugger.plugin.Activator;
+import stanford.infolab.debugger.mock.TestCaseGenerator;
 
 /**
  * The class <code>NewTestCaseWizardPageOne</code> contains controls and validation routines for the
@@ -306,8 +306,8 @@ public class GiraphJUnitWizardPage extends NewTypeWizardPage {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   private void createTestCompute(IType type, ImportsManager imports) throws CoreException {
-    @SuppressWarnings("rawtypes")
     GiraphScenarioWrapper scenario = getScenario();
 
     imports.addImport("org.junit.Test");

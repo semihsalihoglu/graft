@@ -14,13 +14,6 @@
     <project.build.targetJdk>1.7</project.build.targetJdk>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>my-local-repo</id>
-      <url>file://${top.dir}/my-repo</url>
-    </repository>
-  </repositories>
-
   <build>
     <plugins>
       <plugin>
@@ -104,13 +97,13 @@
    </dependency>
    <dependency>
      <groupId>org.apache.giraph</groupId>
-     <artifactId>giraph-core-trunk</artifactId>
-     <version>1.1.0</version>
+     <artifactId>giraph-core</artifactId>
+     <version>1.1.0-SNAPSHOT</version>
    </dependency>
    <dependency>
      <groupId>org.apache.giraph</groupId>
-     <artifactId>giraph-examples-trunk</artifactId>
-     <version>1.1.0</version>
+     <artifactId>giraph-examples</artifactId>
+     <version>1.1.0-SNAPSHOT</version>
    </dependency>
    <dependency>
      <groupId>org.apache.hadoop</groupId>
@@ -155,7 +148,7 @@
    <dependency>
      <groupId>junit</groupId>
      <artifactId>junit</artifactId>
-     <version>4.8.1</version>
+     <version>4.11</version>
      <scope>test</scope>
    </dependency>
    <dependency>

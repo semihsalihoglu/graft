@@ -1,4 +1,4 @@
-package stanford.infolab.plugin.mock;
+package stanford.infolab.debugger.mock;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -24,7 +24,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -57,35 +56,10 @@ public class TestCaseGenerator {
     return unsolvedWritableSet;
   }
 
-  public <I extends WritableComparable<I>, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable> String generateTest(
-      GiraphScenarioWrapper<I, V, E, M1, M2> input, String testPackage) throws VelocityException,
-      IOException {
-    VelocityContext context = new VelocityContext();
-
-    context.put("package", testPackage);
-
-    @SuppressWarnings("rawtypes")
-    HashSet<Class> usedTypes = new LinkedHashSet<>(6);
-    usedTypes.add(input.getClassUnderTest());
-    usedTypes.add(input.getVertexIdClass());
-    usedTypes.add(input.getVertexValueClass());
-    usedTypes.add(input.getEdgeValueClass());
-    usedTypes.add(input.getIncomingMessageClass());
-    usedTypes.add(input.getOutgoingMessageClass());
-    context.put("usedTypes", usedTypes);
-
-    context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
-
-    context.put("vertexIdType", input.getVertexIdClass().getSimpleName());
-    context.put("vertexValueType", input.getVertexValueClass().getSimpleName());
-    context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
-    context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
-    context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
-
-    context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
-    context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
-    context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
-    context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
+  @SuppressWarnings("rawtypes")
+  public String generateTest(GiraphScenarioWrapper input, String testPackage) 
+      throws VelocityException, IOException {
+    VelocityContext context = buildContext(input);
 
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("TestCaseTemplate.vm");
@@ -122,41 +96,8 @@ public class TestCaseGenerator {
 
   @SuppressWarnings("rawtypes")
   public String generateSetUp(GiraphScenarioWrapper input) throws VelocityException, IOException {
-    VelocityContext context = new VelocityContext();
-    context.put("helper", new FormatHelper());
-
-    context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
-
-    context.put("vertexIdType", input.getVertexIdClass().getSimpleName());
-    context.put("vertexValueType", input.getVertexValueClass().getSimpleName());
-    context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
-    context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
-    context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
+    VelocityContext context = buildContext(input);
     
-    context.put("superstepNo", input.getContextWrapper().getSuperstepNoWrapper());
-    context.put("nVertices", input.getContextWrapper().getTotalNumVerticesWrapper());
-    context.put("nEdges", input.getContextWrapper().getTotalNumEdgesWrapper());
-    
-//    List<Aggregator> aggregators = Arrays.asList(new Aggregator("testAggr", 
-//        new DoubleWritable(1.0)));
-    context.put("aggregators", input.getContextWrapper().getPreviousAggregatedValues());
-    
-    //TODO(brian): Use default values for now, change when data are available
-//    List<Config> configs = Arrays.asList(new Config("Epsilon", 0.01f), new Config("MaxSteps", 100), 
-//        new Config("MaxError", 655.36f));
-    List<Config> configs = new ArrayList<>();
-    for (Iterator<Entry<String,String>> configIter = input.getConfig().iterator();
-        configIter.hasNext(); ) {
-      Entry<String,String> entry = configIter.next();
-      configs.add(new Config(entry.getKey(), entry.getValue()));
-    }
-    context.put("configs", configs);
-    
-    context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
-    context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
-    context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
-    context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
-
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("SetUpTemplate.vm");
       template.merge(context, sw);
@@ -164,36 +105,11 @@ public class TestCaseGenerator {
     }
   }
   
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"rawtypes"})
   public String generateTestCompute(GiraphScenarioWrapper input) throws VelocityException, IOException {
     unsolvedWritableSet.clear();
     
-    VelocityContext context = new VelocityContext();
-    context.put("helper", new FormatHelper());
-    
-    context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
-    
-    context.put("vertexIdType", input.getVertexIdClass().getSimpleName());
-    context.put("vertexValueType", input.getVertexValueClass().getSimpleName());
-    context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
-    context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
-    context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
-    
-    context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
-    context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
-    context.put("vertexValueAfter", input.getContextWrapper().getVertexValueAfterWrapper());
-    context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
-    context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
-    
-    HashMap<OutgoingMessageWrapper, OutMsg> outMsgMap = new HashMap<>();
-    for (OutgoingMessageWrapper msg : 
-        (Collection<OutgoingMessageWrapper>)input.getContextWrapper().getOutgoingMessageWrappers()) {
-      if (outMsgMap.containsKey(msg))
-        outMsgMap.get(msg).incrementTimes();
-      else
-        outMsgMap.put(msg, new OutMsg(msg));
-    }
-    context.put("outMsgs", outMsgMap.values());
+    VelocityContext context = buildContext(input);
     
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("TestComputeTemplate.vm");
@@ -211,6 +127,64 @@ public class TestCaseGenerator {
       template.merge(context, sw);
       return sw.toString();
     }
+  }
+  
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private VelocityContext buildContext(GiraphScenarioWrapper input) {
+    VelocityContext context = new VelocityContext();
+
+    HashSet<Class> usedTypes = new LinkedHashSet<>(6);
+    usedTypes.add(input.getClassUnderTest());
+    usedTypes.add(input.getVertexIdClass());
+    usedTypes.add(input.getVertexValueClass());
+    usedTypes.add(input.getEdgeValueClass());
+    usedTypes.add(input.getIncomingMessageClass());
+    usedTypes.add(input.getOutgoingMessageClass());
+    context.put("usedTypes", usedTypes);
+
+    context.put("helper", new FormatHelper());
+    
+    context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
+
+    context.put("vertexIdType", input.getVertexIdClass().getSimpleName());
+    context.put("vertexValueType", input.getVertexValueClass().getSimpleName());
+    context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
+    context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
+    context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
+    
+    context.put("superstepNo", input.getContextWrapper().getSuperstepNoWrapper());
+    context.put("nVertices", input.getContextWrapper().getTotalNumVerticesWrapper());
+    context.put("nEdges", input.getContextWrapper().getTotalNumEdgesWrapper());
+    
+    context.put("aggregators", input.getContextWrapper().getPreviousAggregatedValues());
+    
+    List<Config> configs = new ArrayList<>();
+    if (input.getConfig() != null) {
+      for (Iterator<Entry<String,String>> configIter = input.getConfig().iterator();
+          configIter.hasNext(); ) {
+        Entry<String,String> entry = configIter.next();
+        configs.add(new Config(entry.getKey(), entry.getValue()));
+      }
+    }
+    context.put("configs", configs);
+
+    context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
+    context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
+    context.put("vertexValueAfter", input.getContextWrapper().getVertexValueAfterWrapper());
+    context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
+    context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
+
+    HashMap<OutgoingMessageWrapper, OutMsg> outMsgMap = new HashMap<>();
+    for (OutgoingMessageWrapper msg : 
+        (Collection<OutgoingMessageWrapper>)input.getContextWrapper().getOutgoingMessageWrappers()) {
+      if (outMsgMap.containsKey(msg))
+        outMsgMap.get(msg).incrementTimes();
+      else
+        outMsgMap.put(msg, new OutMsg(msg));
+    }
+    context.put("outMsgs", outMsgMap.values());
+    
+    return context;
   }
   
   public class FormatHelper {
