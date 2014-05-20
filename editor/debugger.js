@@ -20,7 +20,7 @@ function GiraphDebugger(options) {
 }
 
 /* 
- * Denotes the mode
+ * Denotes the mode.
  * Debug Mode - Editor is in readonly, walking through the supersteps of a giraph job.
  * Edit Mode - Create new graphs in the editor.
  */
@@ -205,7 +205,8 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
     var messageTabs = $('<ul />')
         .addClass('nav nav-tabs')
         .html('<li class="active"><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>' +
-            '<li><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>')
+            '<li><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>' + 
+            '<li><a id="node-attr-edgevals" class="nav-msg" href="#!">Edge Value</a></li>')
         .appendTo(messageContainer);
 
     var tableContainer = $('<div />')
@@ -485,7 +486,7 @@ GiraphDebugger.prototype.initElements = function() {
         // Render the table
         var clickedId = event.target.id;
         var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-') + 1, clickedId.length);
-        this.toggleMessageTabs(clickedSuffix);
+        this.toggleMessageTabs(clickedId);
         var messageData = clickedSuffix === 'sent' ?
             this.editor.getMessagesSentByNode(this.selectedNodeId) :
             this.editor.getMessagesReceivedByNode(this.selectedNodeId);
@@ -558,7 +559,7 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
     }).bind(this));
 
     // Set the 'Sent' tab as the active tab and show messages.
-    this.toggleMessageTabs('sent');
+    this.toggleMessageTabs('node-attr-sent');
     this.showMessages(data.editor.getMessagesSentByNode(this.selectedNodeId));
 }
 
@@ -567,12 +568,12 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
  * by setting/removing the 'active' classes on the corresponding elements.
  * @param - Suffix of the clicked element (one of 'sent'/'received')
  */
-GiraphDebugger.prototype.toggleMessageTabs = function(activeSuffix) {
-    // Remove the active class from the li element of the other link
-    var removeSuffix = (activeSuffix === 'sent' ? 'received' : 'sent');
-    $('#node-attr-' + removeSuffix).parent().removeClass('active');
-    // Add the active class to the li element (parent) of the clicked link
-    $('#node-attr-' + activeSuffix).parent().addClass('active');
+GiraphDebugger.prototype.toggleMessageTabs = function(clickedId) {
+    if (this.currentlyActiveTab) {
+        $(this.currentlyActiveTab).parent().removeClass('active');
+    }
+    this.currentlyActiveTab = $('#' + clickedId);
+    $(this.currentlyActiveTab).parent().addClass('active');
 }
 
 /*
