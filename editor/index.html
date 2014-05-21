@@ -5,8 +5,9 @@
     <title>Graft</title>
 		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
-		<link rel="stylesheet" href="app.css">
-		<link rel="stylesheet" href="valpanel.css">
+		<link rel="stylesheet" href="css/valpanel.css">
+		<link rel="stylesheet" href="css/slider/slider.css">
+		<link rel="stylesheet" href="css/app.css">
 		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 		<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
@@ -14,6 +15,7 @@
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 		<script src="js/noty/packaged/jquery.noty.packaged.min.js"></script>
+		<script src="js/slider/bootstrap-slider.js"></script>
 		<script src="js/utils.js"></script>
 		<script src="js/editor.core.js"></script>
 		<script src="js/editor.utils.js"></script>
@@ -25,17 +27,7 @@
 			var currentSuperstep = -1;
 
 			$(document).ready(function(){
-					// Test
-					$("#integrity-container").mouseenter(function() {
-						//$("#integrity-container").css('width', "200px");
-						$("#integrity-container").animate({ width: "150px"}, 250);
-					});	
 					
-					$("#integrity-container").mouseleave(function() {
-						//$("#integrity-container").css('width', "200px");
-						$("#integrity-container").animate({ width: "45px"}, 500);
-					});	
-
 					$("#node-attr-id").keyup(function(event){
 						if(event.keyCode===13){
 							$("#btn-node-attr-save").click();
@@ -128,6 +120,18 @@
 					$("#btn-attr-view-cancel").click(function() {
 						$("#attr-view").dialog("close");
 					});
+
+					// Slider for linkDistance 
+					$('#slider-link-distance').slider({
+						min : editor.linkDistance,
+						value : editor.linkDistance,
+						max : 500
+					})
+					.on('slideStop', function(ev) {
+						// resize the linkDistance of editor
+						editor.linkDistance = ev.value;
+						editor.restart();
+					});
 				});
 		</script>
 	</head>
@@ -204,6 +208,8 @@
 			<!-- Row2 begins-->
 			<div class="row" style="margin-top:20px;">
 				<div class="col-md-6">
+					<!-- Slider for linkDistance-->
+					<label>Link Distance : </label> <div class="slider" id="slider-link-distance"></div>
 				</div>
 			</div> <!--Row2 ends-->
 

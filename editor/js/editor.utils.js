@@ -12,16 +12,15 @@ Editor.prototype.setSize = function() {
  * svg elements within the container.
  */
 Editor.prototype.resizeForce = function() {
-    this.setSize();
-    this.force.size([this.width, this.height]);
+    this.force.size([this.width, this.height])
+              .linkDistance(this.linkDistance)
+              .charge(-500 - (this.linkDistance - 150)*2);
 }
 
 /*
  * Initializes the SVG element, along with marker and defs.
  */
 Editor.prototype.initElements = function() {
-    // Initialize colors for nodes
-    this.colors = d3.scale.category10();
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
@@ -70,6 +69,13 @@ Editor.prototype.initElements = function() {
                       .text('Loading')
                       .attr('x', '40')
                       .attr('y', '128');
+    // Aggregators
+    this.globalsContainer = this.svg.append('svg:g');
+    this.globalsContainer.append('text')
+                       .attr('class', 'editor-globals-heading')
+                       .text('Aggregators');
+   // d3 selector for global key-value pairs
+   this.globs = this.globalsContainer.append('text').selectAll('tspan');
 }
 
 /*
@@ -103,7 +109,7 @@ Editor.prototype.initForce = function() {
                               .nodes(this.nodes)
                               .links(this.links)
                               .size([this.width, this.height])
-                              .linkDistance(150)
+                              .linkDistance(this.linkDistance)
                               .charge(-500 )
                               .on('tick', this.tick.bind(this))
 }
@@ -195,29 +201,32 @@ Editor.prototype.getNewNode = function(id) {
  * Returns a new link (edge) object from the node IDs of the logical edge.
  * @param {string} sourceNodeId - The ID of the source node in the logical edge.
  * @param {string} targetNodeId - The ID of the target node in the logical edge.
+ * @param {string} [edgeValue] - Value associated with the edge. Optional parameter.
  * @desc - Logical edge means, "Edge from node with ID x to node with ID y".
  * It implicitly captures the direction. However, the link objects have
  * the 'left' and 'right' properties to denote direction. Also, source strictly < target.
  * Therefore, the source and target may not match that of the logical edge, but the
  * direction will compensate for the mismatch.
  */
-Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
-    var source, target, direction;
+Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId, edgeValue) {
+    var source, target, direction, leftValue = null, rightValue = null;
     if (sourceNodeId < targetNodeId) {
         source = sourceNodeId;
         target = targetNodeId;
         direction = 'right';
+        rightValue = edgeValue;
     } else {
         source = targetNodeId;
         target = sourceNodeId;
         direction = 'left';
+        leftValue = edgeValue;
     }
     // Every link has an ID - Added to the SVG element to show edge value as textPath
     if (!this.maxLinkId) {
         this.maxLinkId = 0;
     }
     link = {source : this.getNodeWithId(source), target : this.getNodeWithId(target), 
-        id : this.maxLinkId++, leftValue : null, rightValue : null,  left : false, right : false};
+        id : this.maxLinkId++, leftValue : leftValue, rightValue : rightValue,  left : false, right : false};
     link[direction] = true;
     return link;
 }
@@ -226,11 +235,12 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
  * Adds a new link object to the links array or updates an existing link.
  * @param {string} sourceNodeId - Id of the source node in the logical edge.
  * @param {string} targetNodeid - Id of the target node in the logical edge.
+ * @param {string} [edgeValue] - Value associated with the edge. Optional parameter.
  */
-Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
+Editor.prototype.addEdge = function(sourceNodeId, targetNodeId, edgeValue) {
     // console.log('Adding edge: ' + sourceNodeId + ' -> ' + targetNodeId);
     // Get the new link object.
-    var newLink = this.getNewLink(sourceNodeId, targetNodeId);
+    var newLink = this.getNewLink(sourceNodeId, targetNodeId, edgeValue);
     // Check if a link with these source and target Ids already exists.
     var existingLink = this.links.filter(function(l) {
         return (l.source === newLink.source && l.target === newLink.target);
@@ -242,6 +252,13 @@ Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
         // newLink or existingLink denote the edge.
         existingLink.left |= newLink.left;
         existingLink.right |= newLink.right;
+        if (edgeValue) {
+            if (sourceNodeId < targetNodeId) {
+                existingLink.rightValue = edgeValue;
+            } else {
+                existingLink.leftValue = edgeValue; 
+            }
+        }
         return existingLink;
     } else {
         this.links.push(newLink);
@@ -490,6 +507,23 @@ Editor.prototype.restartNodes = function() {
           .attr('class', 'vval');
     // remove old nodes
     this.circle.exit().remove();
+}
+
+/* 
+ * Restarts the global values 
+ */
+Editor.prototype.restartGlobals = function() {
+    this.globalsContainer.attr('transform', 'translate(' + (this.width - 250) + ', 25)')
+    this.globalsContainer.transition().style('opacity', this.globals.length > 0 ? 1 : 0);
+    // Remove all values
+    this.globs = this.globs.data([]);
+    this.globs.exit().remove();
+    // Set new values
+    this.globs = this.globs.data(this.globals);
+    this.globs.enter().append('tspan').classed('editor-globals-value', true)
+        .attr('dy', '2.0em')
+        .attr('x', 0)
+        .text(function(d) { return "{0} -> {1}".format(d[0], d[1]); });
 }
 
 /*

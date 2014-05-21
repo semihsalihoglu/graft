@@ -215,7 +215,7 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
 
     var messageTable = $('<table />')
         .addClass('table')
-        .attr('id', 'node-attr-messages')
+        .attr('id', 'node-attr-flow')
         .appendTo(messageContainer);
 }
 
@@ -496,12 +496,18 @@ GiraphDebugger.prototype.initElements = function() {
     $('.nav-msg').click((function(event) {
         // Render the table
         var clickedId = event.target.id;
-        var clickedSuffix = clickedId.substr(clickedId.lastIndexOf('-') + 1, clickedId.length);
         this.toggleMessageTabs(clickedId);
-        var messageData = clickedSuffix === 'sent' ?
-            this.editor.getMessagesSentByNode(this.selectedNodeId) :
-            this.editor.getMessagesReceivedByNode(this.selectedNodeId);
-        this.showMessages(messageData);
+        if (clickedId === 'node-attr-sent') {
+            var messageData = this.editor.getMessagesSentByNode(this.selectedNodeId);
+            this.showMessages(messageData);
+        } else if(clickedId === 'node-attr-received') {
+            var messageData = this.editor.getMessagesReceivedByNode(this.selectedNodeId);
+            this.showMessages(messageData);
+        } else {
+            var edgeValues = this.editor.getEdgeValuesForNode(this.selectedNodeId);
+            this.showEdgeValues(edgeValues);
+        }
+        
     }).bind(this));
     // Attach mouseenter event for valpanel - Preview (Expand to the right)
     $(this.valpanel.container).mouseenter((function(event) {
@@ -592,12 +598,26 @@ GiraphDebugger.prototype.toggleMessageTabs = function(clickedId) {
  * @param messageData - The data of the sent/received messages from/to this node.
  */
 GiraphDebugger.prototype.showMessages = function(messageData) {
-    $('#node-attr-messages').html('');
+    $('#node-attr-flow').html('');
     for (var nodeId in messageData) {
         var tr = document.createElement('tr');
         $(tr).html('<td>' + nodeId + '</td><td>' +
             messageData[nodeId] + '</td>');
-        $('#node-attr-messages').append(tr);
+        $('#node-attr-flow').append(tr);
+    }
+}
+
+/*
+ * Populates the edge value table on the node attr modal with the edge vaue data.
+ * @param edgeValues - The edge values for this node. 
+ */
+GiraphDebugger.prototype.showEdgeValues = function(edgeValues) {
+    $('#node-attr-flow').html('');
+    for (var nodeId in edgeValues) {
+        var tr = document.createElement('tr');
+        $(tr).html('<td>' + nodeId + '</td><td>' +
+            edgeValues[nodeId] + '</td>');
+        $('#node-attr-flow').append(tr);
     }
 }
 

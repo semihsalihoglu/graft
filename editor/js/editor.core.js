@@ -19,11 +19,14 @@ function Editor(options) {
     this.defaultColor = '#FFFDDB'
     // Useful options. Not required by the editor class itself.
     this.errorColor = '#FF9494';
-
+    // Graph members
     this.nodes = [];
     this.links = [];
     this.messages = [];
-
+    // globals is an array of 2-length arrays where d[0]=key, d[1]=value
+    this.globals = [];
+    // linkDistance controls the distance between two nodes in the graph.
+    this.linkDistance = 150;
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
         this.undirected = options['undirected'] === true;
@@ -91,9 +94,11 @@ Editor.prototype.init = function() {
  * May be called from the client after updating graph properties.
  */
 Editor.prototype.restart = function() {
-    this.resizeForce();
+    this.setSize();
     this.restartNodes();
     this.restartLinks();
+    this.resizeForce();
+    this.restartGlobals();
 
     // Set the background to light gray if editor is readonly.
     this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
@@ -135,6 +140,26 @@ Editor.prototype.getMessagesSentByNode = function(id) {
         }
     }
     return messagesSent;
+}
+
+/*
+ * Returns all the edge values for this node's neighbor in a JSON object.
+ * Output format: {neighborId: edgeValue}
+ * @param {string} id
+ */
+Editor.prototype.getEdgeValuesForNode = function(id) {
+    var edgeValues = {};
+    for (var i = 0; i < this.links.length; i++) {
+        var link = this.links[i];
+        console.log(link);
+        // Make sure the logical edge is from this node to some other node.
+        if (link.source.id === id && link.right && link.rightValue) {
+            edgeValues[link.target.id] = link.rightValue; 
+        } else if (link.target.id === id && link.left && link.leftValue) {
+            edgeValues[link.source.id] = link.leftValue; 
+        }
+    }
+    return edgeValues;
 }
 
 /*
@@ -373,13 +398,14 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         // For every node in the adj list of this node,
         // add the node to this.nodes and add the edge to this.links
         for (var i = 0; i < adj.length; i++) {
-            var adjId = adj[i];
+            var adjId = adj[i]['neighborId'];
+            var edgeValue = adj[i]['edgeValue'];
             var adjNode = this.getNodeWithId(adjId);
             if (!adjNode) {
                 adjNode = this.addNode(adjId);
             }
             // Add the edge.
-            this.addEdge(nodeId, adjId);
+            this.addEdge(nodeId, adjId, edgeValue);
         }
     }
     this.updateGraphData(adjList);
@@ -428,11 +454,12 @@ Editor.prototype.addToGraph = function(scenario) {
         var neighbors = scenario[nodeId]['neighbors'];
         // For each neighbor, add the edge.
         for (var i = 0 ; i < neighbors.length; i++) {
-            var neighborId = neighbors[i];
+            var neighborId = neighbors[i]['neighborId'];
+            var edgeValue = neighbors[i]['edgeValue'];
             // Add neighbor node if it doesn't exist.
             this.addNode(neighborId);
             // Addes edge, or ignores if already exists.
-            this.addEdge(nodeId, neighborId);
+            this.addEdge(nodeId, neighborId, edgeValue);
         }
     }
 }

@@ -128,11 +128,8 @@ public class ServerUtils {
   /*
    * Reads the protocol buffer trace corresponding to the given jobId,
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
-   * 
    * @param jobId : ID of the job debugged.
-   * 
    * @param superstepNo: Superstep number debugged.
-   * 
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
    */
   public static GiraphScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
@@ -212,7 +209,7 @@ public class ServerUtils {
     scenarioObj.put("vertexId", contextWrapper.getVertexIdWrapper());
     scenarioObj.put("vertexValue", contextWrapper.getVertexValueAfterWrapper());
     JSONObject outgoingMessagesObj = new JSONObject();
-    ArrayList<String> neighborsList = new ArrayList<String>();
+    JSONArray neighborsList = new JSONArray();
     // Add outgoing messages.
     for (Object outgoingMessage : contextWrapper.getOutgoingMessageWrappers()) {
       OutgoingMessageWrapper outgoingMessageWrapper = (OutgoingMessageWrapper) outgoingMessage;
@@ -221,9 +218,13 @@ public class ServerUtils {
     }
     // Add neighbors.
     for (Object neighbor : contextWrapper.getNeighborWrappers()) {
+      JSONObject neighborObject = new JSONObject();
       NeighborWrapper neighborWrapper = (NeighborWrapper) neighbor;
-      neighborsList.add(neighborWrapper.getNbrId().toString());
+      neighborObject.put("neighborId", neighborWrapper.getNbrId());
+      neighborObject.put("edgeValue", neighborWrapper.getEdgeValue());
+      neighborsList.put(neighborObject);
     }
+    
     scenarioObj.put("outgoingMessages", outgoingMessagesObj);
     scenarioObj.put("neighbors", neighborsList);
     // Add exception, if present.
