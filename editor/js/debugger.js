@@ -393,9 +393,20 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
             url : this.debuggerServerRoot + "/supersteps",
             data : {'jobId' : this.currentJobId}
     })
+    .retry({
+            times : 5, 
+            timeout : 2000,
+            retryCallback : function(remainingTimes) {
+                // Failed intermediately. Will be retried. 
+                noty({text : 'Failed to fetch job. Retrying ' + remainingTimes + ' more times...', type : 'warning', timeout : 1000});
+            }
+    })
     .done((function(response) {
         this.maxSuperstepNumber = Math.max.apply(Math, response);
-    }).bind(this));
+    }).bind(this))
+    .fail(function(response) {
+        noty({text : 'Failed to fetch job. Please check your network and debugger server.', type : 'error'});
+    });
 
     // If scenario is already cached, don't fetch again.
     if (superstepNumber in this.stateCache) {
