@@ -1,14 +1,12 @@
 package stanford.infolab.debugger.examples.integrity;
 
+import java.io.IOException;
+
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
-
-import stanford.infolab.debugger.instrumenter.AbstractInterceptingComputation;
-
-import java.io.IOException;
 
 /**
  * Implementation of the HCC algorithm that identifies connected components and

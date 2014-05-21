@@ -48,14 +48,14 @@ import java.util.Set;
  * adapted to represent additional qualities that could affect the
  * ordering of the final result array.
  */
-public class SimpleTriangleClosingDebugComputation extends AbstractInterceptingComputation<
+public abstract class SimpleTriangleClosingDebugComputationModified extends AbstractInterceptingComputation<
   IntWritable, IntWritable,
   NullWritable, IntWritable, IntWritable> {
   /** Vertices to close the triangle, ranked by frequency of in-msgs */
   private Map<IntWritable, Integer> closeMap =
     Maps.<IntWritable, Integer>newHashMap();
 
-  public void computeFurther(
+  public void compute(
       Vertex<IntWritable, IntWritable, NullWritable> vertex,
       Iterable<IntWritable> messages) throws IOException {
     if (getSuperstep() == 0) {
@@ -154,15 +154,9 @@ public class SimpleTriangleClosingDebugComputation extends AbstractInterceptingC
     }
     /** Set storage type for this ArrayListWritable */
     @Override
-    @SuppressWarnings("unchecked")
     public void setClass() {
       setClass(IntWritable.class);
     }
   }
 
-  @Override
-  public Class<? extends Computation<IntWritable, IntWritable, NullWritable, IntWritable,
-    IntWritable>> getActualTestedClass() {
-    return SimpleTriangleClosingActualComputation.class;
-  }
 }

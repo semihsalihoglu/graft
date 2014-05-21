@@ -79,11 +79,12 @@ set -x # XXX REMOVE ME LATER
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
 
 # first, instrument the given class
-classNameSuffix=
-tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/InstrumentJar.XXXXXX")
+classNameSuffix=Debug
+tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/giraph-debug.XXXXXX")
 trap 'rm -rf "$tmpDir"' EXIT
-java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" -Dgiraph.debugger.classNameSuffix="$classNameSuffix" \
-    stanford.infolab.debugger.instrumenter.InstrumentJar \
+java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" \
+    -Dgiraph.debugger.classNameSuffix="$classNameSuffix" \
+    stanford.infolab.debugger.instrumenter.InstrumentGiraphComputationClasses \
         "$origClassName" "$tmpDir"/classes
 instrumentedClassName="$origClassName$classNameSuffix"
 
