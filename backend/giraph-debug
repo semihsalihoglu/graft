@@ -13,6 +13,11 @@
 #       JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
 #       COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
 # 
+# To launch GUI, use the following command:
+# 
+#   giraph-debug gui [JOB_ID]
+# 
+# Note that you can specify an optional Giraph Job ID to launch it.
 #
 # Author: Jaeho Shin <netj@cs.stanford.edu>
 # Created: 2014-05-09
@@ -33,13 +38,31 @@ set -eu
 #)
 #[ $# -gt 0 ] || set -- "${opts[@]}"
 
+: ${GUI_PORT:=8000}
 
 # show usage unless we have enough arguments
 usage() { sed -n '2,/^#$/ s/^# //p' <"$0"; }
-if [ $# -lt 3 ]; then
+if [ $# -lt 1 ]; then
     usage
     exit 1
 fi
+
+Here=$(cd "$(dirname "$0")" && pwd)
+jars=($Here/target/backend-*.jar)
+CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=: echo "${jars[*]}")"
+
+# handle special cases first
+case $1 in
+    gui)
+        echo "Starting Debugger GUI at http://localhost:$GUI_PORT/"
+        exec java ${CLASSPATH:+-cp "$CLASSPATH"} \
+            -D"giraph.debugger.guiPort=$GUI_PORT" \
+            -D"giraph.debugger.editorPath=$Here/../editor" \
+            stanford.infolab.debugger.server.Server
+        ;;
+    *)
+        # otherwise, instrument and launch the job
+esac
 
 # parse arguments
 debugConfigClassName=$1; shift

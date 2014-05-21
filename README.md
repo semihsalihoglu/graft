@@ -37,4 +37,13 @@ You can launch any Giraph program with debugging support by simply replacing the
         #
 
 ### Launch GUI
-...
+First launch the GUI with the following command:
+
+    ./giraph-debug gui
+
+Then open <http://localhost:8000> from your web browser.
+
+You can use a different port by launching the GUI with:
+
+    GUI_PORT=12345 ./giraph-debug gui
+
