@@ -1,11 +1,12 @@
 
 package stanford.infolab.debugger.examples.simpledebug;
 
+import java.io.IOException;
+
 import org.apache.giraph.Algorithm;
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.conf.LongConfOption;
 import org.apache.giraph.edge.Edge;
-import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
@@ -14,8 +15,6 @@ import org.apache.log4j.Logger;
 
 import stanford.infolab.debugger.instrumenter.AbstractInterceptingComputation;
 
-import java.io.IOException;
-
 /**
  * Debug version of SimpleShortestPathsComputation.
  */
@@ -23,7 +22,7 @@ import java.io.IOException;
     name = "Shortest paths",
     description = "Finds all shortest paths from a selected vertex"
 )
-public class SimpleShortestPathsDebugComputation extends AbstractInterceptingComputation<
+public abstract class SimpleShortestPathsDebugComputationModified extends AbstractInterceptingComputation<
     LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
 
   /** The shortest paths id */
@@ -32,7 +31,7 @@ public class SimpleShortestPathsDebugComputation extends AbstractInterceptingCom
           "The shortest paths id");
   /** Class logger */
   private static final Logger LOG =
-      Logger.getLogger(SimpleShortestPathsDebugComputation.class);
+      Logger.getLogger(SimpleShortestPathsDebugComputationModified.class);
 
   /**
    * Is this vertex the source id?
@@ -45,8 +44,9 @@ public class SimpleShortestPathsDebugComputation extends AbstractInterceptingCom
   }
 
   @Override
-  public void computeFurther(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
-    Iterable<DoubleWritable> messages) throws IOException {
+  public void compute(
+      Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+      Iterable<DoubleWritable> messages) throws IOException {
     // We do a dummy read of the aggregator below because for now we only intercept an aggregator
     // if at least one vertex reads it.
     LongWritable aggregatedValue  = getAggregatedValue(
@@ -87,9 +87,4 @@ public class SimpleShortestPathsDebugComputation extends AbstractInterceptingCom
     vertex.voteToHalt();
   }
 
-  @Override
-  public Class<? extends Computation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable,
-    DoubleWritable>> getActualTestedClass() {
-    return SimpleShortestPathsActualComputation.class;
-  }
 }

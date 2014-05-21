@@ -1,14 +1,13 @@
 package stanford.infolab.debugger.examples.integrity;
 
+import java.io.IOException;
+
 import org.apache.giraph.edge.Edge;
-import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
 import stanford.infolab.debugger.instrumenter.AbstractInterceptingComputation;
-
-import java.io.IOException;
 
 /**
  * Implementation of the HCC algorithm that identifies connected components and
@@ -26,7 +25,7 @@ import java.io.IOException;
  *
  * http://www.cs.cmu.edu/~ukang/papers/PegasusKAIS.pdf
  */
-public class ConnectedComponentsDebugComputation extends
+public abstract class ConnectedComponentsDebugComputationModified extends
   AbstractInterceptingComputation<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
   /**
@@ -37,7 +36,7 @@ public class ConnectedComponentsDebugComputation extends
    * @param messages Iterator of messages from the previous superstep.
    * @throws IOException
    */
-  public void computeFurther(
+  public void compute(
       Vertex<IntWritable, IntWritable, NullWritable> vertex,
       Iterable<IntWritable> messages) throws IOException {
     int currentComponent = vertex.getValue().get();
@@ -74,9 +73,4 @@ public class ConnectedComponentsDebugComputation extends
     vertex.voteToHalt();
   }
 
-  @Override
-  public Class<? extends Computation<IntWritable, IntWritable, NullWritable, IntWritable,
-    IntWritable>> getActualTestedClass() {
-    return ConnectedComponentsActualComputation.class;
-  }
 }

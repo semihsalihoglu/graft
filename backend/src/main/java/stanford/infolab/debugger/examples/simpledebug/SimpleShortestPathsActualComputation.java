@@ -1,6 +1,8 @@
 
 package stanford.infolab.debugger.examples.simpledebug;
 
+import java.io.IOException;
+
 import org.apache.giraph.Algorithm;
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.conf.LongConfOption;
@@ -11,10 +13,6 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.log4j.Logger;
-
-import stanford.infolab.debugger.instrumenter.AbstractInterceptingComputation;
-
-import java.io.IOException;
 
 /**
  * Debug version of SimpleShortestPathsComputation.
