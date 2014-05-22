@@ -173,7 +173,16 @@ text.tid {
 	margin-bottom: 20px;
 }
 
+.editor-globals-heading {
+	font: 16px sans-serif;
+}
+
 /* Bootstrap overrides */
 .form-control {
 	margin-left:5px;
+}
+
+.slider {
+	width: 100%;
+	margin-left: 15px;
 }

@@ -19,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
+import stanford.infolab.debugger.utils.AggregatedValueWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
 import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
@@ -224,7 +225,6 @@ public class ServerUtils {
       neighborObject.put("edgeValue", neighborWrapper.getEdgeValue());
       neighborsList.put(neighborObject);
     }
-    
     scenarioObj.put("outgoingMessages", outgoingMessagesObj);
     scenarioObj.put("neighbors", neighborsList);
     // Add exception, if present.
@@ -236,6 +236,13 @@ public class ServerUtils {
       exceptionObj.put("stackTrace", exceptionWrapper.getStackTrace());
       scenarioObj.put("exception", exceptionObj);
     }
+    JSONObject aggregateObj = new JSONObject();
+     for(Object aggregatedValue : contextWrapper.getPreviousAggregatedValues()) {
+      AggregatedValueWrapper aggregatedValueWrapper = 
+        (AggregatedValueWrapper) aggregatedValue;
+      aggregateObj.put(aggregatedValueWrapper.getKey(), aggregatedValueWrapper.getValue());
+    }
+    scenarioObj.put("globals", aggregateObj);
     return scenarioObj;
   }
 

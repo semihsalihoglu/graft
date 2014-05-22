@@ -23,8 +23,8 @@ function Editor(options) {
     this.nodes = [];
     this.links = [];
     this.messages = [];
-    // globals is an array of 2-length arrays where d[0]=key, d[1]=value
-    this.globals = [];
+    // globals is a collecton of key-value pairs displayed in the top-right corner.
+    this.globals = {};
     // linkDistance controls the distance between two nodes in the graph.
     this.linkDistance = 150;
     if (options) {
@@ -436,6 +436,12 @@ Editor.prototype.updateGraphData = function(scenario) {
                     message: msgs[receiverId]
                 });
             }
+        }
+        // Update globals
+        // NOTE: Later vertices ovewrite value for a given key
+        var globals = scenario[nodeId]['globals'];
+        for (var key in globals) {
+            this.globals[key] = globals[key];
         }
     }
 }

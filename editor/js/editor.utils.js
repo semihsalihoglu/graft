@@ -21,6 +21,7 @@ Editor.prototype.resizeForce = function() {
  * Initializes the SVG element, along with marker and defs.
  */
 Editor.prototype.initElements = function() {
+    // Create the tabular view 
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
@@ -514,12 +515,14 @@ Editor.prototype.restartNodes = function() {
  */
 Editor.prototype.restartGlobals = function() {
     this.globalsContainer.attr('transform', 'translate(' + (this.width - 250) + ', 25)')
-    this.globalsContainer.transition().style('opacity', this.globals.length > 0 ? 1 : 0);
+    this.globalsContainer.transition().style('opacity', Utils.count(this.globals) > 0 ? 1 : 0);
     // Remove all values
     this.globs = this.globs.data([]);
     this.globs.exit().remove();
+    // Convert JSON to array of 2-length arrays for d3
+    var data = $.map(this.globals, function(value, key) { return [[key, value]]; });
     // Set new values
-    this.globs = this.globs.data(this.globals);
+    this.globs = this.globs.data(data);
     this.globs.enter().append('tspan').classed('editor-globals-value', true)
         .attr('dy', '2.0em')
         .attr('x', 0)
