@@ -25,6 +25,8 @@ function Editor(options) {
     this.messages = [];
     // globals is a collecton of key-value pairs displayed in the top-right corner.
     this.globals = {};
+    // set graph as the default view
+    this.view = Editor.ViewEnum.GRAPH;
     // linkDistance controls the distance between two nodes in the graph.
     this.linkDistance = 150;
     if (options) {
@@ -38,6 +40,14 @@ function Editor(options) {
     this.lastKeyDown = -1;
     this.init();
     this.buildSample();
+}
+
+/*
+ * Represents the two views of the editor - tabular and graph
+ */
+Editor.ViewEnum = {
+    TABLET : 'tablet',
+    GRAPH : 'graph'
 }
 
 /*
@@ -535,4 +545,17 @@ Editor.prototype.colorNodes = function(nodeIds, color, uncolorRest) {
         }
     }
     this.restart();
+}
+
+/* 
+ * Toggles the two views of the editor by sliding up/down the tablet.
+ */
+Editor.prototype.toggleView = function() { 
+    if (this.view === Editor.ViewEnum.GRAPH) {
+        this.view = Editor.ViewEnum.TABLET;
+        $(this.tablet[0]).slideDown('slow');
+    } else {
+        this.view = Editor.ViewEnum.GRAPH;
+        $(this.tablet[0]).slideUp('slow');
+    }
 }

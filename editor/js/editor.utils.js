@@ -21,12 +21,15 @@ Editor.prototype.resizeForce = function() {
  * Initializes the SVG element, along with marker and defs.
  */
 Editor.prototype.initElements = function() {
-    // Create the tabular view 
+    // Create the tabular view and hide it for now.
+    this.tablet = d3.select(this.container)
+        .insert('div')
+        .attr('class', 'editor-tablet')
+        .style('display', 'none');
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
-                     .html('')
-                     .insert('svg', ':first-child')
+                     .insert('svg')
                          .attr('class','editor')
 
    // Defines end arrow marker for graph links.

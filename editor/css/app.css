@@ -177,6 +177,11 @@ text.tid {
 	font: 16px sans-serif;
 }
 
+.editor-tablet {
+	width:100%;
+	height:100%;
+}
+
 /* Bootstrap overrides */
 .form-control {
 	margin-left:5px;
