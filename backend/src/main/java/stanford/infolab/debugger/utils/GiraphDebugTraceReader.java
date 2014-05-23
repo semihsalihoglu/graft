@@ -24,7 +24,7 @@ public class GiraphDebugTraceReader {
     Path pt = new Path(traceDir);
     for (FileStatus fileStatus: fs.listStatus(pt)) {
 //      System.out.println("reading trace: " + fileStatus.getPath());
-      GiraphScenarioWrapper scenarioWrapper = new GiraphScenarioWrapper();
+      GiraphVertexScenarioWrapper scenarioWrapper = new GiraphVertexScenarioWrapper();
 //      scenarioWrapper.load("/Users/semihsalihoglu/Downloads/download");
       scenarioWrapper.loadFromHDFS(fs, fileStatus.getPath().toString());
       System.out.println(scenarioWrapper);

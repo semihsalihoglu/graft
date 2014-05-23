@@ -69,7 +69,7 @@ public class BottomInterceptingComputation<I extends WritableComparable, V exten
 
 	@Override
 	public Class getActualTestedClass() {
-		return getClass().getSuperclass();
+		return getClass();
 	}
 
 }

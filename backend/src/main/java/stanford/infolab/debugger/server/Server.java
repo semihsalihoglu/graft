@@ -20,10 +20,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import stanford.infolab.debugger.server.ServerUtils.DebugTrace;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.NeighborWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.OutgoingMessageWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
 import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
 import sun.security.ssl.Debug;
@@ -274,7 +274,7 @@ public static void main(String[] args) throws Exception {
         // Send JSON by default.
         JSONObject scenarioObj = new JSONObject();
         for (String vertexId : vertexIds) {
-          GiraphScenarioWrapper giraphScenarioWrapper;
+          GiraphVertexScenarioWrapper giraphScenarioWrapper;
           giraphScenarioWrapper = ServerUtils.readScenarioFromTrace(jobId, superstepNo,
             vertexId.trim());
           scenarioObj.put(vertexId, ServerUtils.scenarioToJSON(giraphScenarioWrapper));
@@ -347,7 +347,7 @@ public static void main(String[] args) throws Exception {
           // Send JSON by default.
           JSONObject scenarioObj = new JSONObject();
           for (String vertexId : vertexIds) {
-            GiraphScenarioWrapper giraphScenarioWrapper;
+            GiraphVertexScenarioWrapper giraphScenarioWrapper;
             giraphScenarioWrapper = ServerUtils.readExceptionFromTrace(jobId, superstepNo,
               vertexId.trim());
             scenarioObj.put(vertexId, ServerUtils.scenarioToJSON(giraphScenarioWrapper));

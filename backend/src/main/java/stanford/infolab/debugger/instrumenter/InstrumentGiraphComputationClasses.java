@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.Sets;
 
 /**
- * The main class for that instruments user's ordinary Giraph Computation class
+ * The main class that instruments user's ordinary Giraph Computation class
  * with necessary changes for debugging.
  * 
  * @author netj
@@ -46,11 +46,11 @@ public class InstrumentGiraphComputationClasses {
 		try {
 			// Load the involved classes with Javassist
 			LOG.info("Looking for classes...");
-			String interceptingClassName = userComputationClassName
+			String alternativeClassName = userComputationClassName
 					+ INTERCEPTOR_CLASS_NAME_SUFFIX;
 			ClassPool classPool = ClassPool.getDefault();
 			CtClass userComputationClass = classPool
-					.get(userComputationClassName);
+					.getAndRename(userComputationClassName, alternativeClassName);
 			// We need two classes: one at the bottom (subclass) and
 			// another at the top (superclass).
 			CtClass topClass = classPool
@@ -58,7 +58,7 @@ public class InstrumentGiraphComputationClasses {
 							.getCanonicalName());
 			CtClass bottomClass = classPool.getAndRename(
 					BottomInterceptingComputation.class.getCanonicalName(),
-					interceptingClassName);
+					userComputationClassName);
 
 			LOG.info("  user's Computation class (userComputationClass):\n"
 					+ getGenericsName(userComputationClass));

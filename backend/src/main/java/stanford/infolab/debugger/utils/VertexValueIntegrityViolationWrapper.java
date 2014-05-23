@@ -72,7 +72,7 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
     return stringBuilder.toString();
   }
   
-  public class VertexIdValuePairWrapper {
+  public class VertexIdValuePairWrapper extends BaseWrapper {
     public I vertexId;
     public V vertexValue;
 
@@ -81,9 +81,37 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
       this.vertexValue = vertexValue;
     }
 
+    public VertexIdValuePairWrapper() {
+      // TODO Auto-generated constructor stub
+    }
+
     @Override
     public String toString() {
       return "VertexIdValuePairWrapper: srcId: " + vertexId + " value: " + vertexValue; 
+    }
+
+    @Override
+    public GeneratedMessage buildProtoObject() {
+      VertexIdValuePair.Builder vertexIdValuePairBuilder =
+        VertexIdValuePair.newBuilder();
+      vertexIdValuePairBuilder.setVertexId(toByteString(this.vertexId));
+      vertexIdValuePairBuilder.setVertexValue(toByteString(this.vertexValue));
+      return vertexIdValuePairBuilder.build();
+    }
+
+    @Override
+    public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+      return VertexIdValuePair.parseFrom(inputStream);
+    }
+
+    @Override
+    public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
+      IOException, InstantiationException, IllegalAccessException {
+      VertexIdValuePair vertexIdValuePair = (VertexIdValuePair) generatedMessage;
+      this.vertexId = newInstance(vertexIdClass);
+      fromByteString(vertexIdValuePair.getVertexId(), vertexId);
+      this.vertexValue = newInstance(vertexValueClass);
+      fromByteString(vertexIdValuePair.getVertexValue(), vertexValue);
     }
   }
 
@@ -103,13 +131,8 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
     vertexValueIntegrityViolationBuilder.setVertexValueClass(getVertexValueClass().getName());
     vertexValueIntegrityViolationBuilder.setSuperstepNo(getSuperstepNo());
     for (VertexIdValuePairWrapper vertexIdValuePairWrapper : vertexIdValuePairWrappers) {
-      VertexIdValuePair.Builder vertexIdValuePairBuilder =
-        VertexIdValuePair.newBuilder();
-      vertexIdValuePairBuilder.setVertexId(
-        toByteString(vertexIdValuePairWrapper.vertexId));
-      vertexIdValuePairBuilder.setVertexValue(
-        toByteString(vertexIdValuePairWrapper.vertexValue));
-      vertexValueIntegrityViolationBuilder.addVertexIdValuePair(vertexIdValuePairBuilder.build());
+      vertexValueIntegrityViolationBuilder.addVertexIdValuePair(
+        (VertexIdValuePair) vertexIdValuePairWrapper.buildProtoObject());
     }
     return vertexValueIntegrityViolationBuilder.build();
   }
@@ -122,7 +145,7 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
   @SuppressWarnings("unchecked")
   @Override
   public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
-    IOException {
+    IOException, InstantiationException, IllegalAccessException {
     VertexValueIntegrityViolation vertexValueIntegrityViolation =
       (VertexValueIntegrityViolation) protoObject;
     
@@ -135,12 +158,11 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
     initialize(vertexIdClass, vertexValueClass);
     setSuperstepNo(vertexValueIntegrityViolation.getSuperstepNo());
 
-    for (VertexIdValuePair vertexIdValuePair : vertexValueIntegrityViolation.getVertexIdValuePairList()) {
-      I vertexId = newInstance(vertexIdClass);
-      fromByteString(vertexIdValuePair.getVertexId(), vertexId);
-      V vertexValue = newInstance(vertexValueClass);
-      fromByteString(vertexIdValuePair.getVertexValue(), vertexValue);
-      addVertexIdPairWrapper(vertexId, vertexValue);
+    for (VertexIdValuePair vertexIdValuePair
+      : vertexValueIntegrityViolation.getVertexIdValuePairList()) {
+      VertexIdValuePairWrapper vertexIdValuePairWrapper = new VertexIdValuePairWrapper();
+      vertexIdValuePairWrapper.loadFromProto(vertexIdValuePair);
+      vertexIdValuePairWrappers.add(vertexIdValuePairWrapper);
     }
   }
 }

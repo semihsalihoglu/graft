@@ -28,7 +28,7 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
   extends BaseScenarioAndIntegrityWrapper<I>{
 
   private Class<M2> outgoingMessageClass;
-  private List<ExtendedOutgoingMessageWrapper> msgWrappers = new ArrayList<>();
+  private List<ExtendedOutgoingMessageWrapper> extendedOutgoingMessageWrappers = new ArrayList<>();
   private long superstepNo;
 
   // Empty constructor to be used for loading from HDFS.
@@ -44,16 +44,17 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
   }
 
   public Collection<ExtendedOutgoingMessageWrapper> getExtendedOutgoingMessageWrappers() {
-    return msgWrappers;
+    return extendedOutgoingMessageWrappers;
   }
 
   public void addMsgWrapper(I srcId, I destinationId, M2 message) {
-    msgWrappers.add(new ExtendedOutgoingMessageWrapper(makeCloneOf(srcId, vertexIdClass),
+    extendedOutgoingMessageWrappers.add(
+      new ExtendedOutgoingMessageWrapper(makeCloneOf(srcId, vertexIdClass),
       makeCloneOf(destinationId, vertexIdClass), makeCloneOf(message, outgoingMessageClass)));
   }
 
   public int numMsgWrappers() {
-    return msgWrappers.size();
+    return extendedOutgoingMessageWrappers.size();
   }
   
   public Class<M2> getOutgoingMessageClass() {
@@ -72,7 +73,7 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
     return stringBuilder.toString();
   }
   
-  public class ExtendedOutgoingMessageWrapper {
+  public class ExtendedOutgoingMessageWrapper extends BaseWrapper {
     public I srcId;
     public I destinationId;
     public M2 message;
@@ -83,10 +84,40 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
       this.message = message;
     }
     
+    public ExtendedOutgoingMessageWrapper() {}
+
     @Override
     public String toString() {
       return "extendedOutgoingMessage: srcId: " + srcId + " destinationId: " + destinationId
         + " message: " + message; 
+    }
+
+    @Override
+    public GeneratedMessage buildProtoObject() {
+      ExtendedOutgoingMessage.Builder extendedOutgoingMessageBuilder =
+        ExtendedOutgoingMessage.newBuilder();
+      extendedOutgoingMessageBuilder.setSrcId(toByteString(srcId));
+      extendedOutgoingMessageBuilder.setDestinationId(toByteString(destinationId));
+      extendedOutgoingMessageBuilder.setMsgData(toByteString(message));
+      return extendedOutgoingMessageBuilder.build();
+    }
+
+    @Override
+    public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+      return ExtendedOutgoingMessage.parseFrom(inputStream);
+    }
+
+    @Override
+    public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
+      IOException, InstantiationException, IllegalAccessException {
+      ExtendedOutgoingMessage extendedOutgoingMessage =
+        (ExtendedOutgoingMessage) generatedMessage;
+      this.srcId = newInstance(vertexIdClass);
+      fromByteString(extendedOutgoingMessage.getSrcId(), this.srcId);
+      this.destinationId = newInstance(vertexIdClass);
+      fromByteString(extendedOutgoingMessage.getDestinationId(), this.destinationId);
+      this.message = newInstance(outgoingMessageClass);
+      fromByteString(extendedOutgoingMessage.getMsgData(), this.message);
     }
   }
 
@@ -105,23 +136,17 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
     messageIntegrityViolationBuilder.setVertexIdClass(getVertexIdClass().getName());
     messageIntegrityViolationBuilder.setOutgoingMessageClass(getOutgoingMessageClass().getName());
     messageIntegrityViolationBuilder.setSuperstepNo(getSuperstepNo());
-    for (ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper : msgWrappers) {
-      ExtendedOutgoingMessage.Builder extendedOutgoingMessageBuilder =
-        ExtendedOutgoingMessage.newBuilder();
-      extendedOutgoingMessageBuilder.setSrcId(
-        toByteString(extendedOutgoingMessageWrapper.srcId));
-      extendedOutgoingMessageBuilder.setDestinationId(
-        toByteString(extendedOutgoingMessageWrapper.destinationId));
-      extendedOutgoingMessageBuilder.setMsgData(
-        toByteString(extendedOutgoingMessageWrapper.message));
-      messageIntegrityViolationBuilder.addMessage(extendedOutgoingMessageBuilder.build());
+    for (ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper
+      : extendedOutgoingMessageWrappers) {
+      messageIntegrityViolationBuilder.addMessage(
+        (ExtendedOutgoingMessage) extendedOutgoingMessageWrapper.buildProtoObject());
     }
     return messageIntegrityViolationBuilder.build();
   }
 
   @SuppressWarnings("unchecked")
   public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
-    IOException {
+    IOException, InstantiationException, IllegalAccessException {
     MessageIntegrityViolation msgIntegrityViolation = (MessageIntegrityViolation) generatedMessage;
     Class<I> vertexIdClass = (Class<I>) castClassToUpperBound(
       Class.forName(msgIntegrityViolation.getVertexIdClass()), WritableComparable.class);
@@ -132,14 +157,11 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
     initialize(vertexIdClass, outgoingMessageClass);
     setSuperstepNo(msgIntegrityViolation.getSuperstepNo());
 
-    for (ExtendedOutgoingMessage outmsg : msgIntegrityViolation.getMessageList()) {
-      I srcId = newInstance(vertexIdClass);
-      fromByteString(outmsg.getSrcId(), srcId);
-      I destinationId = newInstance(vertexIdClass);
-      fromByteString(outmsg.getDestinationId(), destinationId);
-      M2 msg = newInstance(outgoingMessageClass);
-      fromByteString(outmsg.getMsgData(), msg);
-      addMsgWrapper(srcId, destinationId, msg);
+    for (ExtendedOutgoingMessage extendOutgoingMessage : msgIntegrityViolation.getMessageList()) {
+      ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper =
+        new ExtendedOutgoingMessageWrapper();
+      extendedOutgoingMessageWrapper.loadFromProto(extendOutgoingMessage);
+      extendedOutgoingMessageWrappers.add(extendedOutgoingMessageWrapper);
     }
   }
 
