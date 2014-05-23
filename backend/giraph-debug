@@ -3,28 +3,52 @@
 # 
 # To debug your Giraph computation, simply run:
 # 
-#   giraph-debug DEBUG_CONFIG_CLASS \
-#       JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
-#       COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
+#     giraph-debug DEBUG_CONFIG_CLASS \
+#         JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
+#         COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
 # 
 # Instead of running GiraphRunner with the hadoop jar command:
 # 
-#   hadoop jar \
-#       JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
-#       COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
+#     hadoop jar \
+#         JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
+#         COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
 # 
-# To launch GUI, use the following command:
 # 
-#   giraph-debug gui [PORT]
+# To list available traces for a Giraph job, run the following command:
 # 
-# Note that you can specify an optional Giraph Job ID to launch it.
+#     giraph-debug list JOB_ID
+# 
+# It will show a list of TRACE_IDs.
+# 
+# 
+# To browse what has been captured in an individual trace, run:
+# 
+#     giraph-debug dump JOB_ID TRACE_ID
+# 
+# 
+# To generate a JUnit test case code into from a trace, run:
+# 
+#     giraph-debug mktest JOB_ID TRACE_ID TEST_NAME
+# 
+# It will generate TEST_NAME.java and other necessary files as TEST_NAME.*.
+# 
+# 
+# To launch the debugger GUI, run:
+# 
+#     giraph-debug gui [PORT]
+# 
+# and open the URL in your web browser.
 #
 # Author: Jaeho Shin <netj@cs.stanford.edu>
 # Created: 2014-05-09
 set -eu
 
 # show usage unless we have enough arguments
-usage() { sed -n '2,/^#$/ s/^# //p' <"$0"; }
+error() { echo >&2 "$@"; false; }
+usage() {
+    sed -n '2,/^#$/ s/^# //p' <"$0"
+    [ $# -eq 0 ] || error "$@"
+}
 if [ $# -lt 1 ]; then
     usage
     exit 1
@@ -32,18 +56,53 @@ fi
 
 Here=$(cd "$(dirname "$0")" && pwd -P)
 jars=($Here/target/backend-*.jar)
-CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=: echo "${jars[*]}")"
+CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${jars[*]}")"
+exec_java() {
+    exec java ${CLASSPATH:+-cp "$CLASSPATH"} \
+        "$@"
+}
 
-# handle special cases first
+# handle modes other than launching GiraphJob first
 case $1 in
     gui)
         GUI_PORT=${2:-8000}
         echo "Starting Debugger GUI at http://$HOSTNAME:$GUI_PORT/"
-        exec java ${CLASSPATH:+-cp "$CLASSPATH"} \
+        exec_java \
             -D"giraph.debugger.guiPort=$GUI_PORT" \
             -D"giraph.debugger.editorPath=$Here/../editor" \
             stanford.infolab.debugger.server.Server
         ;;
+
+    ls|list)
+        shift
+        [ $# -gt 0 ] || usage "JOB_ID to list is missing"
+        JobId=$1; shift
+        exec_java stanford.infolab.debugger.commands.ListTraces \
+            "$JobId" "$@"
+        ;;
+
+    dump)
+        shift
+        [ $# -gt 0 ] || usage "JOB_ID is missing"
+        JobId=$1; shift
+        [ $# -gt 0 ] || usage "TRACE_ID to dump is missing"
+        TraceId=$1; shift
+        exec_java stanford.infolab.debugger.commands.DumpTrace \
+            "$JobId" "$TraceId" "$@"
+        ;;
+
+    mktest)
+        shift
+        [ $# -gt 0 ] || usage "JOB_ID is missing"
+        JobId=$1; shift
+        [ $# -gt 0 ] || usage "TRACE_ID is missing"
+        TraceId=$1; shift
+        [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
+        TestName=$1; shift
+        exec_java stanford.infolab.debugger.commands.GenerateTestCaseCode \
+            "$JobId" "$TraceId" "$TestName" "$@"
+        ;;
+
     *)
         # otherwise, instrument and launch the job
 esac
