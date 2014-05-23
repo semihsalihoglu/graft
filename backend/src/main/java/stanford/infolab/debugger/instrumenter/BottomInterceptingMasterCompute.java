@@ -4,9 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import stanford.infolab.debugger.examples.simpledebug.SimpleShortestPathsMaster;
-
-public class BottomInterceptingMasterCompute extends SimpleShortestPathsMaster {
+public class BottomInterceptingMasterCompute extends UserMasterCompute {
 
   @Intercept
   @Override
