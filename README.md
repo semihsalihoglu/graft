@@ -36,14 +36,32 @@ You can launch any Giraph program with debugging support by simply replacing the
         -ca giraph.SplitMasterWorker=false \
         #
 
-### Launch GUI
-First launch the GUI with the following command:
+Find the job identifier from the output, e.g., `job_201405221715_0005` and copy it for later.
+
+### Launch Debugger GUI
+Launch the debugger GUI with the following command:
 
     ./giraph-debug gui
 
-Then open <http://localhost:8000> from your web browser.
+Then open <http://localhost:8000> from your web browser, and paste the job ID to browse it after the job has finished.
 
-You can use a different port by launching the GUI with:
+If necessary, you can specify a different port number when you launch the GUI.
 
-    GUI_PORT=12345 ./giraph-debug gui
+    ./giraph-debug gui 12345
+
+### Or, Stay on the Command-line to Debug
+
+You can access all information that has been recorded by the debugging Giraph job using the following commands.
+
+#### List Recorded Traces
+
+    ./giraph-debug list job_201405221715_0005
+
+#### Dump a Trace
+
+    ./giraph-debug dump job_201405221715_0005 reg_stp_0_vid_6.tr
+
+#### Generate JUnit Test Case Code from a Trace
+
+    ./giraph-debug mktest job_201405221715_0005 reg_stp_0_vid_6.tr TestVertex6Superstep0
 
