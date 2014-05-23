@@ -15,30 +15,13 @@
 # 
 # To launch GUI, use the following command:
 # 
-#   giraph-debug gui [JOB_ID]
+#   giraph-debug gui [PORT]
 # 
 # Note that you can specify an optional Giraph Job ID to launch it.
 #
 # Author: Jaeho Shin <netj@cs.stanford.edu>
 # Created: 2014-05-09
 set -eu
-
-# XXX default option for testing
-#opts=(
-#    target/backend-0.0-SNAPSHOT.jar
-#    org.apache.giraph.GiraphRunner
-#    #stanford.infolab.debugger.examples.simpledebug.SimpleShortestPathsActualComputation
-#    org.apache.giraph.examples.SimpleShortestPathsComputation
-#    -vif org.apache.giraph.io.formats.JsonLongDoubleFloatDoubleVertexInputFormat
-#    -vip g
-#    -vof org.apache.giraph.io.formats.IdWithValueTextOutputFormat
-#    -op out/giraph_debugger_output/tiny_graph_sssp.$$
-#    -w 1
-#    -ca giraph.SplitMasterWorker=false,dbgcfg=stanford.infolab.debugger.examples.simpledebug.SimpleShortestPathsDebugConfig
-#)
-#[ $# -gt 0 ] || set -- "${opts[@]}"
-
-: ${GUI_PORT:=8000}
 
 # show usage unless we have enough arguments
 usage() { sed -n '2,/^#$/ s/^# //p' <"$0"; }
@@ -54,7 +37,8 @@ CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=: echo "${jars[*]}")"
 # handle special cases first
 case $1 in
     gui)
-        echo "Starting Debugger GUI at http://localhost:$GUI_PORT/"
+        GUI_PORT=${2:-8000}
+        echo "Starting Debugger GUI at http://$HOSTNAME:$GUI_PORT/"
         exec java ${CLASSPATH:+-cp "$CLASSPATH"} \
             -D"giraph.debugger.guiPort=$GUI_PORT" \
             -D"giraph.debugger.editorPath=$Here/../editor" \
@@ -95,8 +79,6 @@ while shift; do
     hadoopJarOpts+=("$1")
 done
 origClassName=$1; shift
-
-set -x # XXX REMOVE ME LATER
 
 # set up environment
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
