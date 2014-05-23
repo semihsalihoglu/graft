@@ -15,8 +15,9 @@
  * Released under the MIT, BSD, and GPL Licenses.
  *
  * Date: Mon Nov 21 21:11:03 2011 -0500
+ *
+ * NOTE: This file is a part of the noty JS library - Please see jquery-noty.js.
  */
-
 
 (function(){
 

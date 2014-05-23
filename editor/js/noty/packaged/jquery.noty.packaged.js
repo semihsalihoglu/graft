@@ -7,6 +7,8 @@
  * Licensed under the MIT licenses:
  * http://www.opensource.org/licenses/mit-license.php
  *
+ * NOTE: This file is a part of the noty JS library - Please see jquery-noty.js.
+ *
  **/
 
 if (typeof Object.create !== 'function') {

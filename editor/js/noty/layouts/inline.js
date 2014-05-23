@@ -1,3 +1,6 @@
+/*!
+ * NOTE: This file is a part of the noty JS library - Please see jquery-noty.js.
+ */
 (function($) {
 
 	$.noty.layouts.inline = {

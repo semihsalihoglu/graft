@@ -23,8 +23,8 @@ function Editor(options) {
     this.nodes = [];
     this.links = [];
     this.messages = [];
-    // globals is a collecton of key-value pairs displayed in the top-right corner.
-    this.globals = {};
+    // aggregators is a collecton of key-value pairs displayed in the top-right corner.
+    this.aggregators = {};
     // set graph as the default view
     this.view = Editor.ViewEnum.GRAPH;
     // linkDistance controls the distance between two nodes in the graph.
@@ -108,7 +108,7 @@ Editor.prototype.restart = function() {
     this.restartNodes();
     this.restartLinks();
     this.resizeForce();
-    this.restartGlobals();
+    this.restartAggregators();
 
     // Set the background to light gray if editor is readonly.
     this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
@@ -447,11 +447,11 @@ Editor.prototype.updateGraphData = function(scenario) {
                 });
             }
         }
-        // Update globals
+        // Update aggregators
         // NOTE: Later vertices ovewrite value for a given key
-        var globals = scenario[nodeId]['globals'];
-        for (var key in globals) {
-            this.globals[key] = globals[key];
+        var aggregators = scenario[nodeId]['aggregators'];
+        for (var key in aggregators) {
+            this.aggregators[key] = aggregators[key];
         }
     }
 }

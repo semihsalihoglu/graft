@@ -242,7 +242,7 @@ public class ServerUtils {
         (AggregatedValueWrapper) aggregatedValue;
       aggregateObj.put(aggregatedValueWrapper.getKey(), aggregatedValueWrapper.getValue());
     }
-    scenarioObj.put("globals", aggregateObj);
+    scenarioObj.put("aggregators", aggregateObj);
     return scenarioObj;
   }
 

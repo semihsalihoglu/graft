@@ -1,5 +1,6 @@
 /*
- * Utility functions
+ * Utility functions used in other JS files. 
+ * Parts of this file are borrowed from others. A comment is placed on top in such cases.
  */
 function Utils() {}
 
@@ -33,9 +34,13 @@ if (!String.prototype.format) {
   };
 }
 
-/*! jQuery Ajax Retry - v0.2.4 - 2013-08-16
-* https://github.com/johnkpaul/jquery-ajax-retry
-* Copyright (c) 2013 John Paul; Licensed MIT */
+/*! 
+ *jQuery Ajax Retry - v0.2.4 - 2013-08-16
+ * https://github.com/johnkpaul/jquery-ajax-retry
+ * Copyright (c) 2013 John Paul; Licensed MIT 
+ *
+ * NOTE: We are using this code to retry AJAX calls to the debugger server.
+ */
 (function($) {
   // enhance all ajax requests with our retry API
   $.ajaxPrefilter(function(options, originalOptions, jqXHR){

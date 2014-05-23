@@ -74,12 +74,12 @@ Editor.prototype.initElements = function() {
                       .attr('x', '40')
                       .attr('y', '128');
     // Aggregators
-    this.globalsContainer = this.svg.append('svg:g');
-    this.globalsContainer.append('text')
-                       .attr('class', 'editor-globals-heading')
+    this.aggregatorsContainer = this.svg.append('svg:g');
+    this.aggregatorsContainer.append('text')
+                       .attr('class', 'editor-aggregators-heading')
                        .text('Aggregators');
    // d3 selector for global key-value pairs
-   this.globs = this.globalsContainer.append('text').selectAll('tspan');
+   this.globs = this.aggregatorsContainer.append('text').selectAll('tspan');
 }
 
 /*
@@ -516,17 +516,17 @@ Editor.prototype.restartNodes = function() {
 /* 
  * Restarts the global values 
  */
-Editor.prototype.restartGlobals = function() {
-    this.globalsContainer.attr('transform', 'translate(' + (this.width - 250) + ', 25)')
-    this.globalsContainer.transition().style('opacity', Utils.count(this.globals) > 0 ? 1 : 0);
+Editor.prototype.restartAggregators = function() {
+    this.aggregatorsContainer.attr('transform', 'translate(' + (this.width - 250) + ', 25)')
+    this.aggregatorsContainer.transition().style('opacity', Utils.count(this.aggregators) > 0 ? 1 : 0);
     // Remove all values
     this.globs = this.globs.data([]);
     this.globs.exit().remove();
     // Convert JSON to array of 2-length arrays for d3
-    var data = $.map(this.globals, function(value, key) { return [[key, value]]; });
+    var data = $.map(this.aggregators, function(value, key) { return [[key, value]]; });
     // Set new values
     this.globs = this.globs.data(data);
-    this.globs.enter().append('tspan').classed('editor-globals-value', true)
+    this.globs.enter().append('tspan').classed('editor-aggregators-value', true)
         .attr('dy', '2.0em')
         .attr('x', 0)
         .text(function(d) { return "{0} -> {1}".format(d[0], d[1]); });

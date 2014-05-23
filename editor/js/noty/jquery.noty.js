@@ -7,6 +7,10 @@
  * Licensed under the MIT licenses:
  * http://www.opensource.org/licenses/mit-license.php
  *
+ * NOTE: We are using noty to show error/warning notifications for 
+ * AJAX failures and retries, particularly whil fetching scenario and
+ * integrity violations.
+ *
  **/
 
 if (typeof Object.create !== 'function') {

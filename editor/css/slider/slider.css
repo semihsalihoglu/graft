@@ -5,6 +5,8 @@
  * Licensed under the Apache License v2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  *
+ * NOTE: We are using this code to show a slider for changing link distance
+ * between nodes, among other things. 
  */
 .slider {
   display: inline-block;
