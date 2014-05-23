@@ -13,6 +13,7 @@ import com.google.protobuf.GeneratedMessage;
 
 import stanford.infolab.debugger.Scenario;
 import stanford.infolab.debugger.Scenario.CommonVertexMasterContext;
+import stanford.infolab.debugger.Scenario.Exception;
 import stanford.infolab.debugger.Scenario.GiraphVertexScenario;
 import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexContext;
 import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexContext.Neighbor;
@@ -551,10 +552,7 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       (VertexScenarioClasses) vertexScenarioClassesWrapper.buildProtoObject());
     giraphScenarioBuilder.setContext((VertexContext) contextWrapper.buildProtoObject());
     if (hasExceptionWrapper()) {
-      Scenario.Exception.Builder exceptionBuilder = Scenario.Exception.newBuilder();
-      exceptionBuilder.setMessage(getExceptionWrapper().getErrorMessage());
-      exceptionBuilder.setStackTrace(getExceptionWrapper().getStackTrace());
-      giraphScenarioBuilder.setException(exceptionBuilder.build());
+      giraphScenarioBuilder.setException((Exception) exceptionWrapper.buildProtoObject());
     }
     GiraphVertexScenario giraphScenario = giraphScenarioBuilder.build();
     return giraphScenario;

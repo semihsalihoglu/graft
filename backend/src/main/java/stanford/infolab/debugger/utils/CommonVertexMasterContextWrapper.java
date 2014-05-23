@@ -32,6 +32,14 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
     this.totalNumEdges = -1;
     this.previousAggregatedValueWrappers = new ArrayList<>();
   }
+  
+  public CommonVertexMasterContextWrapper(ImmutableClassesGiraphConfiguration immutableClassesConfig,
+    long superstepNo, long totalNumVertices, long totalNumEdges) {
+    this.immutableClassesConfig = immutableClassesConfig;
+    this.superstepNo = superstepNo;
+    this.totalNumVertices = totalNumVertices;
+    this.totalNumEdges = totalNumEdges;
+  }
 
   public long getSuperstepNoWrapper() {
     return superstepNo;

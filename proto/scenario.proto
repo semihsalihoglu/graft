@@ -3,8 +3,8 @@ package stanford.infolab.debugger;
 import "giraph_aggregator.proto";
 
 // GiraphVertexScenario captures necessary information to replicate
-// the environment under which Computation.compute() function was
-// called on a particular vertex.
+// the environment under which user's Computation.compute() function was
+// called on a particular vertex and superstep.
 message GiraphVertexScenario {  
   required VertexScenarioClasses vertexScenarioClasses = 1; 
   required VertexContext context = 2;
@@ -31,14 +31,14 @@ message GiraphVertexScenario {
  // VertexContext encapsulates a particular pair of inputs and outputs of Computation.compute().
  message VertexContext {
    required CommonVertexMasterContext commonContext = 1;
-   required bytes vertexId = 5;
-   required bytes vertexValueBefore = 6;
-   optional bytes vertexValueAfter = 7;
+   required bytes vertexId = 2;
+   required bytes vertexValueBefore = 3;
+   optional bytes vertexValueAfter = 4;
    // TODO: We might have to break neighbor also to
    // neighborsBefore and neighborsAfter.
-   repeated Neighbor neighbor = 8;
-   repeated bytes inMessage = 9;
-   repeated OutgoingMessage outMessage = 10;
+   repeated Neighbor neighbor = 5;
+   repeated bytes inMessage = 6;
+   repeated OutgoingMessage outMessage = 7;
 
    // Messages sent by the current vertex.
    message OutgoingMessage {
@@ -54,16 +54,28 @@ message GiraphVertexScenario {
  }
 }
 
+
+// GiraphMasterScenario captures the necessary information to
+// replicate the environment under which user's Master.compute()
+// function was called.
+message GiraphMasterScenario {
+  required string masterClassUnderTest = 1;
+  required CommonVertexMasterContext commonContext = 2;
+  optional Exception exception = 3;
+}
+
 // Information related to the exception thrown.
 message Exception {
   required string message = 1;
   required string stackTrace = 2;
 }
 
+// Contains common fiels between GiraphVertexScenario.VertexContext
+// and GiraphMasterScenario.
 message CommonVertexMasterContext {
   required bytes conf = 1;
   required int64 superstepNo = 2;
   required int64 totalNumVertices = 3;
   required int64 totalNumEdges = 4;
-  repeated AggregatedValue previousAggregatedValue = 11;
+  repeated AggregatedValue previousAggregatedValue = 5;
 }

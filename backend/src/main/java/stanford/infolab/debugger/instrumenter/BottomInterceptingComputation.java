@@ -37,20 +37,17 @@ public class BottomInterceptingComputation<I extends WritableComparable, V exten
 	public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
 			throws IOException {
 		boolean shouldCatchException = interceptComputeBegin(vertex, messages);
-		try {
-			if (shouldCatchException) {
-				try {
-					super.compute(vertex, messages);
-				} catch (Exception e) {
-					interceptComputeException(vertex, messages, e);
-					throw e;
-				}
-			} else {
-				super.compute(vertex, messages);
-			}
-		} finally {
-			interceptComputeEnd(vertex, messages);
-		}
+    if (shouldCatchException) {
+      try {
+        super.compute(vertex, messages);
+      } catch (Exception e) {
+        interceptComputeException(vertex, messages, e);
+        throw e;
+      }
+    } else {
+      super.compute(vertex, messages);
+    }
+    interceptComputeEnd(vertex, messages);
 	}
 
 	@Intercept

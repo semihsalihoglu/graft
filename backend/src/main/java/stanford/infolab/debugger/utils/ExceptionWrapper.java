@@ -23,6 +23,11 @@ public class ExceptionWrapper extends BaseWrapper {
 
   public ExceptionWrapper() {}
 
+  public ExceptionWrapper(String errorMessage, String stackTrace) {
+    this.errorMessage = errorMessage;
+    this.stackTrace = stackTrace;
+  }
+
   @Override
   public String toString() {
     StringBuilder stringBuilder = new StringBuilder();

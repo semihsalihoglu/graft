@@ -81,7 +81,6 @@ public abstract class BaseWrapper {
   }
 
   public void saveToHDFS(FileSystem fs, String fileName) throws IOException {
-    System.out.println("Saving " + this.getClass().getCanonicalName() + " to file: " + fileName);
     Path pt = new Path(fileName);
     buildProtoObject().writeTo(fs.create(pt, true).getWrappedStream());
   }
