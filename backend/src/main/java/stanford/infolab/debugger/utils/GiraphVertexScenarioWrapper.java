@@ -20,9 +20,10 @@ import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexContext.Out
 import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexScenarioClasses;
 
 /**
- * A wrapper class around the contents of scenario.proto. In scenario.proto most
- * things are stored as serialized byte arrays and this class gives them access
- * through the java classes that those byte arrays serialize.
+ * Wrapper class around {@link stanford.infolab.debugger.Scenario.GiraphVertexScenario}
+ * protocol buffer. In {@link stanford.infolab.debugger.Scenario.GiraphVertexScenario} most fields
+ * are stored as serialized byte arrays and this class gives them access through the java classes
+ * that those byte arrays serialize.
  * 
  * @param <I>
  *          vertex ID class.
@@ -268,15 +269,14 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
         IOException, InstantiationException, IllegalAccessException {
         Neighbor neighbor = (Neighbor) protoObject;
-        I neighborId = newInstance(vertexScenarioClassesWrapper.vertexIdClass);
-        fromByteString(neighbor.getNeighborId(), neighborId);
+        this.nbrId = newInstance(vertexScenarioClassesWrapper.vertexIdClass);
+        fromByteString(neighbor.getNeighborId(), this.nbrId);
 
-        E edgeValue;
         if (neighbor.hasEdgeValue()) {
-          edgeValue = newInstance(vertexScenarioClassesWrapper.edgeValueClass);
-          fromByteString(neighbor.getEdgeValue(), edgeValue);
+          this.edgeValue = newInstance(vertexScenarioClassesWrapper.edgeValueClass);
+          fromByteString(neighbor.getEdgeValue(), this.edgeValue);
         } else {
-          edgeValue = null;
+          this.edgeValue = null;
         }
       }
     }

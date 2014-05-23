@@ -46,7 +46,7 @@ public class ServerUtils {
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
 
-  private static final String TRACE_ROOT = "";
+  private static final String TRACE_ROOT = "/giraph-debug-traces";
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -69,12 +69,12 @@ public class ServerUtils {
   }
 
   /*
-   * Returns the HDFS FileSystem reference.
+   * Returns the HDFS FileSystem reference. 
+   * Note: We assume that the classpath contains the Hadoop's conf directory or the core-site.xml
+   * and hdfs-site.xml configuration directories.
    */
   public static FileSystem getFileSystem() throws IOException {
-    String coreSitePath = "/usr/local/hadoop/conf/core-site.xml";
     Configuration configuration = new Configuration();
-    configuration.addResource(new Path(coreSitePath));
     return FileSystem.get(configuration);
   }
 
