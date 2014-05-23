@@ -31,8 +31,10 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.CommonVertexMasterContextWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexScenarioClassesWrapper;
 
 /**
  * This is a code generator which can generate the JUnit test cases for a Giraph.
@@ -57,7 +59,7 @@ public class TestCaseGenerator {
   }
 
   @SuppressWarnings("rawtypes")
-  public String generateTest(GiraphScenarioWrapper input, String testPackage) 
+  public String generateTest(GiraphVertexScenarioWrapper input, String testPackage) 
       throws VelocityException, IOException {
     VelocityContext context = buildContext(input);
 
@@ -69,33 +71,38 @@ public class TestCaseGenerator {
   }
   
   @SuppressWarnings("rawtypes")
-  public String generateClassUnderTestField(GiraphScenarioWrapper scenario) {
-    return "private " + scenario.getClassUnderTest().getSimpleName() + " classUnderTest;";
+  public String generateClassUnderTestField(GiraphVertexScenarioWrapper scenario) {
+    return "private " +scenario.getVertexScenarioClassesWrapper().getClassUnderTest()
+      .getSimpleName() + " classUnderTest;";
   }
   
   @SuppressWarnings("rawtypes")
-  public String generateConfField(GiraphScenarioWrapper scenario) {
+  public String generateConfField(GiraphVertexScenarioWrapper scenario) {
     return String.format("private ImmutableClassesGiraphConfiguration<%s, %s, %s> conf;", 
-        scenario.getVertexIdClass().getSimpleName(), scenario.getVertexValueClass().getSimpleName(),
-        scenario.getEdgeValueClass().getSimpleName());
+        scenario.getVertexScenarioClassesWrapper().getVertexIdClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getVertexValueClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getEdgeValueClass().getSimpleName());
   }
   
   @SuppressWarnings("rawtypes")
-  public String generateMockEnvField(GiraphScenarioWrapper scenario) {
+  public String generateMockEnvField(GiraphVertexScenarioWrapper scenario) {
     return String.format("private MockedEnvironment<%s, %s, %s, %s> mockEnv;",
-        scenario.getVertexIdClass().getSimpleName(), scenario.getVertexValueClass().getSimpleName(),
-        scenario.getEdgeValueClass().getSimpleName(), scenario.getOutgoingMessageClass().getSimpleName());
+        scenario.getVertexScenarioClassesWrapper().getVertexIdClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getVertexValueClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getEdgeValueClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getOutgoingMessageClass().getSimpleName());
   }
   
   @SuppressWarnings("rawtypes")
-  public String generateProcessorField(GiraphScenarioWrapper scenario) {
+  public String generateProcessorField(GiraphVertexScenarioWrapper scenario) {
     return String.format("private WorkerClientRequestProcessor<%s, %s, %s> processor;", 
-        scenario.getVertexIdClass().getSimpleName(), scenario.getVertexValueClass().getSimpleName(),
-        scenario.getEdgeValueClass().getSimpleName());
+        scenario.getVertexScenarioClassesWrapper().getVertexIdClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getVertexValueClass().getSimpleName(),
+        scenario.getVertexScenarioClassesWrapper().getEdgeValueClass().getSimpleName());
   }
 
   @SuppressWarnings("rawtypes")
-  public String generateSetUp(GiraphScenarioWrapper input) throws VelocityException, IOException {
+  public String generateSetUp(GiraphVertexScenarioWrapper input) throws VelocityException, IOException {
     VelocityContext context = buildContext(input);
     
     try (StringWriter sw = new StringWriter()) {
@@ -106,7 +113,7 @@ public class TestCaseGenerator {
   }
   
   @SuppressWarnings({"rawtypes"})
-  public String generateTestCompute(GiraphScenarioWrapper input) throws VelocityException, IOException {
+  public String generateTestCompute(GiraphVertexScenarioWrapper input) throws VelocityException, IOException {
     unsolvedWritableSet.clear();
     
     VelocityContext context = buildContext(input);
@@ -130,53 +137,58 @@ public class TestCaseGenerator {
   }
   
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private VelocityContext buildContext(GiraphScenarioWrapper input) {
+  private VelocityContext buildContext(GiraphVertexScenarioWrapper giraphScenarioWrapper) {
     VelocityContext context = new VelocityContext();
 
+    VertexScenarioClassesWrapper vertexScenarioClassesWrapper =
+      giraphScenarioWrapper.getVertexScenarioClassesWrapper();
     HashSet<Class> usedTypes = new LinkedHashSet<>(6);
-    usedTypes.add(input.getClassUnderTest());
-    usedTypes.add(input.getVertexIdClass());
-    usedTypes.add(input.getVertexValueClass());
-    usedTypes.add(input.getEdgeValueClass());
-    usedTypes.add(input.getIncomingMessageClass());
-    usedTypes.add(input.getOutgoingMessageClass());
+    usedTypes.add(vertexScenarioClassesWrapper.getClassUnderTest());
+    usedTypes.add(vertexScenarioClassesWrapper.getVertexIdClass());
+    usedTypes.add(vertexScenarioClassesWrapper.getVertexValueClass());
+    usedTypes.add(vertexScenarioClassesWrapper.getEdgeValueClass());
+    usedTypes.add(vertexScenarioClassesWrapper.getIncomingMessageClass());
+    usedTypes.add(vertexScenarioClassesWrapper.getOutgoingMessageClass());
     context.put("usedTypes", usedTypes);
 
     context.put("helper", new FormatHelper());
     
-    context.put("classUnderTestName", new String(input.getClassUnderTest().getSimpleName()));
+    context.put("classUnderTestName", new String(
+      vertexScenarioClassesWrapper.getClassUnderTest().getSimpleName()));
 
-    context.put("vertexIdType", input.getVertexIdClass().getSimpleName());
-    context.put("vertexValueType", input.getVertexValueClass().getSimpleName());
-    context.put("edgeValueType", input.getEdgeValueClass().getSimpleName());
-    context.put("inMsgType", input.getIncomingMessageClass().getSimpleName());
-    context.put("outMsgType", input.getOutgoingMessageClass().getSimpleName());
+    context.put("vertexIdType", vertexScenarioClassesWrapper.getVertexIdClass().getSimpleName());
+    context.put("vertexValueType", vertexScenarioClassesWrapper.getVertexValueClass().getSimpleName());
+    context.put("edgeValueType", vertexScenarioClassesWrapper.getEdgeValueClass().getSimpleName());
+    context.put("inMsgType", vertexScenarioClassesWrapper.getIncomingMessageClass().getSimpleName());
+    context.put("outMsgType", vertexScenarioClassesWrapper.getOutgoingMessageClass().getSimpleName());
     
-    context.put("superstepNo", input.getContextWrapper().getSuperstepNoWrapper());
-    context.put("nVertices", input.getContextWrapper().getTotalNumVerticesWrapper());
-    context.put("nEdges", input.getContextWrapper().getTotalNumEdgesWrapper());
+    CommonVertexMasterContextWrapper commonVertexMasterContextWrapper =
+      giraphScenarioWrapper.getContextWrapper().getCommonVertexMasterContextWrapper();
+    context.put("superstepNo", commonVertexMasterContextWrapper.getSuperstepNoWrapper());
+    context.put("nVertices", commonVertexMasterContextWrapper.getTotalNumVerticesWrapper());
+    context.put("nEdges", commonVertexMasterContextWrapper.getTotalNumEdgesWrapper());
     
-    context.put("aggregators", input.getContextWrapper().getPreviousAggregatedValues());
+    context.put("aggregators", commonVertexMasterContextWrapper.getPreviousAggregatedValues());
     
     List<Config> configs = new ArrayList<>();
-    if (input.getConfig() != null) {
-      for (Iterator<Entry<String,String>> configIter = input.getConfig().iterator();
-          configIter.hasNext(); ) {
+    if (commonVertexMasterContextWrapper.getConfig() != null) {
+      for (Iterator<Entry<String,String>> configIter =
+        commonVertexMasterContextWrapper.getConfig().iterator(); configIter.hasNext(); ) {
         Entry<String,String> entry = configIter.next();
         configs.add(new Config(entry.getKey(), entry.getValue()));
       }
     }
     context.put("configs", configs);
 
-    context.put("vertexId", input.getContextWrapper().getVertexIdWrapper());
-    context.put("vertexValue", input.getContextWrapper().getVertexValueBeforeWrapper());
-    context.put("vertexValueAfter", input.getContextWrapper().getVertexValueAfterWrapper());
-    context.put("inMsgs", input.getContextWrapper().getIncomingMessageWrappers());
-    context.put("neighbors", input.getContextWrapper().getNeighborWrappers());
+    context.put("vertexId", giraphScenarioWrapper.getContextWrapper().getVertexIdWrapper());
+    context.put("vertexValue", giraphScenarioWrapper.getContextWrapper().getVertexValueBeforeWrapper());
+    context.put("vertexValueAfter", giraphScenarioWrapper.getContextWrapper().getVertexValueAfterWrapper());
+    context.put("inMsgs", giraphScenarioWrapper.getContextWrapper().getIncomingMessageWrappers());
+    context.put("neighbors", giraphScenarioWrapper.getContextWrapper().getNeighborWrappers());
 
     HashMap<OutgoingMessageWrapper, OutMsg> outMsgMap = new HashMap<>();
     for (OutgoingMessageWrapper msg : 
-        (Collection<OutgoingMessageWrapper>)input.getContextWrapper().getOutgoingMessageWrappers()) {
+        (Collection<OutgoingMessageWrapper>)giraphScenarioWrapper.getContextWrapper().getOutgoingMessageWrappers()) {
       if (outMsgMap.containsKey(msg))
         outMsgMap.get(msg).incrementTimes();
       else
