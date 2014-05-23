@@ -15,6 +15,7 @@ import org.apache.hadoop.io.WritableComparable;
  * @param <M1> Incoming message type
  * @param <M2> Outgoing message type
  */
+@SuppressWarnings({ "rawtypes" })
 public abstract class DebugConfig<I extends WritableComparable, V extends Writable,
   E extends Writable, M1 extends Writable, M2 extends Writable> {
 

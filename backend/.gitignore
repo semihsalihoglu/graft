@@ -1,0 +1,8 @@
+# Maven stuffs
+/target
+/dependency-reduced-pom.xml
+
+# Eclipse files
+/.classpath
+/.project
+/.settings

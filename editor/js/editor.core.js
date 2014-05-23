@@ -23,6 +23,10 @@ function Editor(options) {
     this.nodes = [];
     this.links = [];
     this.messages = [];
+    // Table members
+    // Current scenario (adjList) object as received from the server.
+    // REMOVE
+    this.currentScenario = eval("[{'PR1' : {neighbors: [{ 'neighborId' : 'PR2'}, { 'neighborId' : 'PR3'}], vertexValues : [0.244], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', 'PR3' : 'msgFrom1To3.step-1'}}, 'PR2' : {neighbors: [{ neighborId : 'PR3'}], vertexValues: [0.455], outgoingMessages: {'PR3': 'msgTo3From2.step-1'}}, 'PR4' : {neighbors: [ { neighborId : 'PR1'}], vertexValues : [0.78]}},  {'PR1' : {vertexValues:[0.44], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step0', 'PR3' : 'msgFrom1To3.step0'}}, 'PR2' : {vertexValues:[0.889], outgoingMessages: {'PR3': 'msgTo3From2.step0'}}, 'PR4' : {vertexValues:[0.98]}}, {'PR1' : {vertexValues:[0.001], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', 'PR3' : 'msgFrom1To3.step1'}}, 'PR2' : {vertexValues:[0.667], outgoingMessages: {'PR3': 'msgTo3From2.step1'}}}, {'PR1' : {vertexValues:[0.232], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step2', 'PR3' : 'msgFrom1To3.step2'}}, 'PR2' : {vertexValues:[0.787], outgoingMessages: {'PR3': 'msgTo3From2.step2'}}}]")[0];
     // aggregators is a collecton of key-value pairs displayed in the top-right corner.
     this.aggregators = {};
     // set graph as the default view
@@ -398,6 +402,8 @@ Editor.prototype.keyup = function() {
  */
 Editor.prototype.buildGraphFromAdjList = function(adjList) {
     this.empty();
+    // Cache the scenario object. Used by tabular view.
+    this.currentScenario = adjList;
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in adjList) {
         var node = this.getNodeWithId(nodeId);
@@ -407,7 +413,7 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         var adj = adjList[nodeId]['neighbors'];
         // For every node in the adj list of this node,
         // add the node to this.nodes and add the edge to this.links
-        for (var i = 0; i < adj.length; i++) {
+        for (var i = 0; adj && i < adj.length; i++) {
             var adjId = adj[i]['neighborId'];
             var edgeValue = adj[i]['edgeValue'];
             var adjNode = this.getNodeWithId(adjId);

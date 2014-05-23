@@ -13,7 +13,7 @@
 function GiraphDebugger(options) {
     // Initialize (and reset) variables for jobs.
     this.resetVars();
-    this.debuggerServerRoot = 'http://localhost:8000';
+    this.debuggerServerRoot = (location.protocol === 'file:' ? 'http://localhost:8000' : '');
     this.mode = GiraphDebugger.ModeEnum.EDIT;
     this.init(options);
     return this;

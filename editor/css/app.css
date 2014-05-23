@@ -180,11 +180,24 @@ text.tid {
 .editor-tablet {
 	width:100%;
 	height:100%;
+	padding: 10px;
+}
+
+td.tablet-details-control {
+    background: url('../img/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.tablet-details-control {
+    background: url('../img/details_close.png') no-repeat center center;
 }
 
 /* Bootstrap overrides */
 .form-control {
 	margin-left:5px;
+}
+
+.nav-tabs li {
+	cursor: pointer;
 }
 
 .slider {

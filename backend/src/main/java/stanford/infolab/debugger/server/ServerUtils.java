@@ -19,11 +19,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
+
 import stanford.infolab.debugger.utils.AggregatedValueWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.NeighborWrapper;
-import stanford.infolab.debugger.utils.GiraphScenarioWrapper.ContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.NeighborWrapper;
+import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.ExceptionWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper.ExtendedOutgoingMessageWrapper;
 import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
@@ -46,7 +48,7 @@ public class ServerUtils {
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
 
-  private static final String TRACE_ROOT = "";
+  private static final String TRACE_ROOT = "/giraph-debug-traces";
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -69,12 +71,12 @@ public class ServerUtils {
   }
 
   /*
-   * Returns the HDFS FileSystem reference.
+   * Returns the HDFS FileSystem reference. 
+   * Note: We assume that the classpath contains the Hadoop's conf directory or the core-site.xml
+   * and hdfs-site.xml configuration directories.
    */
   public static FileSystem getFileSystem() throws IOException {
-    String coreSitePath = "/usr/local/hadoop/conf/core-site.xml";
     Configuration configuration = new Configuration();
-    configuration.addResource(new Path(coreSitePath));
     return FileSystem.get(configuration);
   }
 
@@ -133,13 +135,13 @@ public class ServerUtils {
    * @param superstepNo: Superstep number debugged.
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
    */
-  public static GiraphScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
+  public static GiraphVertexScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
     String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
     IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo,
       DebugTrace.REGULAR, vertexId);
-    GiraphScenarioWrapper giraphScenarioWrapper = new GiraphScenarioWrapper();
+    GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
     giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
@@ -175,13 +177,13 @@ public class ServerUtils {
   /*
    * Returns the MessageIntegrityViolationWrapper from trace file.
    */
-  public static GiraphScenarioWrapper readExceptionFromTrace(String jobId, long superstepNo,
+  public static GiraphVertexScenarioWrapper readExceptionFromTrace(String jobId, long superstepNo,
     String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
     IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo,
       DebugTrace.EXCEPTION, vertexId);
-    GiraphScenarioWrapper giraphScenarioWrapper = new GiraphScenarioWrapper();
+    GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
     giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
@@ -203,9 +205,9 @@ public class ServerUtils {
    * (JSONObject)
    * @param giraphScenarioWrapper : Giraph Scenario object.
    */
-  public static JSONObject scenarioToJSON(GiraphScenarioWrapper giraphScenarioWrapper)
+  public static JSONObject scenarioToJSON(GiraphVertexScenarioWrapper giraphScenarioWrapper)
     throws JSONException {
-    ContextWrapper contextWrapper = giraphScenarioWrapper.getContextWrapper();
+    VertexContextWrapper contextWrapper = giraphScenarioWrapper.getContextWrapper();
     JSONObject scenarioObj = new JSONObject();
     scenarioObj.put("vertexId", contextWrapper.getVertexIdWrapper());
     scenarioObj.put("vertexValue", contextWrapper.getVertexValueAfterWrapper());
@@ -230,16 +232,15 @@ public class ServerUtils {
     // Add exception, if present.
     if (giraphScenarioWrapper.hasExceptionWrapper()) {
       JSONObject exceptionObj = new JSONObject();
-      GiraphScenarioWrapper.ExceptionWrapper exceptionWrapper = giraphScenarioWrapper
-        .getExceptionWrapper();
+      ExceptionWrapper exceptionWrapper = giraphScenarioWrapper.getExceptionWrapper();
       exceptionObj.put("message", exceptionWrapper.getErrorMessage());
       exceptionObj.put("stackTrace", exceptionWrapper.getStackTrace());
       scenarioObj.put("exception", exceptionObj);
     }
     JSONObject aggregateObj = new JSONObject();
-     for(Object aggregatedValue : contextWrapper.getPreviousAggregatedValues()) {
-      AggregatedValueWrapper aggregatedValueWrapper = 
-        (AggregatedValueWrapper) aggregatedValue;
+    for (Object aggregatedValue : contextWrapper.getCommonVertexMasterContextWrapper()
+      .getPreviousAggregatedValues()) {
+      AggregatedValueWrapper aggregatedValueWrapper = (AggregatedValueWrapper) aggregatedValue;
       aggregateObj.put(aggregatedValueWrapper.getKey(), aggregatedValueWrapper.getValue());
     }
     scenarioObj.put("aggregators", aggregateObj);

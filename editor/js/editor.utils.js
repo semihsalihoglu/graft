@@ -18,6 +18,46 @@ Editor.prototype.resizeForce = function() {
 }
 
 /*
+ * Returns the detailed view of each row in the table view.
+ */
+Editor.prototype.getRowDetailsHtml = function(row) {
+    var navContainer = $('<ul />')
+        .attr('class', 'nav nav-tabs')
+        .attr('id', 'tablet-nav');
+    navContainer.append($('<li class="active"><a data-toggle="tab" data-name="outgoingMessages">Outgoing Messages</a></li>'));
+    navContainer.append($('<li><a data-toggle="tab" data-name="incomingMessages">Incoming Messages</a></li>'));
+    navContainer.append($('<li><a data-toggle="tab" data-name="neighbors">Neighbors</a></li>'));
+
+    return navContainer;
+}
+
+Editor.prototype.initTable = function() {
+    //REMOV
+    this.toggleView(); 
+    var jqueryTableContainer = $(this.tablet[0]);
+    var jqueryTable = $('<table id="editor-tablet-table" class="editor-tablet-table table">' + 
+            '<thead><tr><th></th><th>Vertex ID</th><th>Vertex Value</th><th>Outgoing Msgs</th>' + 
+            '<th>Incoming Msgs</th><th>Neighbors</th></tr></thead></table>');
+    jqueryTableContainer.append(jqueryTable);
+    // Define the table schema and initialize DataTable object.
+    this.dataTable = $("#editor-tablet-table").DataTable({
+        'columns' : [
+            {
+                'class' : 'tablet-details-control',
+                'orderable' : false,
+                'data' : null,
+                'defaultContent' : ''
+            },
+            { 'data' : 'vertexId' },
+            { 'data' : 'vertexValue' },
+            { 'data' : 'outgoingMessages.numOutgoingMessages' },
+            { 'data' : 'incomingMessages.numIncomingMessages' },
+            { 'data' : 'neighbors.numNeighbors'}
+        ]
+    });
+}
+
+/*
  * Initializes the SVG element, along with marker and defs.
  */
 Editor.prototype.initElements = function() {
@@ -26,6 +66,8 @@ Editor.prototype.initElements = function() {
         .insert('div')
         .attr('class', 'editor-tablet')
         .style('display', 'none');
+
+    this.initTable();
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
@@ -530,6 +572,59 @@ Editor.prototype.restartAggregators = function() {
         .attr('dy', '2.0em')
         .attr('x', 0)
         .text(function(d) { return "{0} -> {1}".format(d[0], d[1]); });
+}
+
+/*
+ * Restarts the table with the latest currentScenario
+ */
+Editor.prototype.restartTable = function() { 
+    // Remove all rows of the table and add again.
+    this.dataTable.rows().remove();
+
+    // Modify the scenario object to suit dataTables format
+    for (var nodeId in this.currentScenario) {
+        var dataRow = {};
+        var scenario = this.currentScenario[nodeId];
+        dataRow.vertexId = nodeId;
+        dataRow.vertexValue = scenario.vertexValues[0],
+        dataRow.outgoingMessages = { 
+            numOutgoingMessages : Utils.count(scenario.outgoingMessages), 
+            data : scenario.outgoingMessages
+        },
+        dataRow.incomingMessages = { 
+            numIncomingMessages : Utils.count(scenario.incomingMessages), 
+            data : scenario.incomingMessages
+        },
+        dataRow.neighbors = {
+            numNeighbors : Utils.count(scenario.neighbors),
+            data : scenario.neighbors
+        }
+        this.dataTable.row.add(dataRow).draw();
+    }
+
+    // Bind click event for rows.
+    $('#editor-tablet-table td.tablet-details-control').click((function(event) {
+        var tr = $(event.target).parents('tr');
+        var row = this.dataTable.row(tr);
+        console.log(row);
+        if ( row.child.isShown()) {
+            // This row is already open - close it.
+            row.child.hide();
+            tr.removeClass('shown');
+        } else {
+            // Open this row.
+            var rowHtml = this.getRowDetailsHtml(row.data());
+            var navContainerId = $(rowHtml).attr('id');
+            console.log(navContainerId);
+            row.child(this.getRowDetailsHtml(rowHtml)).show();
+            // Now attach events to the tabs
+            // NOTE: MUST attach events after the row.child call. 
+            $('#tablet-nav li a').click(function() {
+                console.log(this);
+            });
+            tr.addClass('shown');
+        }
+    }).bind(this));
 }
 
 /*

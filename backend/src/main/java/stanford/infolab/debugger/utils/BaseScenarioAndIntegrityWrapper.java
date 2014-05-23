@@ -3,8 +3,8 @@ package stanford.infolab.debugger.utils;
 import org.apache.hadoop.io.WritableComparable;
 
 /**
- * Base wrapper class for {@link GiraphScenarioWrapper} and all of the integrity
- * violation wrappers.
+ * Base wrapper class for {@link GiraphVertexScenarioWrapper}, {@link MsgIntegrityViolationWrapper},
+ * {@link VertexValueIntegrityViolationWrapper}.
  * @author semihsalihoglu
  *
  * @param <I> Vertex id 
