@@ -32,18 +32,20 @@ public class ExceptionWrapper extends BaseWrapper {
   }
 
   public String getErrorMessage() {
+    // We append with "" to guard against null pointer exceptions
     return "" + errorMessage;
   }
 
   public String getStackTrace() {
+    // We append with "" to guard against null pointer exceptions
     return "" + stackTrace;
   }
 
   @Override
   public GeneratedMessage buildProtoObject() {
     Exception.Builder exceptionBuilder = Exception.newBuilder();
-    exceptionBuilder.setMessage(errorMessage);
-    exceptionBuilder.setStackTrace(stackTrace);
+    exceptionBuilder.setMessage(getErrorMessage());
+    exceptionBuilder.setStackTrace(getStackTrace());
     return exceptionBuilder.build();
   }
 
@@ -61,10 +63,12 @@ public class ExceptionWrapper extends BaseWrapper {
   }
 
   public void setErrorMessage(String errorMessage) {
-    this.errorMessage = errorMessage;
+    // We append "" to guard against null pointer exceptions
+    this.errorMessage = "" + errorMessage;
   }
 
   public void setStackTrace(String stackTrace) {
-    this.stackTrace = stackTrace;
+    // We append "" to guard against null pointer exceptions
+    this.stackTrace = "" + stackTrace;
   }
 }
