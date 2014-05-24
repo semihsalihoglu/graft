@@ -46,7 +46,7 @@ public class ServerUtils {
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
 
-  private static final String TRACE_ROOT = "/giraph-debug-traces";
+  public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
