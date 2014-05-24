@@ -66,7 +66,6 @@ text.tid {
 
 #editor-container {
 	overflow: hidden;
-	height:450px;
 	border-bottom: solid black 1px;
 	border-top: solid black 1px;
 	margin-bottom:20px;
@@ -169,7 +168,7 @@ text.tid {
 
 
 #debugger-container {
-	height: 450px;
+	height: 480px;
 	margin-bottom: 20px;
 }
 
@@ -177,10 +176,12 @@ text.tid {
 	font: 16px sans-serif;
 }
 
+/* Graph Editor tabular view styles */
 .editor-tablet {
 	width:100%;
 	height:100%;
 	padding: 10px;
+	overflow: auto;
 }
 
 td.tablet-details-control {
@@ -189,6 +190,15 @@ td.tablet-details-control {
 }
 tr.shown td.tablet-details-control {
     background: url('../img/details_close.png') no-repeat center center;
+}
+
+.tablet-data-container {
+	padding: 5px;
+	background-color : #FFDFDF;
+}
+
+.tablet-data-container table {
+	margin:0px;
 }
 
 /* Bootstrap overrides */
@@ -203,4 +213,8 @@ tr.shown td.tablet-details-control {
 .slider {
 	width: 100%;
 	margin-left: 15px;
+}
+
+.table th {
+	text-align: center;
 }

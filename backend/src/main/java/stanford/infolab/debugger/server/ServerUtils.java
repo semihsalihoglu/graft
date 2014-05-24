@@ -219,6 +219,11 @@ public class ServerUtils {
       outgoingMessagesObj.put(outgoingMessageWrapper.destinationId.toString(),
         outgoingMessageWrapper.message.toString());
     }
+    // Add incoming messages.
+    ArrayList<String> incomingMessagesList = new ArrayList<String>();
+    for (Object incomingMessage : contextWrapper.getIncomingMessageWrappers()) {
+      incomingMessagesList.add(incomingMessage.toString());
+    }
     // Add neighbors.
     for (Object neighbor : contextWrapper.getNeighborWrappers()) {
       JSONObject neighborObject = new JSONObject();
@@ -228,6 +233,7 @@ public class ServerUtils {
       neighborsList.put(neighborObject);
     }
     scenarioObj.put("outgoingMessages", outgoingMessagesObj);
+    scenarioObj.put("incomingMessages", incomingMessagesList);
     scenarioObj.put("neighbors", neighborsList);
     // Add exception, if present.
     if (giraphScenarioWrapper.hasExceptionWrapper()) {

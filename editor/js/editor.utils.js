@@ -21,21 +21,31 @@ Editor.prototype.resizeForce = function() {
  * Returns the detailed view of each row in the table view.
  */
 Editor.prototype.getRowDetailsHtml = function(row) {
+    var outerContainer = $('<div />');
     var navContainer = $('<ul />')
         .attr('class', 'nav nav-tabs')
-        .attr('id', 'tablet-nav');
+        .attr('id', 'tablet-nav')
+        .appendTo(outerContainer);
     navContainer.append($('<li class="active"><a data-toggle="tab" data-name="outgoingMessages">Outgoing Messages</a></li>'));
     navContainer.append($('<li><a data-toggle="tab" data-name="incomingMessages">Incoming Messages</a></li>'));
     navContainer.append($('<li><a data-toggle="tab" data-name="neighbors">Neighbors</a></li>'));
 
-    return navContainer;
+    var dataContainer = $('<div />')
+        .attr('class', 'tablet-data-container')
+        .appendTo(outerContainer);
+
+    return {
+        'outerContainer' : outerContainer,
+        'dataContainer' : dataContainer,
+        'navContainer' : navContainer
+    };
 }
 
 Editor.prototype.initTable = function() {
     //REMOV
     this.toggleView(); 
     var jqueryTableContainer = $(this.tablet[0]);
-    var jqueryTable = $('<table id="editor-tablet-table" class="editor-tablet-table table">' + 
+    var jqueryTable = $('<table id="editor-tablet-table" class="editor-tablet-table table display">' + 
             '<thead><tr><th></th><th>Vertex ID</th><th>Vertex Value</th><th>Outgoing Msgs</th>' + 
             '<th>Incoming Msgs</th><th>Neighbors</th></tr></thead></table>');
     jqueryTableContainer.append(jqueryTable);
@@ -613,15 +623,46 @@ Editor.prototype.restartTable = function() {
             tr.removeClass('shown');
         } else {
             // Open this row.
-            var rowHtml = this.getRowDetailsHtml(row.data());
-            var navContainerId = $(rowHtml).attr('id');
-            console.log(navContainerId);
-            row.child(this.getRowDetailsHtml(rowHtml)).show();
+            var rowData = row.data();
+            var rowHtml = this.getRowDetailsHtml(rowData);
+            var dataContainer = rowHtml.dataContainer;
+            row.child(rowHtml.outerContainer).show();
             // Now attach events to the tabs
             // NOTE: MUST attach events after the row.child call. 
-            $('#tablet-nav li a').click(function() {
-                console.log(this);
-            });
+            $(rowHtml.navContainer).on('click', 'li a', (function(event) {
+                // Check which tab was clicked and populate data accordingly.
+                var dataContainer = rowHtml.dataContainer;
+                var tabName = $(event.target).data('name');
+                // Clear the data container
+                $(dataContainer).empty();
+                if (tabName === 'outgoingMessages') {
+                    var mainTable = $('<table><thead><th>Receiver ID</th><th>Outgoing Message</th></thead></table>')
+                        .attr('class', 'table')
+                        .appendTo(dataContainer)
+                    var outgoingMessages = rowData.outgoingMessages.data;
+                    for (var receiverId in outgoingMessages) {
+                        $(mainTable).append("<tr><td>{0}</td><td>{1}</td></tr>".format(receiverId, outgoingMessages[receiverId]));
+                    }
+                    $(mainTable).DataTable();
+                } else if (tabName === 'incomingMessages') {
+                    var mainTable = $('<table><thead><th>Receiver ID</th><th>Outgoing Message</th></thead></table>')
+                        .attr('class', 'table')
+                        .appendTo(dataContainer);
+                    var incomingMessages = rowData.incomingMessages.data;
+                    //TODO: Understand incoming Message schema and add accordingly.
+                } else if (tabName === 'neighbors') {
+                    var mainTable = $('<table><thead><th>Neighbor ID</th><th>Edge Value</th></thead></table>')
+                        .attr('class', 'table')
+                        .appendTo(dataContainer)
+                    var neighbors = rowData.neighbors.data;
+                    console.log(neighbors);
+                    for (var i = 0 ; i < neighbors.length; i++) {
+                        $(mainTable).append("<tr><td>{0}</td><td>{1}</td></tr>"
+                            .format(neighbors[i].neighborId, neighbors[i].edgeValue ? neighbors[i].edgeValue : '-'));
+                    }
+                    $(mainTable).DataTable();
+                }
+            }).bind(this));
             tr.addClass('shown');
         }
     }).bind(this));

@@ -113,6 +113,7 @@ Editor.prototype.restart = function() {
     this.restartLinks();
     this.resizeForce();
     this.restartAggregators();
+    this.restartTable();
 
     // Set the background to light gray if editor is readonly.
     this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
