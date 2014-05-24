@@ -25,8 +25,7 @@ function Editor(options) {
     this.messages = [];
     // Table members
     // Current scenario (adjList) object as received from the server.
-    // REMOVE
-    this.currentScenario = eval("[{'PR1' : {neighbors: [{ 'neighborId' : 'PR2'}, { 'neighborId' : 'PR3'}], vertexValues : [0.244], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', 'PR3' : 'msgFrom1To3.step-1'}}, 'PR2' : {neighbors: [{ neighborId : 'PR3'}], vertexValues: [0.455], outgoingMessages: {'PR3': 'msgTo3From2.step-1'}}, 'PR4' : {neighbors: [ { neighborId : 'PR1'}], vertexValues : [0.78]}},  {'PR1' : {vertexValues:[0.44], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step0', 'PR3' : 'msgFrom1To3.step0'}}, 'PR2' : {vertexValues:[0.889], outgoingMessages: {'PR3': 'msgTo3From2.step0'}}, 'PR4' : {vertexValues:[0.98]}}, {'PR1' : {vertexValues:[0.001], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', 'PR3' : 'msgFrom1To3.step1'}}, 'PR2' : {vertexValues:[0.667], outgoingMessages: {'PR3': 'msgTo3From2.step1'}}}, {'PR1' : {vertexValues:[0.232], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step2', 'PR3' : 'msgFrom1To3.step2'}}, 'PR2' : {vertexValues:[0.787], outgoingMessages: {'PR3': 'msgTo3From2.step2'}}}]")[0];
+    this.currentScenario = {};
     // aggregators is a collecton of key-value pairs displayed in the top-right corner.
     this.aggregators = {};
     // set graph as the default view
@@ -65,7 +64,7 @@ Editor.prototype.buildSample = function() {
     }
     this.addEdge('1', '2');
     this.addEdge('2', '3');
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -78,7 +77,7 @@ Editor.prototype.empty = function() {
     this.links.length = 0;
     this.messages.length = 0;
     this.numNodes = 0;
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -100,20 +99,19 @@ Editor.prototype.init = function() {
     this.circle = this.svg.append('svg:g').selectAll('g');
     // Initializes the force layout.
     this.initForce();
-    this.restart();
+    this.restartGraph();
 }
 
 /*
  * Updates the graph. Called internally on various events.
  * May be called from the client after updating graph properties.
  */
-Editor.prototype.restart = function() {
+Editor.prototype.restartGraph = function() {
     this.setSize();
     this.restartNodes();
     this.restartLinks();
     this.resizeForce();
     this.restartAggregators();
-    this.restartTable();
 
     // Set the background to light gray if editor is readonly.
     this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
@@ -138,7 +136,7 @@ Editor.prototype.mousedown = function() {
         node =  this.addNode();
     node.x = point[0];
     node.y = point[1];
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -278,7 +276,7 @@ Editor.prototype.mousemove = function() {
         this.mousedown_node.y + 'L' + d3.mouse(this.svg[0][0])[0] + ',' +
         d3.mouse(this.svg[0][0])[1]
     );
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -333,7 +331,7 @@ Editor.prototype.keydown = function() {
 
             this.selected_link = null;
             this.selected_node = null;
-            this.restart();
+            this.restartGraph();
             break;
         case 66: // B
             if (this.selected_link) {
@@ -342,7 +340,7 @@ Editor.prototype.keydown = function() {
                 this.selected_link.right = true;
             }
 
-            this.restart();
+            this.restartGraph();
             break;
         case 76: // L
             if (this.selected_link) {
@@ -351,7 +349,7 @@ Editor.prototype.keydown = function() {
                 this.selected_link.right = false;
             }
 
-            this.restart();
+            this.restartGraph();
             break;
         case 82: // R
             if (this.selected_node) {
@@ -363,7 +361,7 @@ Editor.prototype.keydown = function() {
                 this.selected_link.right = true;
             }
 
-            this.restart();
+            this.restartGraph();
             break;
     }
 }
@@ -403,8 +401,6 @@ Editor.prototype.keyup = function() {
  */
 Editor.prototype.buildGraphFromAdjList = function(adjList) {
     this.empty();
-    // Cache the scenario object. Used by tabular view.
-    this.currentScenario = adjList;
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in adjList) {
         var node = this.getNodeWithId(nodeId);
@@ -426,7 +422,8 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         }
     }
     this.updateGraphData(adjList);
-    this.restart();
+    this.restartGraph();
+    this.restartTable();
 }
 
 /*
@@ -437,6 +434,8 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
  * only updates the node attributes and messages exchanged.
  */
 Editor.prototype.updateGraphData = function(scenario) {
+    // Cache the scenario object. Used by tabular view.
+    this.currentScenario = scenario;
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in scenario) {
         var node = this.getNodeWithId(nodeId);
@@ -501,7 +500,7 @@ Editor.prototype.showPreloader = function() {
 Editor.prototype.hidePreloader = function() {
     this.svg.selectAll('g').transition().style('opacity', 1);
     this.preloader.transition().style('opacity', 0);
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -551,7 +550,7 @@ Editor.prototype.colorNodes = function(nodeIds, color, uncolorRest) {
             }
         }
     }
-    this.restart();
+    this.restartGraph();
 }
 
 /* 

@@ -59,7 +59,7 @@ GiraphDebugger.prototype.init = function(options) {
         'editor' : this.editor,
         'debuggerServerRoot' : this.debuggerServerRoot,
         'resizeCallback' : (function() {
-            this.editor.restart();
+            this.editor.restartGraph();
         }).bind(this)
     });
 
@@ -469,7 +469,8 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
             this.editor.disableNode(nodeId);
         }
     }
-    this.editor.restart();
+    this.editor.restartGraph();
+    this.editor.restartTable();
 }
 
 /*
@@ -571,7 +572,7 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
         data.editor.nodes[index].id = new_id;
 
         data.editor.nodes[index].attrs = new_attrs;
-        data.editor.restart();
+        data.editor.restartGraph();
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
 

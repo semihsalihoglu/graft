@@ -400,7 +400,7 @@ Editor.prototype.restartLinks = function() {
                              this.selected_link = this.mousedown_link;
                          }
                          this.selected_node = null;
-                         this.restart();
+                         this.restartGraph();
                      }).bind(this));
     // Add edge value labels for the new edges.
     // Note that two tspans are required for 
@@ -483,7 +483,7 @@ Editor.prototype.addNodes = function() {
                     .style('marker-end', 'url(#end-arrow)')
                     .classed('hidden', false)
                     .attr('d', 'M' + this.mousedown_node.x + ',' + this.mousedown_node.y + 'L' + this.mousedown_node.x + ',' + this.mousedown_node.y);
-             this.restart();
+             this.restartGraph();
          }).bind(this))
          .on('mouseup', (function(d) {
              if (!this.mousedown_node) {
@@ -507,12 +507,12 @@ Editor.prototype.addNodes = function() {
              // Add link to graph (update if exists).
              var newLink = this.addEdge(this.mousedown_node.id, this.mouseup_node.id);
              this.selected_link = newLink;
-             this.restart();
+             this.restartGraph();
          }).bind(this))
          .on('dblclick', (function(d) {
              if (this.dblnode) {
                  this.dblnode({'event' : d3.event, 'node': d, editor : this });
-                 this.restart();
+                 this.restartGraph();
              }
          }).bind(this));
 
@@ -616,7 +616,6 @@ Editor.prototype.restartTable = function() {
     $('#editor-tablet-table td.tablet-details-control').click((function(event) {
         var tr = $(event.target).parents('tr');
         var row = this.dataTable.row(tr);
-        console.log(row);
         if ( row.child.isShown()) {
             // This row is already open - close it.
             row.child.hide();
@@ -645,11 +644,13 @@ Editor.prototype.restartTable = function() {
                     }
                     $(mainTable).DataTable();
                 } else if (tabName === 'incomingMessages') {
-                    var mainTable = $('<table><thead><th>Receiver ID</th><th>Outgoing Message</th></thead></table>')
+                    var mainTable = $('<table><thead><th>Incoming Message</th></thead></table>')
                         .attr('class', 'table')
                         .appendTo(dataContainer);
                     var incomingMessages = rowData.incomingMessages.data;
-                    //TODO: Understand incoming Message schema and add accordingly.
+                    for (var i = 0; i < incomingMessages.length; i++) {
+                        $(mainTable).append("<tr><td>{0}</td></tr>".format(incomingMessages[i]));
+                    }
                 } else if (tabName === 'neighbors') {
                     var mainTable = $('<table><thead><th>Neighbor ID</th><th>Edge Value</th></thead></table>')
                         .attr('class', 'table')
@@ -663,6 +664,8 @@ Editor.prototype.restartTable = function() {
                     $(mainTable).DataTable();
                 }
             }).bind(this));
+            // Click the first tab of the navContainer - ul>li>a
+            $(rowHtml.navContainer).children(':first').children(':first').click();
             tr.addClass('shown');
         }
     }).bind(this));
