@@ -1,4 +1,6 @@
+#if ($package)
 package $package;
+#end
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -22,7 +24,7 @@ import $type.Name;
 #end
 #end
 
-public class $classUnderTestName#[[Test]]# {
+public class $className {
 
   private $classUnderTestName classUnderTest;
   private ImmutableClassesGiraphConfiguration<$vertexIdType, $vertexValueType, $edgeValueType> conf;

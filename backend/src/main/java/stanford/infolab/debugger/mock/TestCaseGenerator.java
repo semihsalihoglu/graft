@@ -57,11 +57,17 @@ public class TestCaseGenerator {
   public Set<Class> getUnsolvedWritableSet() {
     return unsolvedWritableSet;
   }
-
+  
   @SuppressWarnings("rawtypes")
   public String generateTest(GiraphVertexScenarioWrapper input, String testPackage) 
       throws VelocityException, IOException {
-    VelocityContext context = buildContext(input);
+    return generateTest(input, testPackage, null);
+  }
+
+  @SuppressWarnings("rawtypes")
+  public String generateTest(GiraphVertexScenarioWrapper input, String testPackage, String className) 
+      throws VelocityException, IOException {
+    VelocityContext context = buildContext(input, className);
 
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("TestCaseTemplate.vm");
@@ -136,8 +142,13 @@ public class TestCaseGenerator {
     }
   }
   
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("rawtypes")
   private VelocityContext buildContext(GiraphVertexScenarioWrapper giraphScenarioWrapper) {
+    return buildContext(giraphScenarioWrapper, null);
+  }
+  
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private VelocityContext buildContext(GiraphVertexScenarioWrapper giraphScenarioWrapper, String className) {
     VelocityContext context = new VelocityContext();
 
     VertexScenarioClassesWrapper vertexScenarioClassesWrapper =
@@ -152,6 +163,12 @@ public class TestCaseGenerator {
     context.put("usedTypes", usedTypes);
 
     context.put("helper", new FormatHelper());
+    
+    if (className != null) {
+      context.put("className", className);
+    } else {
+      context.put("className", vertexScenarioClassesWrapper.getClassUnderTest().getSimpleName() + "Test");
+    }
     
     context.put("classUnderTestName", new String(
       vertexScenarioClassesWrapper.getClassUnderTest().getSimpleName()));
