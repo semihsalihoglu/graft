@@ -28,8 +28,8 @@ public class InstrumentGiraphComputationClasses {
 	private static Logger LOG = Logger
 			.getLogger(InstrumentGiraphComputationClasses.class);
 
-	private static final String INTERCEPTOR_CLASS_NAME_SUFFIX = System
-			.getProperty("giraph.debugger.classNameSuffix", "Debug");
+	private static final String ORIGINAL_CLASS_NAME_SUFFIX = System
+			.getProperty("giraph.debugger.classNameSuffix", "Original");
 	private static final String tmpDirNamePrefix = InstrumentGiraphComputationClasses.class
 			.getSimpleName();
 
@@ -47,7 +47,7 @@ public class InstrumentGiraphComputationClasses {
 			// Load the involved classes with Javassist
 			LOG.info("Looking for classes...");
 			String alternativeClassName = userComputationClassName
-					+ INTERCEPTOR_CLASS_NAME_SUFFIX;
+					+ ORIGINAL_CLASS_NAME_SUFFIX;
 			ClassPool classPool = ClassPool.getDefault();
 			CtClass userComputationClass = classPool
 					.getAndRename(userComputationClassName, alternativeClassName);
