@@ -177,7 +177,7 @@ public class InstrumentGiraphComputationClasses {
 			CannotCompileException, ClassNotFoundException {
 		Collection<CtClass> classesModified = Sets.newHashSet();
 		// Load the involved classes with Javassist
-		LOG.info("Looking for classes to instrument: " + targetClassName
+		LOG.debug("Looking for classes to instrument: " + targetClassName
 				+ "...");
 		String alternativeClassName = targetClassName
 				+ ORIGINAL_CLASS_NAME_SUFFIX;
@@ -189,11 +189,11 @@ public class InstrumentGiraphComputationClasses {
 		CtClass bottomClass = classPool.getAndRename(bottomClassName,
 				targetClassName);
 
-		LOG.info("  target class to instrument (targetClass):\n"
+		LOG.debug("  target class to instrument (targetClass):\n"
 				+ getGenericsName(targetClass));
-		LOG.info("  class to instrument at top (topClass):\n"
+		LOG.debug("  class to instrument at top (topClass):\n"
 				+ getGenericsName(topClass));
-		LOG.info("  class to instrument at bottom (bottomClass):\n"
+		LOG.debug("  class to instrument at bottom (bottomClass):\n"
 				+ getGenericsName(bottomClass));
 
 		// 1. To intercept other Giraph API calls by user's computation
@@ -204,7 +204,7 @@ public class InstrumentGiraphComputationClasses {
 		// AbstractComputation.
 		// 1-a. Find the user's base class that extends the top class'
 		// superclass.
-		LOG.info("Looking for user's top class that extends "
+		LOG.debug("Looking for user's top class that extends "
 				+ getGenericsName(topClass.getSuperclass()));
 		CtClass targetTopClass = targetClass;
 		while (!targetTopClass.equals(Object.class)
@@ -216,10 +216,10 @@ public class InstrumentGiraphComputationClasses {
 			throw new NotFoundException(targetClass.getName() + " must extend "
 					+ topClass.getSuperclass().getName());
 		}
-		LOG.info("  class to inject topClass on top of (targetTopClass):\n"
+		LOG.debug("  class to inject topClass on top of (targetTopClass):\n"
 				+ getGenericsName(targetTopClass));
 		// 1-b. Mark user's class as abstract and erase any final modifier.
-		LOG.info("Marking targetClass as abstract and non-final...");
+		LOG.debug("Marking targetClass as abstract and non-final...");
 		{
 			int mod = targetClass.getModifiers();
 			mod |= Modifier.ABSTRACT;
@@ -230,7 +230,7 @@ public class InstrumentGiraphComputationClasses {
 		if (!targetTopClass.equals(topClass)) {
 			// 1-c. Inject the top class by setting it as the superclass of
 			// user's class that extends its superclass (AbstractComputation).
-			LOG.info("Injecting topClass on top of targetTopClass...");
+			LOG.debug("Injecting topClass on top of targetTopClass...");
 			targetTopClass.setSuperclass(topClass);
 			targetTopClass.replaceClassName(topClass.getSuperclass().getName(),
 					topClass.getName());
@@ -252,7 +252,7 @@ public class InstrumentGiraphComputationClasses {
 		}
 		// 1-d. Then, make the bottomClass extend user's computation, taking
 		// care of generics signature as well.
-		LOG.info("Attaching bottomClass beneath targetClass...");
+		LOG.debug("Attaching bottomClass beneath targetClass...");
 		bottomClass
 				.replaceClassName(mockTargetClassName, targetClass.getName());
 		bottomClass.setSuperclass(targetClass);
@@ -266,7 +266,7 @@ public class InstrumentGiraphComputationClasses {
 		// compute(), so we may have to remove the "final" marker on user's
 		// compute() method.
 		// 2-a. Find all methods that we override in bottomClass.
-		LOG.info("For each method to intercept,"
+		LOG.debug("For each method to intercept,"
 				+ " changing Generics signature of bottomClass, and"
 				+ " erasing final modifier...");
 		for (CtMethod overridingMethod : bottomClass.getMethods()) {
@@ -306,7 +306,7 @@ public class InstrumentGiraphComputationClasses {
 			// 2-e. Remember them for later.
 			classesModified.add(targetMethod.getDeclaringClass());
 		}
-		LOG.info("Finished instrumenting " + targetClassName);
+		LOG.debug("Finished instrumenting " + targetClassName);
 		LOG.debug("            topClass=\n" + getGenericsName(topClass) + "\n"
 				+ topClass);
 		LOG.debug("      targetTopClass=\n" + getGenericsName(targetTopClass)
