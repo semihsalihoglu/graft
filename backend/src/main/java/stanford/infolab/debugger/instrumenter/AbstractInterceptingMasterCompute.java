@@ -42,8 +42,9 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
       commonVertexMasterInterceptionUtil.getCommonVertexMasterContextWrapper());
   }
 
-  @Override
-  public <A extends Writable> A getAggregatedValue(String name) {
+  @Intercept(renameTo="getAggregatedValue")
+  //@Override
+  public <A extends Writable> A getAggregatedValueIntercept(String name) {
     A retVal = super.<A> getAggregatedValue(name);
     commonVertexMasterInterceptionUtil.addAggregatedValueIfNotExists(name, retVal);
     return retVal;
