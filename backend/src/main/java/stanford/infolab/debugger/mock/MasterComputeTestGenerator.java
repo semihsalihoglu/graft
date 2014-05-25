@@ -2,12 +2,20 @@ package stanford.infolab.debugger.mock;
 
 import java.io.IOException;
 import java.io.StringWriter;
+
+import org.apache.giraph.master.MasterCompute;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.VelocityException;
+
 import stanford.infolab.debugger.utils.GiraphMasterScenarioWrapper;
 
+/**
+ * A code generator to generate test cases to test {@link MasterCompute}
+ * 
+ * @author Brian Truong Ba Quan
+ */
 public class MasterComputeTestGenerator extends TestGenerator {
 
   public MasterComputeTestGenerator() {

@@ -11,7 +11,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 
 import stanford.infolab.debugger.instrumenter.AbstractInterceptingComputation;
-import stanford.infolab.debugger.mock.ComputeTestGenerator;
+import stanford.infolab.debugger.mock.ComputationComputeTestGenerator;
 import stanford.infolab.debugger.server.ServerUtils.DebugTrace;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
 
@@ -81,7 +81,7 @@ public class CommandLineMain {
           }
           
           // Generate test case.
-          ComputeTestGenerator generator = new ComputeTestGenerator();
+          ComputationComputeTestGenerator generator = new ComputationComputeTestGenerator();
           String generatedTestCase = generator.generateTest(scenarioWrapper, null, testClass);
           if (outputPrefix != null) {
             try (PrintWriter writer =

@@ -18,9 +18,9 @@ import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexScenari
  * 
  * @author Brian Truong Ba Quan
  */
-public class ComputeTestGenerator extends TestGenerator {
+public class ComputationComputeTestGenerator extends TestGenerator {
   
-  public ComputeTestGenerator() {
+  public ComputationComputeTestGenerator() {
     super();
   }
   
