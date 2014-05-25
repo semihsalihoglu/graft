@@ -11,8 +11,11 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
+import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 
+import org.apache.giraph.graph.Computation;
+import org.apache.giraph.master.MasterCompute;
 import org.apache.log4j.Logger;
 import org.python.google.common.collect.Lists;
 
@@ -45,15 +48,28 @@ public class InstrumentGiraphComputationClasses {
 				.newArrayList(args[0]);
 		String outputDir = (args.length > 1 ? args[1] : null);
 		String masterComputeClassName = (args.length > 2 ? args[2] : null);
-		// TODO Make specifying all Computation class names optional by
-		// analyzing MasterCompute automatically.
-		for (int i = 3; i < args.length; i++)
+		// Additional Computation classes
+		boolean shouldAnalyzeMaster = (masterComputeClassName != null);
+		for (int i = 3; i < args.length; i++) {
 			userComputationClassNames.add(args[i]);
+			// Don't analyze the MasterCompute class when a chosen list of
+			// Computation classes were given
+			shouldAnalyzeMaster = false;
+		}
 
 		try {
 			Collection<CtClass> classesModified = Sets.newHashSet();
 			ClassPool classPool = ClassPool.getDefault();
 			if (masterComputeClassName != null) {
+				if (shouldAnalyzeMaster) {
+					// Collect all Computation class names referenced in
+					// masterComputeClassName
+					LOG.info("Analyzing MasterCompute class: "
+							+ masterComputeClassName);
+					userComputationClassNames.addAll( //
+							collectComputationClassNames( //
+									masterComputeClassName, classPool));
+				}
 				LOG.info("Instrumenting MasterCompute class: "
 						+ masterComputeClassName);
 				classesModified
@@ -65,8 +81,6 @@ public class InstrumentGiraphComputationClasses {
 								UserMasterCompute.class.getName(),
 								BottomInterceptingMasterCompute.class.getName(),
 								classPool));
-				// TODO collect in userComputationClassNames any Computation
-				// class names referenced in masterComputeClassName
 			}
 			for (String userComputationClassName : userComputationClassNames) {
 				LOG.info("Instrumenting Computation class: "
@@ -86,7 +100,8 @@ public class InstrumentGiraphComputationClasses {
 			String jarRoot = outputDir != null ? outputDir
 					: Files.createTempDirectory(tmpDirNamePrefix,
 							new FileAttribute[0]).toString();
-			LOG.info("Writing instrumented classes to " + jarRoot);
+			LOG.info("Writing " + classesModified.size()
+					+ " instrumented classes to " + jarRoot);
 			for (CtClass c : classesModified) {
 				LOG.debug(" writing class " + c.getName());
 				c.writeFile(jarRoot);
@@ -117,6 +132,44 @@ public class InstrumentGiraphComputationClasses {
 
 	}
 
+	protected static Collection<String> collectComputationClassNames(
+			String masterComputeClassName, ClassPool classPool)
+			throws NotFoundException {
+		Collection<String> classNames = Lists.newArrayList();
+		CtClass computationClass = classPool.get(Computation.class.getName());
+		CtClass rootMasterComputeClass = classPool.get(MasterCompute.class
+				.getName());
+		CtClass masterComputeClass = classPool.get(masterComputeClassName);
+		CtClass mc = masterComputeClass;
+		while (mc != null && !mc.equals(rootMasterComputeClass)) {
+			// find all class names appearing in the master compute class
+			@SuppressWarnings("unchecked")
+			Collection<String> classNamesInMasterCompute = Lists
+					.newArrayList(mc.getRefClasses());
+			// as well as in string literals
+			ConstPool constPool = mc.getClassFile().getConstPool();
+			for (int i = 1; i < constPool.getSize(); i++) {
+				switch (constPool.getTag(i)) {
+				case ConstPool.CONST_String:
+					classNamesInMasterCompute.add(constPool.getStringInfo(i));
+					break;
+				}
+			}
+			// collect Computation class names
+			for (String className : classNamesInMasterCompute) {
+				try {
+					if (classPool.get(className).subtypeOf(computationClass))
+						classNames.add(className);
+				} catch (Exception e) {
+				}
+			}
+
+			// repeat above for all superclasses of given masterComputeClass
+			mc = mc.getSuperclass();
+		}
+		return classNames;
+	}
+
 	protected static Collection<CtClass> instrumentSandwich(
 			String targetClassName, String topClassName,
 			String mockTargetClassName, String bottomClassName,
@@ -124,7 +177,8 @@ public class InstrumentGiraphComputationClasses {
 			CannotCompileException, ClassNotFoundException {
 		Collection<CtClass> classesModified = Sets.newHashSet();
 		// Load the involved classes with Javassist
-		LOG.info("Looking for classes...");
+		LOG.info("Looking for classes to instrument: " + targetClassName
+				+ "...");
 		String alternativeClassName = targetClassName
 				+ ORIGINAL_CLASS_NAME_SUFFIX;
 		CtClass targetClass = classPool.getAndRename(targetClassName,
@@ -173,25 +227,27 @@ public class InstrumentGiraphComputationClasses {
 			targetClass.setModifiers(mod);
 			classesModified.add(targetClass);
 		}
-		// 1-c. Inject the top class by setting it as the superclass of
-		// user's class that extends its superclass (AbstractComputation).
-		LOG.info("Injecting topClass on top of targetTopClass...");
-		targetTopClass.setSuperclass(topClass);
-		targetTopClass.replaceClassName(topClass.getSuperclass().getName(),
-				topClass.getName());
-		classesModified.add(targetTopClass);
-		{
-			// XXX Unless we take care of generic signature as well,
-			// GiraphConfigurationValidator will complain.
-			String jvmNameForTopClassSuperclass = Descriptor.of(
-					topClass.getSuperclass()).replaceAll(";$", "");
-			String jvmNameForTopClass = Descriptor.of(topClass).replaceAll(
-					";$", "");
-			String genSig = targetTopClass.getGenericSignature();
-			if (genSig != null) {
-				String genSig2 = genSig.replace(jvmNameForTopClassSuperclass,
-						jvmNameForTopClass);
-				targetTopClass.setGenericSignature(genSig2);
+		if (!targetTopClass.equals(topClass)) {
+			// 1-c. Inject the top class by setting it as the superclass of
+			// user's class that extends its superclass (AbstractComputation).
+			LOG.info("Injecting topClass on top of targetTopClass...");
+			targetTopClass.setSuperclass(topClass);
+			targetTopClass.replaceClassName(topClass.getSuperclass().getName(),
+					topClass.getName());
+			classesModified.add(targetTopClass);
+			{
+				// XXX Unless we take care of generic signature as well,
+				// GiraphConfigurationValidator will complain.
+				String jvmNameForTopClassSuperclass = Descriptor.of(
+						topClass.getSuperclass()).replaceAll(";$", "");
+				String jvmNameForTopClass = Descriptor.of(topClass).replaceAll(
+						";$", "");
+				String genSig = targetTopClass.getGenericSignature();
+				if (genSig != null) {
+					String genSig2 = genSig.replace(
+							jvmNameForTopClassSuperclass, jvmNameForTopClass);
+					targetTopClass.setGenericSignature(genSig2);
+				}
 			}
 		}
 		// 1-d. Then, make the bottomClass extend user's computation, taking
@@ -250,7 +306,7 @@ public class InstrumentGiraphComputationClasses {
 			// 2-e. Remember them for later.
 			classesModified.add(targetMethod.getDeclaringClass());
 		}
-		LOG.info("Finished instrumenting classes");
+		LOG.info("Finished instrumenting " + targetClassName);
 		LOG.debug("            topClass=\n" + getGenericsName(topClass) + "\n"
 				+ topClass);
 		LOG.debug("      targetTopClass=\n" + getGenericsName(targetTopClass)
