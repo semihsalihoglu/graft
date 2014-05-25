@@ -69,10 +69,9 @@ jars=($Here/target/backend-*.jar)
 [ -e "${jars[0]}" ] || error "Cannot find giraph-debugger JAR"
 CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${jars[*]}")"
 javaOpts=(
-    -cp "$CLASSPATH"
     -D"giraph.debugger.traceRootAtHDFS=$TRACE_ROOT" # pass the TRACE_ROOT at HDFS
 )
-exec_java() { exec java "${javaOpts[@]}" "$@"; }
+exec_java() { exec java -cp "$CLASSPATH" "${javaOpts[@]}" "$@"; }
 
 # handle modes other than launching GiraphJob first
 case $1 in
