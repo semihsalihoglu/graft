@@ -157,6 +157,20 @@ while shift; do
 done
 origClassName=$1; shift
 
+# parse GiraphRunner arguments to find if there's a MasterCompute class
+find_master_compute() {
+    while [ $# -gt 0 ]; do
+        case $1 in
+            -mc) shift;
+                echo "$1"
+                return
+                ;;
+            *) shift 2  # XXX assuming other GiraphRunner options always have arguments
+        esac
+    done
+}
+masterComputeClassName=$(find_master_compute "$@")
+
 # set up environment
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
 
@@ -167,7 +181,10 @@ trap 'rm -rf "$tmpDir"' EXIT
 java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" \
     -D"giraph.debugger.classNameSuffix=$classNameSuffix" \
     stanford.infolab.debugger.instrumenter.InstrumentGiraphComputationClasses \
-        "$origClassName" "$tmpDir"/classes
+        "$origClassName" "$tmpDir"/classes \
+        $masterComputeClassName \
+        # TODO additional Computation class names
+        #
 instrumentedClassName="$origClassName"
 
 # next, create a new jar that contains all the instrumented code
