@@ -1,0 +1,47 @@
+#if ($package)
+package $package;
+#end
+
+import static org.mockito.Mockito.*;
+
+import org.junit.Test;
+import org.apache.giraph.conf.GiraphConfiguration;
+import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.graph.GraphState;
+import org.apache.giraph.master.MasterAggregatorUsage;
+import org.apache.hadoop.io.LongWritable;
+
+public class $className {
+
+  @Test
+  public void test() {
+    GiraphConfiguration config = new GiraphConfiguration();
+    config.setMasterComputeClass($classUnderTestName#[[.class]]#);
+    
+#foreach( $config in $configs )
+    config.set#evaluate($config.classStr)("$config.key", $helper.format($config.value));
+#end
+
+    ImmutableClassesGiraphConfiguration conf = new ImmutableClassesGiraphConfiguration<>(config);
+
+    $classUnderTestName classUnderTest = ($classUnderTestName) conf.createComputation();   
+    
+    GraphState graphState = mock(GraphState.class);
+    when(graphState.getSuperstep()).thenReturn($superstepNo#[[l]]#);
+    when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
+    when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
+    classUnderTest.setGraphState(graphState);
+    
+    MasterAggregatorUsage masterAggregatorUsage = mock(MasterAggregatorUsage.class);
+#foreach ($aggr in $aggregators)
+    when(masterAggregatorUsage.getAggregatedValue("$aggr.key")).thenReturn($helper.formatWritable($aggr.value));
+#end
+    classUnderTest.setMasterAggregatorUsage(masterAggregatorUsage);
+    
+    classUnderTest.compute();
+  }
+  
+  
+  #parse("ReadWritableFromStringTemplate.vm")
+
+}
