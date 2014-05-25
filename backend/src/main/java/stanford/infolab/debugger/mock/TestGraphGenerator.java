@@ -15,7 +15,8 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 /**
- * The code generator to generate the end-to-end test case
+ * The code generator to generate the end-to-end test case.
+ * 
  * @author Brian Truong Ba Quan
  */
 public class TestGraphGenerator {
@@ -71,22 +72,16 @@ public class TestGraphGenerator {
         }
       }
     }
-    if (isFloatingPoint) {
-      context.put("vertexIdClass", DoubleWritable.class.getSimpleName());
-    } else {
-      context.put("vertexIdClass", LongWritable.class.getSimpleName());
-    }
+    context.put("vertexIdClass", (isFloatingPoint ? DoubleWritable.class.getSimpleName()
+        : LongWritable.class.getSimpleName()));
     context.put("vertices", vertexMap);
     
     return context;
   }
   
   private String readId(String token, boolean isFloatingPoint) {
-    if (isFloatingPoint) {
-      return Double.valueOf(token).toString() + "d";
-    } else {
-      return Long.valueOf(token).toString() + "l";
-    }
+    return (isFloatingPoint ? Double.valueOf(token).toString() + "d" :
+      Long.valueOf(token).toString() + "l");
   }
   
   public static class TemplateVertex {
@@ -111,22 +106,5 @@ public class TestGraphGenerator {
     public void addNeighbor(Object nbrId) {
       neighbors.add(nbrId);
     }
-  }
-  
-  public static void main(String[] args) {
-    String[] graph = new String[] {
-        "1 4 2 3",
-        "2 1",
-        "4 3 2",
-        "5 2 4"
-      };
-    TestGraphGenerator generator = new TestGraphGenerator();
-    try {
-      String testGraphCode = generator.generate(graph);
-      System.out.println(testGraphCode);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    
   }
 }

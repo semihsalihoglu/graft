@@ -28,6 +28,10 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
     this.exceptionWrapper = null;
   }
 
+  public String getMasterClassUnderTest() {
+    return masterClassUnderTest;
+  }
+
   public CommonVertexMasterContextWrapper getCommonVertexMasterContextWrapper() {
     return commonVertexMasterContextWrapper;
   }

@@ -31,9 +31,12 @@ public class $className {
   private WorkerClientRequestProcessor<$vertexIdType, $vertexValueType, $edgeValueType> processor;
   private MockedEnvironment<$vertexIdType, $vertexValueType, $edgeValueType, $outMsgType> mockEnv;
 	
-#parse("SetUpTemplate.vm")
+#parse("ComputeSetUpFuncTemplate.vm")
   
+  
+#parse("ComputeTestFuncTemplate.vm")
 
-#parse("TestComputeTemplate.vm")
+
+#parse("ReadWritableFromStringTemplate.vm")
 
 }
