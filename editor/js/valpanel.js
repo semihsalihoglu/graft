@@ -254,7 +254,7 @@ ValidationPanel.prototype.showExceptions = function() {
     this.contentContainer.empty();
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<thead><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr>')
+        .html('<thead><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr></thead>')
         .appendTo(this.contentContainer);
     var data = this.buttonData[this.currentLabel].data; 
     var violationIds = [];
