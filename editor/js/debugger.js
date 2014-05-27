@@ -109,7 +109,8 @@ GiraphDebugger.prototype.initIds = function() {
         _btnNextStep : 'btn-next-step',
         _btnEditMode : 'btn-edit-mode',
         _btnFetchJob : 'btn-fetch-job',
-        _btnCaptureScenario : 'btn-capture-scenario'
+        _btnCaptureScenario : 'btn-capture-scenario',
+        _btnToggleView : 'btn-toggle-view'
     };
 }
 
@@ -297,6 +298,17 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         )
         .appendTo(controlsGroup);
 
+   // Toggle the editor between the table and graph view.
+   this.btnToggleView = $('<button />')
+        .attr('class', 'btn btn-default btn-step form-control')
+        .attr('id', this.ids._btnToggleView)
+        .append(
+            $('<span />')
+                .attr('class', 'glyphicon glyphicon-cog')
+                .html('')
+        )
+        .appendTo(controlsGroup);
+
     // Capture Scenario group
     var captureScenarioGroup = $('<div />')
         .attr('class', 'form-group')
@@ -359,6 +371,11 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
                 'raw' : 'dummy'
         });
         location.href = this.debuggerServerRoot + "/scenario?" + urlParams;
+    }).bind(this));
+
+    // Handle the toggle view button.
+    $(this.btnToggleView).click((function(event) {
+        this.editor.toggleView();
     }).bind(this));
 }
 

@@ -42,8 +42,6 @@ Editor.prototype.getRowDetailsHtml = function(row) {
 }
 
 Editor.prototype.initTable = function() {
-    //REMOV
-    this.toggleView(); 
     var jqueryTableContainer = $(this.tablet[0]);
     var jqueryTable = $('<table id="editor-tablet-table" class="editor-tablet-table table display">' + 
             '<thead><tr><th></th><th>Vertex ID</th><th>Vertex Value</th><th>Outgoing Msgs</th>' + 
@@ -566,7 +564,7 @@ Editor.prototype.restartNodes = function() {
 }
 
 /* 
- * Restarts the global values 
+ * Restarts (refreshes, just using 'restart' for consistency) the aggregators.
  */
 Editor.prototype.restartAggregators = function() {
     this.aggregatorsContainer.attr('transform', 'translate(' + (this.width - 250) + ', 25)')
@@ -585,7 +583,7 @@ Editor.prototype.restartAggregators = function() {
 }
 
 /*
- * Restarts the table with the latest currentScenario
+ * Restarts the table with the latest currentScenario.
  */
 Editor.prototype.restartTable = function() { 
     // Remove all rows of the table and add again.

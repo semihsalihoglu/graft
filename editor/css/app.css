@@ -130,7 +130,10 @@ text.tid {
 	margin-top: 20px;
 }
 
-#controls h1, h2, h3, h4 {
+#controls h1,
+#controls h2, 
+#controls h3, 
+#controls h4 {
 	display: inline-block;
 	vertical-align: middle;
 	margin: auto;
@@ -199,6 +202,10 @@ tr.shown td.tablet-details-control {
 
 .tablet-data-container table {
 	margin:0px;
+}
+
+#code-controls {
+	padding: 5px 0px 5px 0px;
 }
 
 /* Bootstrap overrides */
