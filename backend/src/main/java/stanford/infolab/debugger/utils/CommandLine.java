@@ -38,7 +38,7 @@ public class CommandLine {
       try {
         ArrayList<Long> superstepsDebugged = ServerUtils.getSuperstepsDebugged(jobId);
         for (Long superstepNo : superstepsDebugged) {
-          System.out.println(String.format("%-15s  %s  %4d  TestMasterSuperstep%d", "mktest-master", jobId, superstepNo, superstepNo));
+          System.out.println(String.format("%-15s  %s  %4d  TestMaster_%s_S%d", "mktest-master", jobId, superstepNo, jobId, superstepNo));
         }
         for (Long superstepNo : superstepsDebugged) {
         ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
@@ -92,7 +92,9 @@ public class CommandLine {
         } else if (mode.equalsIgnoreCase("mktest-master")) {
           String outputPrefix = args[3].trim();
           String testClassName = new File(outputPrefix).getName();
-          GiraphMasterScenarioWrapper scenario = null; // TODO
+					GiraphMasterScenarioWrapper scenario = ServerUtils
+							.readMasterScenarioFromTrace(jobId, superstepNo,
+									DebugTrace.MASTER_REGULAR);
           String generatedTestCase = new MasterComputeTestGenerator()
             .generateTest(scenario, null, testClassName);
           outputTestCase(outputPrefix, generatedTestCase);
