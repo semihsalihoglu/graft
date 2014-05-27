@@ -31,8 +31,21 @@
 			var currentSuperstep = -1;
 
 			$(document).ready(function(){
+					var currentCode = '';
 					// Initialize highlighting.
-					hljs.initHighlightingOnLoad();	
+					hljs.initHighlightingOnLoad();
+
+					// Performs syntax highlighting for dynamically loaded content in pre code.
+					function highlightAll() {
+						$('pre code').each(function(i, e) {hljs.highlightBlock(e)});
+					}
+
+					// Sets the currentCode string and the code-container div.
+					function setCode(data) {
+						currentCode = data ? data :  { code : '' };
+						$('#code-container').html(currentCode.code);
+						highlightAll();
+					}
 
 					$("#node-attr-id").keyup(function(event){
 						if(event.keyCode===13){
@@ -40,34 +53,47 @@
 						}
 					});
 			
-					function downloadFile(contents, fileName) {
-						var pom = document.createElement('a');
-						pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
-						pom.setAttribute('download', fileName);
-						pom.click();
-					}
-
 					$("#btn-adj-list-get").click(function() {
 						var adjList = editor.getAdjList();
-						downloadFile(adjList, 'adjList.txt');
+						Utils.downloadFile(adjList, 'adjList.txt');
 					});
 
 					$("#btn-edge-list-get").click(function() {
 						var edgeList = editor.getEdgeList();
-						downloadFile(edgeList, 'edgeList.txt');
+						Utils.downloadFile(edgeList, 'edgeList.txt');
 					});
 
 					$("#btn-node-list-get").click(function(){
 						var nodeList = editor.getNodeList();
-						downloadFile(nodeList, 'nodeList.txt');
+						Utils.downloadFile(nodeList, 'nodeList.txt');
 					});
 
 					giraphDebugger = new GiraphDebugger({
-								'debuggerContainer' : '#debugger-container',
-								'nodeAttrContainer' : '#node-attr-container',
-								'superstepControlsContainer' : '#controls-container'
-							});
+								debuggerContainer : '#debugger-container',
+								nodeAttrContainer : '#node-attr-container',
+								superstepControlsContainer : '#controls-container',
+					});
+		
+					// Attach events to catpure scenario - vertex.
+					giraphDebugger.onCaptureVertex(function(response) {
+						setCode(response);
+						noty({text : 'Fetched the vertex scenario successfully.', type : 'success', timeout: 1000});
+					},
+					function(response) {
+						setCode();
+						noty({text : 'Failed to fetch the vertex scenario. Message from server : ' + response, type : 'error'});
+					});
 
+					// Attach events to catpure scenario - master.
+					giraphDebugger.onCaptureMaster(function(response) {
+						setCode(response);
+						noty({text : 'Fetched the master scenario successfully.', type : 'success', timeout: 1000});
+					},
+					function(response) {
+						setCode();
+						noty({text : 'Failed to fetch the master scenario. Message from server : ' + response, type : 'error'});
+					});
+			
 					var editor = giraphDebugger.editor;
 					// Undirected behaviour.
 					$(".graph-type").change(function(event) {
@@ -117,7 +143,6 @@
 									editor.nodes[i].attrs = rows[i].value.split(",");
 								}
 							}
-					
 							editor.restart();
 							$("#attr-view").dialog("close");
 						});
@@ -137,6 +162,16 @@
 						// resize the linkDistance of editor
 						editor.linkDistance = ev.value;
 						editor.restartGraph();
+					});
+
+					// Code select handler.
+					$('#btn-code-select').click(function(event) {
+						selectText('code-container');	
+					});
+
+					// Code download handler.
+					$('#btn-code-download').click(function(event) {
+						Utils.downloadFile(currentCode.code, currentCode.filename);
 					});
 				});
 		</script>
@@ -223,8 +258,8 @@
 			<div style="margin-top:20px;">
 				<div id="code-controls">
 					<h3>Test Code</h3>
-					<button type="button" class="btn btn-primary btn-sm">Copy</button>
-					<button type="button" class="btn btn-danger btn-sm">Download</button>
+					<button type="button" class="btn btn-primary btn-sm" id="btn-code-select">Select All</button>
+					<button type="button" class="btn btn-danger btn-sm" id="btn-code-download">Download</button>
 				</div>
 				<pre>
 					<code id="code-container">import author;

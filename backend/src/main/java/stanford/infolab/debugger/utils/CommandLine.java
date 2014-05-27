@@ -42,14 +42,14 @@ public class CommandLine {
         }
         for (Long superstepNo : superstepsDebugged) {
         ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
-            jobId, superstepNo, DebugTrace.REGULAR);
+            jobId, superstepNo, DebugTrace.VERTEX_ALL);
         for (String vertexId : vertexIds) {
           System.out.println(String.format("%-15s  %s  %4d %8s", "dump", jobId, superstepNo, vertexId));
         }
       }
     for (Long superstepNo : superstepsDebugged) {
       ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
-          jobId, superstepNo, DebugTrace.REGULAR);
+          jobId, superstepNo, DebugTrace.VERTEX_ALL);
       for (String vertexId : vertexIds) {
         System.out.println(String.format("%-15s  %s  %4d %8s  Test_%s_S%d_V%s", "mktest", jobId, superstepNo, vertexId, jobId, superstepNo, vertexId));
       }
@@ -69,7 +69,8 @@ public class CommandLine {
           // TODO: rename ServerUtils to Utils
           @SuppressWarnings("rawtypes")
           GiraphVertexScenarioWrapper scenarioWrapper =
-              ServerUtils.readScenarioFromTrace(jobId, superstepNo, vertexId);
+              ServerUtils.readScenarioFromTrace(jobId, superstepNo, vertexId, 
+                DebugTrace.VERTEX_ALL);
           if (scenarioWrapper == null) {
             System.err.println("The trace file does not exist.");
             System.exit(2);

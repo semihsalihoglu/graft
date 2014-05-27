@@ -1,10 +1,12 @@
 package stanford.infolab.debugger.server;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.net.URLDecoder;
 import java.nio.file.Files;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.io.File;
@@ -21,6 +23,7 @@ import org.json.JSONObject;
 import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
 
 import stanford.infolab.debugger.utils.AggregatedValueWrapper;
+import stanford.infolab.debugger.utils.GiraphMasterScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.NeighborWrapper;
@@ -30,6 +33,7 @@ import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper.ExtendedOutgoingMessageWrapper;
 import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
 import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper.VertexIdValuePairWrapper;
+import sun.security.ssl.Debug;
 
 import com.sun.net.httpserver.Headers;
 
@@ -40,13 +44,16 @@ import java.util.regex.Matcher;
  */
 public class ServerUtils {
   public enum DebugTrace {
-    REGULAR, MESSAGE_INTEGRITY, VERTEX_INTEGRITY, EXCEPTION
+    VERTEX_REGULAR, VERTEX_EXCEPTION, VERTEX_ALL, 
+    INTEGRITY_MESSAGE, INTEGRITY_VERTEX, 
+    MASTER_REGULAR, MASTER_EXCEPTION, MASTER_ALL
   }
 
   public static final String JOB_ID_KEY = "jobId";
   public static final String VERTEX_ID_KEY = "vertexId";
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
+  public static final String TASK_ID_KEY = "taskId";
 
   public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
 
@@ -84,16 +91,24 @@ public class ServerUtils {
    * Returns the file name of the trace file given the three parameters. Pass
    * arbitrary vertexId for traces which do not require a vertexId.
    */
-  public static String getTraceFileName(long superstepNo, DebugTrace debugTrace, String optVertexId) {
+  public static String getTraceFileFormat(DebugTrace debugTrace) {
     switch (debugTrace) {
-    case REGULAR:
-      return String.format("reg_stp_%d_vid_%s.tr", superstepNo, optVertexId);
-    case MESSAGE_INTEGRITY:
-      return String.format("msg_intgrty_stp_%d.tr", superstepNo);
-    case VERTEX_INTEGRITY:
-      return String.format("vv_intgrty_stp_%d.tr", superstepNo);
-    case EXCEPTION:
-      return String.format("err_stp_%d_vid_%s.tr", superstepNo, optVertexId);
+    case VERTEX_REGULAR:
+      return "reg_stp_%d_vid_%s.tr";
+    case VERTEX_EXCEPTION:
+      return "err_stp_%d_vid_%s.tr";
+    case VERTEX_ALL:
+      return "(reg|err)_stp_%d_vid_%s.tr"; 
+    case INTEGRITY_MESSAGE:
+      return "task_%s_msg_intgrty_stp_%d.tr";
+    case INTEGRITY_VERTEX:
+      return "task_%s_vv_intgrty_stp_%d.tr";
+     case MASTER_REGULAR:
+      return "master_reg_stp_%d.tr";
+    case MASTER_EXCEPTION:
+      return "master_err_stp_%d.tr";
+    case MASTER_ALL:
+      return "master_(reg|err)_stp_%d.tr";
     default:
       throw new IllegalArgumentException("DebugTrace not supported.");
     }
@@ -105,27 +120,56 @@ public class ServerUtils {
    */
   public static String getTraceFileRoot(String jobId, DebugTrace debugTrace) {
     switch (debugTrace) {
-    case REGULAR:
-      return String.format("%s/%s", ServerUtils.TRACE_ROOT, jobId);
-    case MESSAGE_INTEGRITY:
-      return String.format("%s/%s/integrity_traces", ServerUtils.TRACE_ROOT, jobId);
-    case VERTEX_INTEGRITY:
-      return String.format("%s/%s/integrity_traces", ServerUtils.TRACE_ROOT, jobId);
-    case EXCEPTION:
-      return String.format("%s/%s", ServerUtils.TRACE_ROOT, jobId);
-    default:
-      throw new IllegalArgumentException("DebugTrace not supported.");
+      case VERTEX_REGULAR:
+      case VERTEX_EXCEPTION:
+      case VERTEX_ALL:
+      case INTEGRITY_MESSAGE:
+      case INTEGRITY_VERTEX:
+      case MASTER_REGULAR:
+      case MASTER_EXCEPTION:
+      case MASTER_ALL:
+        return String.format("%s/%s", ServerUtils.TRACE_ROOT, jobId);
+      default:
+        throw new IllegalArgumentException("DebugTrace not supported.");
     }
   }
 
   /*
-   * Returns the path of the trace file on HDFS.
+   * Returns the path of the vertex trace file on HDFS.
+   * @param debugTrace - Must be one of VERTEX_* types. 
    */
-  public static String getTraceFilePath(String jobId, long superstepNo, DebugTrace debugTrace, 
-    String optVertexId) {
+  public static String getVertexTraceFilePath(String jobId, long superstepNo, 
+    String vertexId, DebugTrace debugTrace) {
+    assert EnumSet.of(DebugTrace.VERTEX_EXCEPTION, 
+      DebugTrace.VERTEX_REGULAR).contains(debugTrace);
     return String.format("%s/%s",
         ServerUtils.getTraceFileRoot(jobId, debugTrace),
-        ServerUtils.getTraceFileName(superstepNo, debugTrace, optVertexId));
+        String.format(ServerUtils.getTraceFileFormat(debugTrace), superstepNo, vertexId));
+  }
+  
+  /*
+   * Returns the path of the vertex trace file on HDFS.
+   * @param debugTrace - Must be one of INTEGRITY_* types. 
+   */
+  public static String getIntegrityTraceFilePath(String jobId, String taskId, 
+    long superstepNo, DebugTrace debugTrace) {
+    assert EnumSet.of(DebugTrace.INTEGRITY_MESSAGE, 
+      DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
+    return String.format("%s/%s",
+        ServerUtils.getTraceFileRoot(jobId, debugTrace),
+        String.format(ServerUtils.getTraceFileFormat(debugTrace), taskId, superstepNo));
+  }
+  
+  /*
+   * Returns the path of the master compute trace file on HDFS.
+   */
+  public static String getMasterTraceFilePath(String jobId, long superstepNo, 
+    DebugTrace debugTrace) {
+    assert EnumSet.of(DebugTrace.MASTER_ALL, DebugTrace.MASTER_EXCEPTION, 
+      DebugTrace.MASTER_REGULAR).contains(debugTrace);
+    return String.format("%s/%s",
+        ServerUtils.getTraceFileRoot(jobId, debugTrace),
+        String.format(ServerUtils.getTraceFileFormat(debugTrace), superstepNo));
   }
 
   /*
@@ -134,27 +178,104 @@ public class ServerUtils {
    * @param jobId : ID of the job debugged.
    * @param superstepNo: Superstep number debugged.
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
+   * @param [debugTrace] - Can be either REGULAR, EXCEPTION OR ALL_VERTICES. In case
+   * of null, returns whichever trace is available.
    */
   public static GiraphVertexScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
-    String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
-    IllegalAccessException {
+    String vertexId, DebugTrace debugTrace) throws IOException, ClassNotFoundException, 
+    InstantiationException, IllegalAccessException {
+    if (!EnumSet.of(DebugTrace.VERTEX_ALL, DebugTrace.VERTEX_EXCEPTION, 
+      DebugTrace.VERTEX_REGULAR).contains(debugTrace)) {
+      // Throw exception for unsupported debug trace. 
+      throw new IllegalArgumentException(
+        "DebugTrace type is invalid. Use REGULAR, EXCEPTION or ALL_VERTICES");
+    }
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo,
-      DebugTrace.REGULAR, vertexId);
     GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
+    // If debugTrace is regular or null, try reading the regular trace first.
+    if (debugTrace == DebugTrace.VERTEX_REGULAR || debugTrace == DebugTrace.VERTEX_ALL) {
+      String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
+        vertexId, DebugTrace.VERTEX_REGULAR);
+      try {
+        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+        // If scenario is found, return it. 
+        return giraphScenarioWrapper;
+      } catch(FileNotFoundException e) {
+        // If debugTrace was null, ignore this exception since 
+        // we will try reading exception trace later.
+        if ( debugTrace == DebugTrace.VERTEX_ALL) {
+          Debug.println("readScenarioFromTrace", "Regular file not found. Ignoring.");
+        } else {
+          throw e;
+        }
+      }
+    } 
+    // This code is reached only when debugTrace = exception or null. 
+    // In case of null, it is only reached when regular trace is not found already.
+    String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
+      vertexId, DebugTrace.VERTEX_EXCEPTION);
     giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
-
+  
+  /*
+   * Reads the master protocol buffer trace corresponding to the given jobId
+   * and superstepNo and returns the GiraphMasterScenarioWrapper object.
+   * @param jobId : ID of the job debugged.
+   * @param superstepNo: Superstep number debugged.
+   * @param [debugTrace] - Can be either MASTER_REGULAR, MASTER_EXCEPTION OR MASTER_ALL. In case
+   * of MASTER_ALL, returns whichever trace is available.
+   */
+  public static GiraphMasterScenarioWrapper readMasterScenarioFromTrace(String jobId,
+    long superstepNo, DebugTrace debugTrace) throws IOException, 
+    ClassNotFoundException, InstantiationException, IllegalAccessException {
+    if (!EnumSet.of(DebugTrace.MASTER_ALL, DebugTrace.MASTER_EXCEPTION, 
+      DebugTrace.MASTER_REGULAR).contains(debugTrace)) {
+      // Throw exception for unsupported debug trace. 
+      throw new IllegalArgumentException(
+        "DebugTrace type is invalid. Use REGULAR, EXCEPTION or ALL_VERTICES");
+    }
+    FileSystem fs = ServerUtils.getFileSystem();
+    GiraphMasterScenarioWrapper giraphScenarioWrapper = new GiraphMasterScenarioWrapper();
+    // For each superstep, there is either a "regular" master trace (saved in
+    // master_reg_stp_i.tr files), or an "exception" master trace (saved in
+    // master_err_stp_i.tr files). We first check to see if a regular master
+    // trace is available. If not, then we check to see if an exception master
+    // trace is available.
+    if (debugTrace == DebugTrace.MASTER_REGULAR || debugTrace == DebugTrace.MASTER_ALL) {
+      String traceFilePath = ServerUtils.getMasterTraceFilePath(jobId, superstepNo,
+        DebugTrace.MASTER_REGULAR);
+      try {
+        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+        // If scenario is found, return it. 
+        return giraphScenarioWrapper;
+      } catch(FileNotFoundException e) {
+        // If debugTrace was null, ignore this exception since 
+        // we will try reading exception trace later.
+        if ( debugTrace == DebugTrace.MASTER_ALL) {
+          Debug.println("readMasterScenarioFromTrace", "Regular file not found. Ignoring.");
+        } else {
+          throw e;
+        }
+      }
+    } 
+    // This code is reached only when debugTrace = exception or null. 
+    // In case of null, it is only reached when regular trace is not found already.
+    String traceFilePath = ServerUtils.getMasterTraceFilePath(jobId, superstepNo,
+      DebugTrace.MASTER_EXCEPTION);
+    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+    return giraphScenarioWrapper;
+  }
+  
   /*
    * Returns the MessageIntegrityViolationWrapper from trace file.
    */
   public static MsgIntegrityViolationWrapper readMsgIntegrityViolationFromTrace(String jobId,
-    long superstepNo) throws IOException, ClassNotFoundException, InstantiationException,
-    IllegalAccessException {
+    String taskId, long superstepNo) throws IOException, ClassNotFoundException, 
+    InstantiationException, IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, 
-      DebugTrace.MESSAGE_INTEGRITY, null /* message integrity does not require vertexId */);
+    String traceFilePath = ServerUtils.getIntegrityTraceFilePath(jobId, taskId, 
+      superstepNo, DebugTrace.INTEGRITY_MESSAGE);
     MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = new MsgIntegrityViolationWrapper();
     msgIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
     return msgIntegrityViolationWrapper;
@@ -164,40 +285,14 @@ public class ServerUtils {
    * Returns the MessageIntegrityViolationWrapper from trace file.
    */
   public static VertexValueIntegrityViolationWrapper readVertexIntegrityViolationFromTrace(
-    String jobId, long superstepNo) throws IOException, ClassNotFoundException,
-    InstantiationException, IllegalAccessException {
+    String jobId, String taskId, long superstepNo) throws IOException, 
+    ClassNotFoundException, InstantiationException, IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo, 
-      DebugTrace.VERTEX_INTEGRITY, null /* vertex integrity does not require vertexId */);
+    String traceFilePath = ServerUtils.getIntegrityTraceFilePath(jobId, taskId, 
+      superstepNo, DebugTrace.INTEGRITY_VERTEX);
     VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper = new VertexValueIntegrityViolationWrapper();
     vertexValueIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
     return vertexValueIntegrityViolationWrapper;
-  }
-
-  /*
-   * Returns the MessageIntegrityViolationWrapper from trace file.
-   */
-  public static GiraphVertexScenarioWrapper readExceptionFromTrace(String jobId, long superstepNo,
-    String vertexId) throws IOException, ClassNotFoundException, InstantiationException,
-    IllegalAccessException {
-    FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo,
-      DebugTrace.EXCEPTION, vertexId);
-    GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
-    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
-    return giraphScenarioWrapper;
-  }
-
-  /*
-   * Returns the raw bytes of the debug trace file.
-   */
-  public static byte[] readTrace(String jobId, long superstepNo, String vertexId)
-    throws IOException {
-    FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getTraceFilePath(jobId, superstepNo,
-      DebugTrace.REGULAR, vertexId);
-    byte[] data = IOUtils.toByteArray(fs.open(new Path(traceFilePath)));
-    return data;
   }
 
   /*
@@ -297,17 +392,15 @@ public class ServerUtils {
    * reading (the file names of) the debug traces on HDFS. File names follow the
    * <prefix>_stp_<superstepNo>_vid_<vertexId>.tr naming convention.
    */
-  public static ArrayList<String> getVerticesDebugged(String jobId, long superstepNo,
+  public static ArrayList<String> getVerticesDebugged(String jobId, long superstepNo, 
     DebugTrace debugTrace) throws IOException {
     ArrayList<String> vertexIds = new ArrayList<String>();
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, debugTrace);
+    String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, 
+      DebugTrace.VERTEX_ALL /* TraceFile root is same for regular and error */);
     // Use this regex to match the file name and capture the vertex id.
-    String prefix = "reg";
-    if (debugTrace == DebugTrace.EXCEPTION) {
-      prefix = "err";
-    }
-    String regex = String.format("%s_stp_%d_vid_(.*?).tr$", prefix, superstepNo);
+    String regex = String.format(ServerUtils.getTraceFileFormat(debugTrace), 
+      superstepNo, "(.*?)");
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
     // Iterate through each file in this directory and match the regex.
@@ -316,12 +409,40 @@ public class ServerUtils {
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.
       if (m.find()) {
-        vertexIds.add(m.group(1));
+        // VERTEX_ALL debug trace has one group to match the prefix -reg|err.
+        vertexIds.add(m.group(debugTrace == DebugTrace.VERTEX_ALL ? 2 : 1));
       }
     }
     return vertexIds;
   }
-  
+
+  /*
+   * Returns the IDs of all the tasks that caused the given integrity violation.
+   * @param debugTrace - Must be one of INTEGRITY_* types.
+   */
+  public static ArrayList<String> getTasksWithIntegrityViolations(String jobId, 
+    long superstepNo, DebugTrace debugTrace) throws IOException {
+    assert EnumSet.of(DebugTrace.INTEGRITY_MESSAGE, 
+      DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
+    ArrayList<String> taskIds = new ArrayList<String>();
+    FileSystem fs = ServerUtils.getFileSystem();
+    String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, debugTrace);
+    // Use this regex to match the file name and capture the vertex id.
+    String regex = String.format(ServerUtils.getTraceFileFormat(debugTrace), "(.*?)", superstepNo);
+    Pattern p = Pattern.compile(regex);
+    Path pt = new Path(traceFileRoot);
+    // Iterate through each file in this directory and match the regex.
+    for (FileStatus fileStatus : fs.listStatus(pt)) {
+      String fileName = new File(fileStatus.getPath().toString()).toString();
+      Matcher m = p.matcher(fileName);
+      // Add this vertex id if there is a match.
+      if (m.find()) {
+        taskIds.add(m.group(1));
+      }
+    }
+    return taskIds;
+    
+  }
   /*
    * Returns the list of supersteps for which there is an exception or
    * regular trace.
@@ -329,7 +450,7 @@ public class ServerUtils {
   public static ArrayList<Long> getSuperstepsDebugged(String jobId) throws IOException {
       ArrayList<Long> superstepIds = new ArrayList<Long>();
       FileSystem fs = ServerUtils.getFileSystem();
-      String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, DebugTrace.REGULAR);
+      String traceFileRoot = ServerUtils.getTraceFileRoot(jobId, DebugTrace.VERTEX_REGULAR);
       // Use this regex to match the file name and capture the vertex id.
       String regex = String.format("(reg|err)_stp_(.*?)_vid_(.*?).tr$");
       Pattern p = Pattern.compile(regex);
