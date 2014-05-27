@@ -28,9 +28,9 @@ TODO(semih): Write
         #
 
 ### Now, Launch It with Debugging
-You can launch any Giraph program with debugging support by simply replacing the first two words (`hadoop jar`) of the command, specifying a class name for debugging configuration:
+You can launch any Giraph program with debugging support by simply replacing the first two words (`hadoop jar`) of the command:
 
-    ./giraph-debug stanford.infolab.debugger.examples.simpledebug.SimpleShortestPathsDebugConfig \
+    ./giraph-debug \
         target/backend-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
         org.apache.giraph.examples.SimpleShortestPathsComputation \
         -vif org.apache.giraph.io.formats.JsonLongDoubleFloatDoubleVertexInputFormat \
@@ -42,6 +42,12 @@ You can launch any Giraph program with debugging support by simply replacing the
         #
 
 Find the job identifier from the output, e.g., `job_201405221715_0005` and copy it for later.
+
+You can optionally specify the supersteps and vertex IDs to debug:
+
+    ./giraph-debug -S 0 -S 1 -S 2 -V 1 -V 2 -V 3 \
+        target/backend-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
+        # ... rest are same as above
 
 ### Launch Debugger GUI
 Launch the debugger GUI with the following command:
