@@ -1,4 +1,4 @@
-package stanford.infolab.debugger.server;
+package stanford.infolab.debugger.utils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -6,14 +6,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 import stanford.infolab.debugger.mock.ComputationComputeTestGenerator;
-import stanford.infolab.debugger.server.Server.GetVertices;
+import stanford.infolab.debugger.server.ServerUtils;
 import stanford.infolab.debugger.server.ServerUtils.DebugTrace;
-import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
 
 /**
  * This main class is the command line interface for the debugger. The command syntax is as follows:
@@ -22,8 +17,9 @@ import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
  * mktest <job_id> <superstep> <vertex> [output_prefix]
  * 
  * @author Brian Truong Ba Quan
+ * @author netj
  */
-public class CommandLineMain {
+public class CommandLine {
   
   public static void main(String[] args) {
     // Validate

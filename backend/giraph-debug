@@ -88,7 +88,7 @@ case $1 in
         shift
         [ $# -gt 0 ] || usage "JOB_ID to list is missing"
         JobId=$1; shift
-        exec_java stanford.infolab.debugger.server.CommandLineMain list \
+        exec_java stanford.infolab.debugger.utils.CommandLine list \
             "$JobId" "$@"
         ;;
 
@@ -100,7 +100,7 @@ case $1 in
         Superstep=$1; shift
         [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
         VertexId=$1; shift
-        exec_java stanford.infolab.debugger.server.CommandLineMain dump \
+        exec_java stanford.infolab.debugger.utils.CommandLine dump \
             "$JobId" "$Superstep" "$VertexId" "$@"
         ;;
 
@@ -115,7 +115,7 @@ case $1 in
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
         pwd
-        exec_java stanford.infolab.debugger.server.CommandLineMain mktest \
+        exec_java stanford.infolab.debugger.utils.CommandLine mktest \
             "$JobId" "$Superstep" "$VertexId" "$TestName" "$@"
         ;;
 
