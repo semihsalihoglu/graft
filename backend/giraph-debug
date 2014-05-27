@@ -67,7 +67,7 @@ fi
 Here=$(cd "$(dirname "$0")" && pwd -P)
 jars=($Here/target/backend-*.jar)
 [ -e "${jars[0]}" ] || error "Cannot find giraph-debugger JAR"
-CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${jars[*]}")"
+CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${jars[*]}"):$(hadoop classpath)"
 javaOpts=(
     -D"giraph.debugger.traceRootAtHDFS=$TRACE_ROOT" # pass the TRACE_ROOT at HDFS
 )
@@ -88,35 +88,35 @@ case $1 in
         shift
         [ $# -gt 0 ] || usage "JOB_ID to list is missing"
         JobId=$1; shift
-        # XXX Relying on hadoop fs -ls instead
-        #exec_java stanford.infolab.debugger.commands.ListTraces \
-        #    "$JobId" "$@"
-        set -o pipefail
-        hadoop fs -lsr "$TRACE_ROOT"/"$JobId" |
-        sed "s#.* $TRACE_ROOT/$JobId/##"
-        exit
+        exec_java stanford.infolab.debugger.server.CommandLineMain list \
+            "$JobId" "$@"
         ;;
 
     dump)
         shift
         [ $# -gt 0 ] || usage "JOB_ID is missing"
         JobId=$1; shift
-        [ $# -gt 0 ] || usage "TRACE_ID to dump is missing"
-        TraceId=$1; shift
-        exec_java stanford.infolab.debugger.commands.DumpTrace \
-            "$JobId" "$TraceId" "$@"
+        [ $# -gt 0 ] || usage "SUPERSTEP to dump is missing"
+        Superstep=$1; shift
+        [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
+        VertexId=$1; shift
+        exec_java stanford.infolab.debugger.server.CommandLineMain dump \
+            "$JobId" "$Superstep" "$VertexId" "$@"
         ;;
 
     mktest)
         shift
         [ $# -gt 0 ] || usage "JOB_ID is missing"
         JobId=$1; shift
-        [ $# -gt 0 ] || usage "TRACE_ID is missing"
-        TraceId=$1; shift
+        [ $# -gt 0 ] || usage "SUPERSTEP to dump is missing"
+        Superstep=$1; shift
+        [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
+        VertexId=$1; shift
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
-        exec_java stanford.infolab.debugger.commands.GenerateTestCaseCode \
-            "$JobId" "$TraceId" "$TestName" "$@"
+        pwd
+        exec_java stanford.infolab.debugger.server.CommandLineMain mktest \
+            "$JobId" "$Superstep" "$VertexId" "$TestName" "$@"
         ;;
 
     *)
@@ -197,6 +197,7 @@ runJar=$instrumentedJarFile
 #hadoopJarOpts+=(-libjars "$instrumentedJarFile")
 
 # submit a job to run the new instrumented jar with the original
-HADOOP_CLASSPATH="$runJar:$HADOOP_CLASSPATH"
+HADOOP_CLASSPATH="$runJar:$HADOOP_CLASSPATH" \
+exec \
 hadoop jar "$runJar" "${hadoopJarOpts[@]}" \
     "$instrumentedClassName" "$@"
