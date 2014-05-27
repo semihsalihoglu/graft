@@ -1,8 +1,15 @@
 package stanford.infolab.debugger.examples.simpledebug;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.LongWritable;
+
+import stanford.infolab.debugger.instrumenter.AbstractInterceptingMasterCompute;
+import stanford.infolab.debugger.instrumenter.BottomInterceptingMasterCompute;
 
 /**
  * Master compute associated with {@link RandomWalkComputation}. It handles
@@ -19,6 +26,9 @@ public class SimpleShortestPathsMaster extends DefaultMasterCompute {
     if (aggregatorValue != null) {
       System.out.println("At Master.compute() with aggregator: " + aggregatorValue.get());
     }
+//    if (getSuperstep() == 2) {
+//      throw new IllegalArgumentException("DUMMY EXCEPTION FOR TESTING");
+//    }
   }
 
   @Override

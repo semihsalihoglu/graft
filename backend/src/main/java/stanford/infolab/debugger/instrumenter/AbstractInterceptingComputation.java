@@ -107,7 +107,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     LOG.info("compute " + vertex + " " + messages);
     vertexId = vertex.getId();
     shouldDebugVertex = debugConfig.shouldDebugSuperstep(getSuperstep())
-      && debugConfig.shouldDebugVertex(vertex.getId()) && (numVerticesLogged <= NUM_VERTICES_TO_LOG);
+      && debugConfig.shouldDebugVertex(vertex) && (numVerticesLogged <= NUM_VERTICES_TO_LOG);
     if (shouldDebugVertex) {
       initGiraphVertexScenario();
       debugVertexBeforeComputation(vertex, messages);
