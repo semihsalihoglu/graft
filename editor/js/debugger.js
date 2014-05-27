@@ -405,7 +405,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
             this.onCaptureVertex.done(retObj);
         }).bind(this))
         .fail((function(response) {
-            this.onCaptureVertex.fail();
+            this.onCaptureVertex.fail(response.responseText);
         }).bind(this))
     }).bind(this));
 
@@ -425,7 +425,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
             this.onCaptureMaster.done(retObj);
         }).bind(this))
         .fail((function(response) {
-            this.onCaptureMaster.fail();
+            this.onCaptureMaster.fail(response.responseText);
         }).bind(this))
     }).bind(this));
 

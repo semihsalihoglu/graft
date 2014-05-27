@@ -205,8 +205,7 @@ public class ServerUtils {
         // we will try reading exception trace later.
         if ( debugTrace == DebugTrace.VERTEX_ALL) {
           Debug.println("readScenarioFromTrace", "Regular file not found. Ignoring.");
-        } else 
-        {
+        } else {
           throw e;
         }
       }

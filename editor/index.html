@@ -79,9 +79,9 @@
 						setCode(response);
 						noty({text : 'Fetched the vertex scenario successfully.', type : 'success', timeout: 1000});
 					},
-					function() {
+					function(response) {
 						setCode();
-						noty({text : 'Failed to fetch the vertex scenario.', type : 'error'});
+						noty({text : 'Failed to fetch the vertex scenario. Message from server : ' + response, type : 'error'});
 					});
 
 					// Attach events to catpure scenario - master.
@@ -89,9 +89,9 @@
 						setCode(response);
 						noty({text : 'Fetched the master scenario successfully.', type : 'success', timeout: 1000});
 					},
-					function() {
+					function(response) {
 						setCode();
-						noty({text : 'Failed to fetch the master scenario.', type : 'error'});
+						noty({text : 'Failed to fetch the master scenario. Message from server : ' + response, type : 'error'});
 					});
 			
 					var editor = giraphDebugger.editor;

@@ -281,10 +281,7 @@ public static void main(String[] args) throws Exception {
         }
         Long superstepNo = Long.parseLong(paramMap.get(ServerUtils.SUPERSTEP_ID_KEY));
         if (superstepNo < -1) {
-          this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
-          this.response = String.format("%s must be an integer >= -1.",
-            ServerUtils.SUPERSTEP_ID_KEY);
-          return;
+          throw new NumberFormatException();
         }
         // Send JSON by default.
         GiraphVertexScenarioWrapper giraphScenarioWrapper = 
