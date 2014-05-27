@@ -41,7 +41,7 @@ public class CommandLineMain {
     if (args[0].equalsIgnoreCase("list")) {
       try {
         FileSystem fs = ServerUtils.getFileSystem();
-        String jobTracePath = ServerUtils.getTraceFileRoot(jobId, DebugTrace.REGULAR);
+        String jobTracePath = ServerUtils.getTraceFileRoot(jobId, DebugTrace.VERTEX_REGULAR);
         Path traceFilePath = new Path(jobTracePath);
         FileStatus[] fileStatuses = fs.listStatus(traceFilePath);
         for (FileStatus status : fileStatuses) {
@@ -62,7 +62,8 @@ public class CommandLineMain {
         // TODO: rename ServerUtils to Utils
         @SuppressWarnings("rawtypes")
         GiraphVertexScenarioWrapper scenarioWrapper =
-            ServerUtils.readScenarioFromTrace(jobId, superstepNo, vertexId);
+            ServerUtils.readScenarioFromTrace(jobId, superstepNo, vertexId, 
+              DebugTrace.VERTEX_ALL);
         if (scenarioWrapper == null) {
           LOG.error("The trace file does not exist.");
           System.exit(0);

@@ -94,3 +94,35 @@ if (!String.prototype.format) {
     };
   }
 }(jQuery));
+
+/* 
+ * Select all text in a given container.
+ * @param elementId : ID of the element with the text.
+ */
+function selectText(elementId) {
+    var doc = document
+        , text = doc.getElementById(elementId)
+        , range, selection
+    ;    
+    if (doc.body.createTextRange) { //ms
+        range = doc.body.createTextRange();
+        range.moveToElementText(text);
+        range.select();
+    } else if (window.getSelection) { //all others
+        selection = window.getSelection();        
+        range = doc.createRange();
+        range.selectNodeContents(text);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+}
+
+/*
+ * Hook to force a file download given the contents and the file name.
+ */
+Utils.downloadFile = function(contents, fileName) {
+    var pom = document.createElement('a');
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
+    pom.setAttribute('download', fileName);
+    pom.click();
+}

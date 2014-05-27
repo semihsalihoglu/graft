@@ -71,6 +71,22 @@ GiraphDebugger.prototype.init = function(options) {
 }
 
 /*
+ * Deferred callbacks for capture scenario
+ */
+GiraphDebugger.prototype.onCaptureVertex = function(done, fail) {
+    this.onCaptureVertex.done = done;
+    this.onCaptureVertex.fail = fail;
+}
+
+/*
+ * Deferred callbacks for capture scenario
+ */
+GiraphDebugger.prototype.onCaptureMaster = function(done, fail) {
+    this.onCaptureMaster.done = done;
+    this.onCaptureMaster.fail = fail;
+}
+
+/*
  * Reset job-related vars to the initial state. 
  */
 GiraphDebugger.prototype.resetVars = function() { 
@@ -109,7 +125,8 @@ GiraphDebugger.prototype.initIds = function() {
         _btnNextStep : 'btn-next-step',
         _btnEditMode : 'btn-edit-mode',
         _btnFetchJob : 'btn-fetch-job',
-        _btnCaptureScenario : 'btn-capture-scenario',
+        _btnCaptureVertexScenario : 'btn-capture-scenario',
+        _btnCaptureMasterScenario : 'btn-capture-scenario',
         _btnToggleView : 'btn-toggle-view'
     };
 }
@@ -321,12 +338,20 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('placeholder', 'Vertex ID')
         .appendTo(captureScenarioGroup);
 
-    // Capture Scenario button.
-    this.btnCaptureScenario = $('<button>')
+    // Capture Vertex Scenario Scenario button.
+    this.btnCaptureVertexScenario = $('<button>')
         .attr('type', 'button')
-        .attr('id', this.ids._btnCaptureScenario)
+        .attr('id', this.ids._btnCaptureVertexScenario)
         .attr('class', 'btn btn-primary form-control')
-        .html('Capture Scenario')
+        .html('Capture Vertex')
+        .appendTo(captureScenarioGroup);
+
+    // Capture Master
+    this.btnCaptureMasterScenario = $('<button>')
+        .attr('type', 'button')
+        .attr('id', this.ids._btnCaptureMasterScenario)
+        .attr('class', 'btn btn-danger form-control')
+        .html('Capture Master')
         .appendTo(captureScenarioGroup);
 
     // Initialize handlers for events
@@ -362,15 +387,46 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     }).bind(this));
 
     // Handle the capture scenario button the superstep controls.
-    $(this.btnCaptureScenario).click((function(event){
+    $(this.btnCaptureVertexScenario).click((function(event){
+        // Get the deferred object.
         var vertexId = $(this.captureVertexIdInput).val();
-        var urlParams = $.param({
+        $.ajax({
+            url : this.debuggerServerRoot + '/test/vertex',
+            data : {
                 'jobId' : this.currentJobId,
                 'superstepId' : this.currentSuperstepNumber,
-                'vertexId' : vertexId,
-                'raw' : 'dummy'
-        });
-        location.href = this.debuggerServerRoot + "/scenario?" + urlParams;
+                'vertexId' : vertexId
+            }
+        })
+        .done((function(response) {
+            retObj = { code : response, 
+                filename : "{0}_{1}_{2}".format(this.currentJobId, this.currentSuperstepNumber, vertexId)
+            }
+            this.onCaptureVertex.done(retObj);
+        }).bind(this))
+        .fail((function(response) {
+            this.onCaptureVertex.fail();
+        }).bind(this))
+    }).bind(this));
+
+    // Handle the master capture scenario button the superstep controls.
+    $(this.btnCaptureMasterScenario).click((function(event){
+        $.ajax({
+            url : this.debuggerServerRoot + '/test/master',
+            data : {
+                'jobId' : this.currentJobId,
+                'superstepId' : this.currentSuperstepNumber,
+            }
+        })
+        .done((function(response) {
+            retObj = { code : response,
+                filename : "{0}_{1}".format(this.currentJobId, this.currentSuperstepNumber)
+            }
+            this.onCaptureMaster.done(retObj);
+        }).bind(this))
+        .fail((function(response) {
+            this.onCaptureMaster.fail();
+        }).bind(this))
     }).bind(this));
 
     // Handle the toggle view button.
