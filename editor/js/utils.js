@@ -58,7 +58,7 @@ if (!String.prototype.format) {
     };
   });
 
-  // generates a fail pipe function that will retry `jqXHR` `times` more times
+  // Generates a fail pipe function that will retry `jqXHR` `times` more times.
   function pipeFailRetry(jqXHR, opts){
     var times = opts.times;
     var timeout = opts.timeout;

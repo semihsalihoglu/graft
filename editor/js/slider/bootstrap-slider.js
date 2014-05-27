@@ -19,7 +19,8 @@
  *
  * NOTE: We are using this code to show a slider for changing link distance
  * between nodes, among other things. 
- * 
+ * USING A LOCAL COPY OF THIS LIBRARY. NO OFFICIAL CDN AVAILABLE.
+ *
  */
  
 !function( $ ) {

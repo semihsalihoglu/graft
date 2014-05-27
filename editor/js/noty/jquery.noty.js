@@ -10,7 +10,8 @@
  * NOTE: We are using noty to show error/warning notifications for 
  * AJAX failures and retries, particularly whil fetching scenario and
  * integrity violations.
- *
+ * USING A LOCAL COPY OF THIS LIBRARY. NO OFFICIAL CDN AVAILABLE.
+ * 
  **/
 
 if (typeof Object.create !== 'function') {
