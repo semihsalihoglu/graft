@@ -45,7 +45,6 @@ function ValidationPanel(options) {
         }).bind(this)
     });
     this.initElements();
-    this.setData('job0', 1);
     this.compact();
 }
 
@@ -99,6 +98,7 @@ ValidationPanel.prototype.initElements = function() {
         var button = $('<button />')
                         .attr('class', 'btn btn-success btn-valpanel')
                         .attr('id', this.btnLabelToId(label))
+                        .attr('disabled', 'true')
                         .click(this.buttonData[label]['clickHandler']);
         var iconSpan = $('<span />')
             .appendTo(button);
@@ -304,11 +304,18 @@ ValidationPanel.prototype.setData = function(jobId, superstepId) {
                 url: this.debuggerServerRoot + '/integrity',
                 data: {'jobId' : this.jobId, 'superstepId' : this.superstepId, 'type' : type}
         })
+        .retry({
+                times: 3,
+                timeout: 1000,
+        })
         .done(this.onReceiveData(type))
-        .fail(function(response) {
-            console.log('Failed to fetch valpanel data - ' + response);
-        });
-    }
+        .fail((function(buttonLabel) {
+                return function(response) {
+                    noty({text : 'Failed to fetch data for ' + buttonLabel + 
+                                '. Please check your network and debugger server.', type : 'error'});
+                }
+            })(this.buttonData[type].fullName))
+        }
 }
 
 ValidationPanel.prototype.showPreloader = function() {

@@ -12,21 +12,76 @@ Editor.prototype.setSize = function() {
  * svg elements within the container.
  */
 Editor.prototype.resizeForce = function() {
-    this.setSize();
-    this.force.size([this.width, this.height]);
+    this.force.size([this.width, this.height])
+              .linkDistance(this.linkDistance)
+              .charge(-500 - (this.linkDistance - 150)*2);
+}
+
+/*
+ * Returns the detailed view of each row in the table view.
+ */
+Editor.prototype.getRowDetailsHtml = function(row) {
+    var outerContainer = $('<div />');
+    var navContainer = $('<ul />')
+        .attr('class', 'nav nav-tabs')
+        .attr('id', 'tablet-nav')
+        .appendTo(outerContainer);
+    navContainer.append($('<li class="active"><a data-toggle="tab" data-name="outgoingMessages">Outgoing Messages</a></li>'));
+    navContainer.append($('<li><a data-toggle="tab" data-name="incomingMessages">Incoming Messages</a></li>'));
+    navContainer.append($('<li><a data-toggle="tab" data-name="neighbors">Neighbors</a></li>'));
+
+    var dataContainer = $('<div />')
+        .attr('class', 'tablet-data-container')
+        .appendTo(outerContainer);
+
+    return {
+        'outerContainer' : outerContainer,
+        'dataContainer' : dataContainer,
+        'navContainer' : navContainer
+    };
+}
+
+Editor.prototype.initTable = function() {
+    //REMOV
+    this.toggleView(); 
+    var jqueryTableContainer = $(this.tablet[0]);
+    var jqueryTable = $('<table id="editor-tablet-table" class="editor-tablet-table table display">' + 
+            '<thead><tr><th></th><th>Vertex ID</th><th>Vertex Value</th><th>Outgoing Msgs</th>' + 
+            '<th>Incoming Msgs</th><th>Neighbors</th></tr></thead></table>');
+    jqueryTableContainer.append(jqueryTable);
+    // Define the table schema and initialize DataTable object.
+    this.dataTable = $("#editor-tablet-table").DataTable({
+        'columns' : [
+            {
+                'class' : 'tablet-details-control',
+                'orderable' : false,
+                'data' : null,
+                'defaultContent' : ''
+            },
+            { 'data' : 'vertexId' },
+            { 'data' : 'vertexValue' },
+            { 'data' : 'outgoingMessages.numOutgoingMessages' },
+            { 'data' : 'incomingMessages.numIncomingMessages' },
+            { 'data' : 'neighbors.numNeighbors'}
+        ]
+    });
 }
 
 /*
  * Initializes the SVG element, along with marker and defs.
  */
 Editor.prototype.initElements = function() {
-    // Initialize colors for nodes
-    this.colors = d3.scale.category10();
+    // Create the tabular view and hide it for now.
+    this.tablet = d3.select(this.container)
+        .insert('div')
+        .attr('class', 'editor-tablet')
+        .style('display', 'none');
+
+    this.initTable();
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
     this.svg = d3.select(this.container)
-                     .html('')
-                     .insert('svg', ':first-child')
+                     .insert('svg')
                          .attr('class','editor')
 
    // Defines end arrow marker for graph links.
@@ -70,6 +125,13 @@ Editor.prototype.initElements = function() {
                       .text('Loading')
                       .attr('x', '40')
                       .attr('y', '128');
+    // Aggregators
+    this.aggregatorsContainer = this.svg.append('svg:g');
+    this.aggregatorsContainer.append('text')
+                       .attr('class', 'editor-aggregators-heading')
+                       .text('Aggregators');
+   // d3 selector for global key-value pairs
+   this.globs = this.aggregatorsContainer.append('text').selectAll('tspan');
 }
 
 /*
@@ -103,7 +165,7 @@ Editor.prototype.initForce = function() {
                               .nodes(this.nodes)
                               .links(this.links)
                               .size([this.width, this.height])
-                              .linkDistance(150)
+                              .linkDistance(this.linkDistance)
                               .charge(-500 )
                               .on('tick', this.tick.bind(this))
 }
@@ -195,29 +257,32 @@ Editor.prototype.getNewNode = function(id) {
  * Returns a new link (edge) object from the node IDs of the logical edge.
  * @param {string} sourceNodeId - The ID of the source node in the logical edge.
  * @param {string} targetNodeId - The ID of the target node in the logical edge.
+ * @param {string} [edgeValue] - Value associated with the edge. Optional parameter.
  * @desc - Logical edge means, "Edge from node with ID x to node with ID y".
  * It implicitly captures the direction. However, the link objects have
  * the 'left' and 'right' properties to denote direction. Also, source strictly < target.
  * Therefore, the source and target may not match that of the logical edge, but the
  * direction will compensate for the mismatch.
  */
-Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
-    var source, target, direction;
+Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId, edgeValue) {
+    var source, target, direction, leftValue = null, rightValue = null;
     if (sourceNodeId < targetNodeId) {
         source = sourceNodeId;
         target = targetNodeId;
         direction = 'right';
+        rightValue = edgeValue;
     } else {
         source = targetNodeId;
         target = sourceNodeId;
         direction = 'left';
+        leftValue = edgeValue;
     }
     // Every link has an ID - Added to the SVG element to show edge value as textPath
     if (!this.maxLinkId) {
         this.maxLinkId = 0;
     }
     link = {source : this.getNodeWithId(source), target : this.getNodeWithId(target), 
-        id : this.maxLinkId++, leftValue : null, rightValue : null,  left : false, right : false};
+        id : this.maxLinkId++, leftValue : leftValue, rightValue : rightValue,  left : false, right : false};
     link[direction] = true;
     return link;
 }
@@ -226,11 +291,12 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId) {
  * Adds a new link object to the links array or updates an existing link.
  * @param {string} sourceNodeId - Id of the source node in the logical edge.
  * @param {string} targetNodeid - Id of the target node in the logical edge.
+ * @param {string} [edgeValue] - Value associated with the edge. Optional parameter.
  */
-Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
+Editor.prototype.addEdge = function(sourceNodeId, targetNodeId, edgeValue) {
     // console.log('Adding edge: ' + sourceNodeId + ' -> ' + targetNodeId);
     // Get the new link object.
-    var newLink = this.getNewLink(sourceNodeId, targetNodeId);
+    var newLink = this.getNewLink(sourceNodeId, targetNodeId, edgeValue);
     // Check if a link with these source and target Ids already exists.
     var existingLink = this.links.filter(function(l) {
         return (l.source === newLink.source && l.target === newLink.target);
@@ -242,6 +308,13 @@ Editor.prototype.addEdge = function(sourceNodeId, targetNodeId) {
         // newLink or existingLink denote the edge.
         existingLink.left |= newLink.left;
         existingLink.right |= newLink.right;
+        if (edgeValue) {
+            if (sourceNodeId < targetNodeId) {
+                existingLink.rightValue = edgeValue;
+            } else {
+                existingLink.leftValue = edgeValue; 
+            }
+        }
         return existingLink;
     } else {
         this.links.push(newLink);
@@ -327,7 +400,7 @@ Editor.prototype.restartLinks = function() {
                              this.selected_link = this.mousedown_link;
                          }
                          this.selected_node = null;
-                         this.restart();
+                         this.restartGraph();
                      }).bind(this));
     // Add edge value labels for the new edges.
     // Note that two tspans are required for 
@@ -410,7 +483,7 @@ Editor.prototype.addNodes = function() {
                     .style('marker-end', 'url(#end-arrow)')
                     .classed('hidden', false)
                     .attr('d', 'M' + this.mousedown_node.x + ',' + this.mousedown_node.y + 'L' + this.mousedown_node.x + ',' + this.mousedown_node.y);
-             this.restart();
+             this.restartGraph();
          }).bind(this))
          .on('mouseup', (function(d) {
              if (!this.mousedown_node) {
@@ -434,12 +507,12 @@ Editor.prototype.addNodes = function() {
              // Add link to graph (update if exists).
              var newLink = this.addEdge(this.mousedown_node.id, this.mouseup_node.id);
              this.selected_link = newLink;
-             this.restart();
+             this.restartGraph();
          }).bind(this))
          .on('dblclick', (function(d) {
              if (this.dblnode) {
                  this.dblnode({'event' : d3.event, 'node': d, editor : this });
-                 this.restart();
+                 this.restartGraph();
              }
          }).bind(this));
 
@@ -490,6 +563,112 @@ Editor.prototype.restartNodes = function() {
           .attr('class', 'vval');
     // remove old nodes
     this.circle.exit().remove();
+}
+
+/* 
+ * Restarts the global values 
+ */
+Editor.prototype.restartAggregators = function() {
+    this.aggregatorsContainer.attr('transform', 'translate(' + (this.width - 250) + ', 25)')
+    this.aggregatorsContainer.transition().style('opacity', Utils.count(this.aggregators) > 0 ? 1 : 0);
+    // Remove all values
+    this.globs = this.globs.data([]);
+    this.globs.exit().remove();
+    // Convert JSON to array of 2-length arrays for d3
+    var data = $.map(this.aggregators, function(value, key) { return [[key, value]]; });
+    // Set new values
+    this.globs = this.globs.data(data);
+    this.globs.enter().append('tspan').classed('editor-aggregators-value', true)
+        .attr('dy', '2.0em')
+        .attr('x', 0)
+        .text(function(d) { return "{0} -> {1}".format(d[0], d[1]); });
+}
+
+/*
+ * Restarts the table with the latest currentScenario
+ */
+Editor.prototype.restartTable = function() { 
+    // Remove all rows of the table and add again.
+    this.dataTable.rows().remove();
+
+    // Modify the scenario object to suit dataTables format
+    for (var nodeId in this.currentScenario) {
+        var dataRow = {};
+        var scenario = this.currentScenario[nodeId];
+        dataRow.vertexId = nodeId;
+        dataRow.vertexValue = scenario.vertexValues[0],
+        dataRow.outgoingMessages = { 
+            numOutgoingMessages : Utils.count(scenario.outgoingMessages), 
+            data : scenario.outgoingMessages
+        },
+        dataRow.incomingMessages = { 
+            numIncomingMessages : Utils.count(scenario.incomingMessages), 
+            data : scenario.incomingMessages
+        },
+        dataRow.neighbors = {
+            numNeighbors : Utils.count(scenario.neighbors),
+            data : scenario.neighbors
+        }
+        this.dataTable.row.add(dataRow).draw();
+    }
+
+    // Bind click event for rows.
+    $('#editor-tablet-table td.tablet-details-control').click((function(event) {
+        var tr = $(event.target).parents('tr');
+        var row = this.dataTable.row(tr);
+        if ( row.child.isShown()) {
+            // This row is already open - close it.
+            row.child.hide();
+            tr.removeClass('shown');
+        } else {
+            // Open this row.
+            var rowData = row.data();
+            var rowHtml = this.getRowDetailsHtml(rowData);
+            var dataContainer = rowHtml.dataContainer;
+            row.child(rowHtml.outerContainer).show();
+            // Now attach events to the tabs
+            // NOTE: MUST attach events after the row.child call. 
+            $(rowHtml.navContainer).on('click', 'li a', (function(event) {
+                // Check which tab was clicked and populate data accordingly.
+                var dataContainer = rowHtml.dataContainer;
+                var tabName = $(event.target).data('name');
+                // Clear the data container
+                $(dataContainer).empty();
+                if (tabName === 'outgoingMessages') {
+                    var mainTable = $('<table><thead><th>Receiver ID</th><th>Outgoing Message</th></thead></table>')
+                        .attr('class', 'table')
+                        .appendTo(dataContainer)
+                    var outgoingMessages = rowData.outgoingMessages.data;
+                    for (var receiverId in outgoingMessages) {
+                        $(mainTable).append("<tr><td>{0}</td><td>{1}</td></tr>".format(receiverId, outgoingMessages[receiverId]));
+                    }
+                    $(mainTable).DataTable();
+                } else if (tabName === 'incomingMessages') {
+                    var mainTable = $('<table><thead><th>Incoming Message</th></thead></table>')
+                        .attr('class', 'table')
+                        .appendTo(dataContainer);
+                    var incomingMessages = rowData.incomingMessages.data;
+                    for (var i = 0; i < incomingMessages.length; i++) {
+                        $(mainTable).append("<tr><td>{0}</td></tr>".format(incomingMessages[i]));
+                    }
+                } else if (tabName === 'neighbors') {
+                    var mainTable = $('<table><thead><th>Neighbor ID</th><th>Edge Value</th></thead></table>')
+                        .attr('class', 'table')
+                        .appendTo(dataContainer)
+                    var neighbors = rowData.neighbors.data;
+                    console.log(neighbors);
+                    for (var i = 0 ; i < neighbors.length; i++) {
+                        $(mainTable).append("<tr><td>{0}</td><td>{1}</td></tr>"
+                            .format(neighbors[i].neighborId, neighbors[i].edgeValue ? neighbors[i].edgeValue : '-'));
+                    }
+                    $(mainTable).DataTable();
+                }
+            }).bind(this));
+            // Click the first tab of the navContainer - ul>li>a
+            $(rowHtml.navContainer).children(':first').children(':first').click();
+            tr.addClass('shown');
+        }
+    }).bind(this));
 }
 
 /*

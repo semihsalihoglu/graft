@@ -1,4 +1,6 @@
+#if ($package)
 package $package;
+#end
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -22,16 +24,19 @@ import $type.Name;
 #end
 #end
 
-public class $classUnderTestName#[[Test]]# {
+public class $className {
 
   private $classUnderTestName classUnderTest;
   private ImmutableClassesGiraphConfiguration<$vertexIdType, $vertexValueType, $edgeValueType> conf;
   private WorkerClientRequestProcessor<$vertexIdType, $vertexValueType, $edgeValueType> processor;
   private MockedEnvironment<$vertexIdType, $vertexValueType, $edgeValueType, $outMsgType> mockEnv;
 	
-#parse("SetUpTemplate.vm")
+#parse("ComputeSetUpFuncTemplate.vm")
   
+  
+#parse("ComputeTestFuncTemplate.vm")
 
-#parse("TestComputeTemplate.vm")
+
+#parse("ReadWritableFromStringTemplate.vm")
 
 }

@@ -37,6 +37,7 @@ import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
 public class CommonVertexMasterInterceptionUtil {
   private static final Logger LOG = Logger.getLogger(AbstractInterceptingMasterCompute.class);
   private static FileSystem fileSystem = null;
+  private String TRACE_ROOT = "/giraph-debug-traces";
   private String jobId;
   private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
   private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper;
@@ -57,6 +58,7 @@ public class CommonVertexMasterInterceptionUtil {
   public void initCommonVertexMasterContextWrapper(
     ImmutableClassesGiraphConfiguration immutableClassesConfig, long superstepNo,
     long totalNumVertices, long totalNumEdges) {
+    this.TRACE_ROOT = immutableClassesConfig.get("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
     this.commonVertexMasterContextWrapper =
       new CommonVertexMasterContextWrapper(immutableClassesConfig, superstepNo, totalNumVertices,
         totalNumEdges);
@@ -122,7 +124,7 @@ public class CommonVertexMasterInterceptionUtil {
   }
 
   public String getTraceDirectory() {
-    return "/giraph-debug-traces/" + jobId;
+    return this.TRACE_ROOT + "/" + jobId;
   }
 
   public static FileSystem getFileSystem() {

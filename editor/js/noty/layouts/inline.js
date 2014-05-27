@@ -1,0 +1,35 @@
+/*!
+ * NOTE: This file is a part of the noty JS library - Please see jquery-noty.js.
+ * USING A LOCAL COPY OF THIS LIBRARY. NO OFFICIAL CDN AVAILABLE.
+ */
+(function($) {
+
+	$.noty.layouts.inline = {
+		name: 'inline',
+		options: {},
+		container: {
+			object: '<ul class="noty_inline_layout_container" />',
+			selector: 'ul.noty_inline_layout_container',
+			style: function() {
+				$(this).css({
+					width: '100%',
+					height: 'auto',
+					margin: 0,
+					padding: 0,
+					listStyleType: 'none',
+					zIndex: 9999999
+				});
+			}
+		},
+		parent: {
+			object: '<li />',
+			selector: 'li',
+			css: {}
+		},
+		css: {
+			display: 'none'
+		},
+		addClass: ''
+	};
+
+})(jQuery);

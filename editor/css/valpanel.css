@@ -54,7 +54,7 @@
 }
 
 .valpanel-preloader {
-	background-image: url('img/preloader.gif');
+	background-image: url('../img/preloader.gif');
 	position: absolute;
 	top: 35%;
 	left: 50%;

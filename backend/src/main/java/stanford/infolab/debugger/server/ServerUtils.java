@@ -19,11 +19,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
-import stanford.infolab.debugger.utils.ExceptionWrapper;
+
+import stanford.infolab.debugger.utils.AggregatedValueWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.NeighborWrapper;
 import stanford.infolab.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.OutgoingMessageWrapper;
+import stanford.infolab.debugger.utils.ExceptionWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper;
 import stanford.infolab.debugger.utils.MsgIntegrityViolationWrapper.ExtendedOutgoingMessageWrapper;
 import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
@@ -46,7 +48,7 @@ public class ServerUtils {
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
 
-  private static final String TRACE_ROOT = "/giraph-debug-traces";
+  public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -129,11 +131,8 @@ public class ServerUtils {
   /*
    * Reads the protocol buffer trace corresponding to the given jobId,
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
-   * 
    * @param jobId : ID of the job debugged.
-   * 
    * @param superstepNo: Superstep number debugged.
-   * 
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
    */
   public static GiraphVertexScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
@@ -213,19 +212,28 @@ public class ServerUtils {
     scenarioObj.put("vertexId", contextWrapper.getVertexIdWrapper());
     scenarioObj.put("vertexValue", contextWrapper.getVertexValueAfterWrapper());
     JSONObject outgoingMessagesObj = new JSONObject();
-    ArrayList<String> neighborsList = new ArrayList<String>();
+    JSONArray neighborsList = new JSONArray();
     // Add outgoing messages.
     for (Object outgoingMessage : contextWrapper.getOutgoingMessageWrappers()) {
       OutgoingMessageWrapper outgoingMessageWrapper = (OutgoingMessageWrapper) outgoingMessage;
       outgoingMessagesObj.put(outgoingMessageWrapper.destinationId.toString(),
         outgoingMessageWrapper.message.toString());
     }
+    // Add incoming messages.
+    ArrayList<String> incomingMessagesList = new ArrayList<String>();
+    for (Object incomingMessage : contextWrapper.getIncomingMessageWrappers()) {
+      incomingMessagesList.add(incomingMessage.toString());
+    }
     // Add neighbors.
     for (Object neighbor : contextWrapper.getNeighborWrappers()) {
+      JSONObject neighborObject = new JSONObject();
       NeighborWrapper neighborWrapper = (NeighborWrapper) neighbor;
-      neighborsList.add(neighborWrapper.getNbrId().toString());
+      neighborObject.put("neighborId", neighborWrapper.getNbrId());
+      neighborObject.put("edgeValue", neighborWrapper.getEdgeValue());
+      neighborsList.put(neighborObject);
     }
     scenarioObj.put("outgoingMessages", outgoingMessagesObj);
+    scenarioObj.put("incomingMessages", incomingMessagesList);
     scenarioObj.put("neighbors", neighborsList);
     // Add exception, if present.
     if (giraphScenarioWrapper.hasExceptionWrapper()) {
@@ -235,6 +243,13 @@ public class ServerUtils {
       exceptionObj.put("stackTrace", exceptionWrapper.getStackTrace());
       scenarioObj.put("exception", exceptionObj);
     }
+    JSONObject aggregateObj = new JSONObject();
+    for (Object aggregatedValue : contextWrapper.getCommonVertexMasterContextWrapper()
+      .getPreviousAggregatedValues()) {
+      AggregatedValueWrapper aggregatedValueWrapper = (AggregatedValueWrapper) aggregatedValue;
+      aggregateObj.put(aggregatedValueWrapper.getKey(), aggregatedValueWrapper.getValue());
+    }
+    scenarioObj.put("aggregators", aggregateObj);
     return scenarioObj;
   }
 

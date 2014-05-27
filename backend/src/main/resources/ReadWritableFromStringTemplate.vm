@@ -1,5 +1,16 @@
-  private $class read$class#[[FromString]]#(String str) {
-    $class writable = $class#[[.class.newInstance();]]#
+#if ($writableReadFromString)
+#foreach ($class in $writableReadFromString)
+#set ($writableClassName = $class.simpleName)
+  private $writableClassName read$writableClassName#[[FromString]]#(String str) {
+    $writableClassName writable = null;
+    try {
+      writable = $writableClassName#[[.class.newInstance();]]#
+    } catch (InstantiationException | IllegalAccessException e) {
+      e.printStackTrace();
+    }
     WritableUtils.readFieldsFromByteArray(str.getBytes(), writable);
     return writable;
   }
+  
+#end
+#end
