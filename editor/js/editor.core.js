@@ -19,11 +19,19 @@ function Editor(options) {
     this.defaultColor = '#FFFDDB'
     // Useful options. Not required by the editor class itself.
     this.errorColor = '#FF9494';
-
+    // Graph members
     this.nodes = [];
     this.links = [];
     this.messages = [];
-
+    // Table members
+    // Current scenario (adjList) object as received from the server.
+    this.currentScenario = {};
+    // aggregators is a collecton of key-value pairs displayed in the top-right corner.
+    this.aggregators = {};
+    // set graph as the default view
+    this.view = Editor.ViewEnum.GRAPH;
+    // linkDistance controls the distance between two nodes in the graph.
+    this.linkDistance = 150;
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
         this.undirected = options['undirected'] === true;
@@ -38,6 +46,14 @@ function Editor(options) {
 }
 
 /*
+ * Represents the two views of the editor - tabular and graph
+ */
+Editor.ViewEnum = {
+    TABLET : 'tablet',
+    GRAPH : 'graph'
+}
+
+/*
  * Build a sample graph with three nodes and two edges.
  */
 Editor.prototype.buildSample = function() {
@@ -48,7 +64,7 @@ Editor.prototype.buildSample = function() {
     }
     this.addEdge('1', '2');
     this.addEdge('2', '3');
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -61,7 +77,7 @@ Editor.prototype.empty = function() {
     this.links.length = 0;
     this.messages.length = 0;
     this.numNodes = 0;
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -83,17 +99,19 @@ Editor.prototype.init = function() {
     this.circle = this.svg.append('svg:g').selectAll('g');
     // Initializes the force layout.
     this.initForce();
-    this.restart();
+    this.restartGraph();
 }
 
 /*
  * Updates the graph. Called internally on various events.
  * May be called from the client after updating graph properties.
  */
-Editor.prototype.restart = function() {
-    this.resizeForce();
+Editor.prototype.restartGraph = function() {
+    this.setSize();
     this.restartNodes();
     this.restartLinks();
+    this.resizeForce();
+    this.restartAggregators();
 
     // Set the background to light gray if editor is readonly.
     this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
@@ -118,7 +136,7 @@ Editor.prototype.mousedown = function() {
         node =  this.addNode();
     node.x = point[0];
     node.y = point[1];
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -135,6 +153,26 @@ Editor.prototype.getMessagesSentByNode = function(id) {
         }
     }
     return messagesSent;
+}
+
+/*
+ * Returns all the edge values for this node's neighbor in a JSON object.
+ * Output format: {neighborId: edgeValue}
+ * @param {string} id
+ */
+Editor.prototype.getEdgeValuesForNode = function(id) {
+    var edgeValues = {};
+    for (var i = 0; i < this.links.length; i++) {
+        var link = this.links[i];
+        console.log(link);
+        // Make sure the logical edge is from this node to some other node.
+        if (link.source.id === id && link.right && link.rightValue) {
+            edgeValues[link.target.id] = link.rightValue; 
+        } else if (link.target.id === id && link.left && link.leftValue) {
+            edgeValues[link.source.id] = link.leftValue; 
+        }
+    }
+    return edgeValues;
 }
 
 /*
@@ -238,7 +276,7 @@ Editor.prototype.mousemove = function() {
         this.mousedown_node.y + 'L' + d3.mouse(this.svg[0][0])[0] + ',' +
         d3.mouse(this.svg[0][0])[1]
     );
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -293,7 +331,7 @@ Editor.prototype.keydown = function() {
 
             this.selected_link = null;
             this.selected_node = null;
-            this.restart();
+            this.restartGraph();
             break;
         case 66: // B
             if (this.selected_link) {
@@ -302,7 +340,7 @@ Editor.prototype.keydown = function() {
                 this.selected_link.right = true;
             }
 
-            this.restart();
+            this.restartGraph();
             break;
         case 76: // L
             if (this.selected_link) {
@@ -311,7 +349,7 @@ Editor.prototype.keydown = function() {
                 this.selected_link.right = false;
             }
 
-            this.restart();
+            this.restartGraph();
             break;
         case 82: // R
             if (this.selected_node) {
@@ -323,7 +361,7 @@ Editor.prototype.keydown = function() {
                 this.selected_link.right = true;
             }
 
-            this.restart();
+            this.restartGraph();
             break;
     }
 }
@@ -372,18 +410,20 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         var adj = adjList[nodeId]['neighbors'];
         // For every node in the adj list of this node,
         // add the node to this.nodes and add the edge to this.links
-        for (var i = 0; i < adj.length; i++) {
-            var adjId = adj[i];
+        for (var i = 0; adj && i < adj.length; i++) {
+            var adjId = adj[i]['neighborId'];
+            var edgeValue = adj[i]['edgeValue'];
             var adjNode = this.getNodeWithId(adjId);
             if (!adjNode) {
                 adjNode = this.addNode(adjId);
             }
             // Add the edge.
-            this.addEdge(nodeId, adjId);
+            this.addEdge(nodeId, adjId, edgeValue);
         }
     }
     this.updateGraphData(adjList);
-    this.restart();
+    this.restartGraph();
+    this.restartTable();
 }
 
 /*
@@ -394,6 +434,8 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
  * only updates the node attributes and messages exchanged.
  */
 Editor.prototype.updateGraphData = function(scenario) {
+    // Cache the scenario object. Used by tabular view.
+    this.currentScenario = scenario;
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in scenario) {
         var node = this.getNodeWithId(nodeId);
@@ -410,6 +452,12 @@ Editor.prototype.updateGraphData = function(scenario) {
                     message: msgs[receiverId]
                 });
             }
+        }
+        // Update aggregators
+        // NOTE: Later vertices ovewrite value for a given key
+        var aggregators = scenario[nodeId]['aggregators'];
+        for (var key in aggregators) {
+            this.aggregators[key] = aggregators[key];
         }
     }
 }
@@ -428,11 +476,12 @@ Editor.prototype.addToGraph = function(scenario) {
         var neighbors = scenario[nodeId]['neighbors'];
         // For each neighbor, add the edge.
         for (var i = 0 ; i < neighbors.length; i++) {
-            var neighborId = neighbors[i];
+            var neighborId = neighbors[i]['neighborId'];
+            var edgeValue = neighbors[i]['edgeValue'];
             // Add neighbor node if it doesn't exist.
             this.addNode(neighborId);
             // Addes edge, or ignores if already exists.
-            this.addEdge(nodeId, neighborId);
+            this.addEdge(nodeId, neighborId, edgeValue);
         }
     }
 }
@@ -451,7 +500,7 @@ Editor.prototype.showPreloader = function() {
 Editor.prototype.hidePreloader = function() {
     this.svg.selectAll('g').transition().style('opacity', 1);
     this.preloader.transition().style('opacity', 0);
-    this.restart();
+    this.restartGraph();
 }
 
 /*
@@ -501,5 +550,18 @@ Editor.prototype.colorNodes = function(nodeIds, color, uncolorRest) {
             }
         }
     }
-    this.restart();
+    this.restartGraph();
+}
+
+/* 
+ * Toggles the two views of the editor by sliding up/down the tablet.
+ */
+Editor.prototype.toggleView = function() { 
+    if (this.view === Editor.ViewEnum.GRAPH) {
+        this.view = Editor.ViewEnum.TABLET;
+        $(this.tablet[0]).slideDown('slow');
+    } else {
+        this.view = Editor.ViewEnum.GRAPH;
+        $(this.tablet[0]).slideUp('slow');
+    }
 }
