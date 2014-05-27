@@ -64,9 +64,9 @@ You can access all information that has been recorded by the debugging Giraph jo
 
 #### Dump a Trace
 
-    ./giraph-debug dump job_201405221715_0005 reg_stp_0_vid_6.tr
+    ./giraph-debug dump job_201405221715_0005 0 6
 
 #### Generate JUnit Test Case Code from a Trace
 
-    ./giraph-debug mktest job_201405221715_0005 reg_stp_0_vid_6.tr TestVertex6Superstep0
+    ./giraph-debug mktest job_201405221715_0005 0 6 Test_job_201405221715_0005_S0_V6
 
