@@ -17,6 +17,8 @@
 #     -S SUPERSTEP_NO   To debug only the given supersteps
 #     -V VERTEX_ID      To debug only the given vertices
 #     -N                To also debug the neighbors of the given vertices
+#     -C CLASS          Name of Computation classes to debug
+#                       (if MasterCompute uses many)
 # 
 # For VERTEX_ID, only LongWritable and IntWritable are supported.  All
 # supersteps will be captured if none were specified, and only the specified
@@ -156,12 +158,14 @@ esac
 # parse options first
 SuperstepsToDebug=()
 VerticesToDebug=()
+ComputationClasses=()
 NoDebugNeighbors=true
-while getopts "S:V:N" o; do
+while getopts "S:V:NC:" o; do
     case $o in
         S) SuperstepsToDebug+=("$OPTARG") ;;
         V) VerticesToDebug+=("$OPTARG") ;;
         N) NoDebugNeighbors=false ;;
+        C) ComputationClasses+=("$OPTARG") ;;
         *)
             error "$o: Unrecognized option"
     esac
@@ -240,13 +244,12 @@ export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
 classNameSuffix=$CLASSNAME_SUFFIX
 tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/giraph-debug.XXXXXX")
 trap 'rm -rf "$tmpDir"' EXIT
+instrumenterArgs=("$origClassName"  "$tmpDir"/classes  $masterComputeClassName)
+[ ${#ComputationClasses[@]} -eq 0 ] || instrumenterArgs+=("${ComputationClasses[@]}")
 java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" \
     -D"giraph.debugger.classNameSuffix=$classNameSuffix" \
     stanford.infolab.debugger.instrumenter.InstrumentGiraphComputationClasses \
-        "$origClassName" "$tmpDir"/classes \
-        $masterComputeClassName \
-        # TODO additional Computation class names
-        #
+        "${instrumenterArgs[@]}"
 instrumentedClassName="$origClassName"
 
 # next, create a new jar that contains all the instrumented code

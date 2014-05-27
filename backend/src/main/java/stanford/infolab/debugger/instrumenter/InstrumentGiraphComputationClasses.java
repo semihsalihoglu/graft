@@ -44,8 +44,7 @@ public class InstrumentGiraphComputationClasses {
 			System.exit(1);
 		}
 
-		Collection<String> userComputationClassNames = Lists
-				.newArrayList(args[0]);
+		Collection<String> userComputationClassNames = Sets.newHashSet(args[0]);
 		String outputDir = (args.length > 1 ? args[1] : null);
 		String masterComputeClassName = (args.length > 2 ? args[2] : null);
 		// Additional Computation classes

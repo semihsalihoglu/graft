@@ -5,9 +5,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.giraph.aggregators.LongSumAggregator;
+import org.apache.giraph.graph.Computation;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.LongWritable;
 
+import stanford.infolab.debugger.examples.exceptiondebug.SimpleTriangleClosingActualComputation;
 import stanford.infolab.debugger.instrumenter.AbstractInterceptingMasterCompute;
 import stanford.infolab.debugger.instrumenter.BottomInterceptingMasterCompute;
 
@@ -29,6 +31,18 @@ public class SimpleShortestPathsMaster extends DefaultMasterCompute {
 //    if (getSuperstep() == 2) {
 //      throw new IllegalArgumentException("DUMMY EXCEPTION FOR TESTING");
 //    }
+
+    // Dummy code for testing Instrumenter analysis 
+    if (getSuperstep() == 100000) {
+    	// which is extremely less likely to happen,
+    	setComputation(SimpleTriangleClosingActualComputation.class);
+    } else if (getSuperstep() == 200000) {
+    	try {
+			setComputation((Class<? extends Computation>) Class.forName("stanford.infolab.debugger.examples.integrity.ConnectedComponentsActualComputation"));
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+    }
   }
 
   @Override
