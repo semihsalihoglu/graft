@@ -1,6 +1,11 @@
 # Giraph Debugger
+## Overview:
+TODO(semih): Write
 
 ## Synopsis
+### Get Giraph Trunk
+    git clone https://github.com/apache/giraph.git -b trunk
+    mvn install
 
 ### Build Backend
     cd backend
