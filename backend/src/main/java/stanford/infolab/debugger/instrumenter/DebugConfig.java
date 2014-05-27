@@ -59,6 +59,9 @@ import org.apache.log4j.Logger;
 public class DebugConfig<I extends WritableComparable, V extends Writable,
   E extends Writable, M1 extends Writable, M2 extends Writable> {
 
+  private static final String SUPERSTEP_DELIMITER = ":";
+  private static final String VERTEX_ID_DELIMITER = ":";
+  
   public static final String VERTICES_TO_DEBUG_FLAG = "giraph.debugger.verticesToDebug";
   public static final String DEBUG_NEIGHBORS_FLAG = "giraph.debugger.debugNeighbors";
   public static final String SUPERSTEPS_TO_DEBUG_FLAG = "giraph.debugger.superstepsToDebug";
@@ -83,7 +86,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     if (superstepsToDebugStr == null) {
       superstepsToDebugSet = null;
     } else {
-      String[] superstepsToDebugArray = superstepsToDebugStr.split(",");
+      String[] superstepsToDebugArray = superstepsToDebugStr.split(SUPERSTEP_DELIMITER);
       superstepsToDebugSet = new HashSet<>();
       for (String superstepStr : superstepsToDebugArray) {
         superstepsToDebugSet.add(Long.valueOf(superstepStr));
@@ -96,7 +99,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
       userComputationClass);
     Class<?> idType = typeArguments[0];
     if (verticesToDebugStr != null) {
-      String[] verticesToDebugArray = verticesToDebugStr.split(",");
+      String[] verticesToDebugArray = verticesToDebugStr.split(VERTEX_ID_DELIMITER);
       this.verticesToDebugSet = new HashSet<>();
       for (String idString : verticesToDebugArray) {
         if (LongWritable.class.isAssignableFrom(idType)) {

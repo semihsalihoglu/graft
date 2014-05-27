@@ -42,9 +42,12 @@ import stanford.infolab.debugger.utils.VertexValueIntegrityViolationWrapper;
 public abstract class AbstractInterceptingComputation<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
   extends AbstractComputation<I, V, E, M1, M2> {
 
+  public static final String CONFIG_CLASS_KEY = "giraph.debugger.configClass";
+
   protected static final Logger LOG = Logger.getLogger(AbstractInterceptingComputation.class);
 
-  public static final StrConfOption DEBUG_CONFIG_CLASS = new StrConfOption("dbgcfg", "",
+  public static final StrConfOption DEBUG_CONFIG_CLASS = new StrConfOption(CONFIG_CLASS_KEY,
+    DebugConfig.class.getName(),
     "The name of the Debug Config class for the computation (e.g. "
       + "stanford.infolab.debugger.examples.SimpleShortestPathsDebugConfig).");
 

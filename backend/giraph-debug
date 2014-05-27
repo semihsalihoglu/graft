@@ -3,7 +3,7 @@
 # 
 # To debug your Giraph computation, simply run:
 # 
-#     giraph-debug DEBUG_CONFIG_CLASS \
+#     giraph-debug [DEBUG_OPTIONS] [DEBUG_CONFIG_CLASS] \
 #         JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
 #         COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
 # 
@@ -12,6 +12,20 @@
 #     hadoop jar \
 #         JAR_FILE org.apache.giraph.GiraphRunner [HADOOP_OPTS] \
 #         COMPUTATION_CLASS GIRAPH_RUNNER_ARGS...
+# 
+# DEBUG_OPTIONS can be a set of the following options:
+#     -S SUPERSTEP_NO   To debug only the given supersteps
+#     -V VERTEX_ID      To debug only the given vertices
+#     -N                To also debug the neighbors of the given vertices
+# 
+# For VERTEX_ID, only LongWritable and IntWritable are supported.  All
+# supersteps will be captured if none were specified, and only the specified
+# vertices will be captured.
+# 
+# If the DEBUG_OPTIONS are insufficient, a custom code that can specify more
+# complex conditions for capturing traces can be written and passed as
+# DEBUG_CONFIG_CLASS, which extends
+# stanford.infolab.debugger.instrumenter.DebugConfig.
 # 
 # By default all trace data for debugging will be stored under
 # /giraph-debug-trace/ at HDFS.  To change this path set the environment
@@ -139,10 +153,31 @@ case $1 in
         # otherwise, instrument and launch the job
 esac
 
+# parse options first
+SuperstepsToDebug=()
+VerticesToDebug=()
+NoDebugNeighbors=true
+while getopts "S:V:N" o; do
+    case $o in
+        S) SuperstepsToDebug+=("$OPTARG") ;;
+        V) VerticesToDebug+=("$OPTARG") ;;
+        N) NoDebugNeighbors=false ;;
+        *)
+            error "$o: Unrecognized option"
+    esac
+done
+shift $(($OPTIND - 1))
+
 # parse arguments
 debugConfigClassName=$1; shift
-# TODO provide a default and make debugConfigClassName optional? by detecting whether it's a file or not?
-jarFile=$1; shift
+if [ -f "$debugConfigClassName" ]; then
+    # the DebugConfig class name is optional, and
+    # we use the default DebugConfig if the first argument seems to be a jar file
+    jarFile=$debugConfigClassName
+    debugConfigClassName=stanford.infolab.debugger.instrumenter.DebugConfig
+else
+    jarFile=$1; shift
+fi
 giraphRunnerClass=$1
 case $giraphRunnerClass in
     org.apache.giraph.GiraphRunner) ;;
@@ -159,7 +194,6 @@ esac
 hadoopJarOpts=(
 $giraphRunnerClass
 "${javaOpts[@]}"
--D dbgcfg="$debugConfigClassName" # pass the class name for debug configuration
 )
 while shift; do
     case $1 in
@@ -185,6 +219,19 @@ find_master_compute() {
     done
 }
 masterComputeClassName=$(find_master_compute "$@")
+
+# pass DebugConfig options via GiraphRunner's -ca (custom argument) options
+#  the class name for debug configuration
+set -- "$@" -ca "giraph.debugger.configClass=$debugConfigClassName"
+#  superstepsToDebug
+[ ${#SuperstepsToDebug[@]} -eq 0 ] ||
+    set -- "$@" -ca "giraph.debugger.superstepsToDebug=$(IFS=:; echo "${SuperstepsToDebug[*]}")"
+#  verticesToDebug
+[ ${#VerticesToDebug[@]} -eq 0 ] ||
+    set -- "$@" -ca "giraph.debugger.verticesToDebug=$(IFS=:; echo "${VerticesToDebug[*]}")"
+#  debugNeighbors
+$NoDebugNeighbors ||
+    set -- "$@" -ca "giraph.debugger.debugNeighbors=true"
 
 # set up environment
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
