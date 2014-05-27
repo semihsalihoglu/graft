@@ -400,7 +400,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         })
         .done((function(response) {
             retObj = { code : response, 
-                filename : "{0}_{1}_{2}".format(this.currentJobId, this.currentSuperstepNumber, vertexId)
+                filename : "{0}_{1}_{2}.java".format(this.currentJobId, this.currentSuperstepNumber, vertexId)
             }
             this.onCaptureVertex.done(retObj);
         }).bind(this))
@@ -420,7 +420,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         })
         .done((function(response) {
             retObj = { code : response,
-                filename : "{0}_{1}".format(this.currentJobId, this.currentSuperstepNumber)
+                filename : "{0}_{1}.java".format(this.currentJobId, this.currentSuperstepNumber)
             }
             this.onCaptureMaster.done(retObj);
         }).bind(this))
@@ -445,7 +445,9 @@ GiraphDebugger.prototype.marshallScenarioForEditor = function (data) {
     for (vertexId in data) {
         // Iterating over every vertex returned and creating a 
         // single element vertexValues array.
-        newData[vertexId]['vertexValues'] = [data[vertexId]['vertexValue']];
+        var vertexValue = data[vertexId].vertexValue;
+        // If vertexValue is present, send that, otherwise, empty array.
+        newData[vertexId].vertexValues = vertexValue ? [vertexValue] : [];
     }
     return newData;
 }

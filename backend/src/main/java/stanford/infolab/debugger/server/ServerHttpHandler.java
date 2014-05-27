@@ -52,7 +52,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     } catch (UnsupportedEncodingException ex) {
       this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
       this.response = "Malformed URL. Given encoding is not supported.";
-    }
+    } 
     // In case of an error statusCode, we just write the exception string.
     // (Consider using JSON).
     if (this.statusCode != HttpURLConnection.HTTP_OK) {
@@ -102,6 +102,30 @@ public abstract class ServerHttpHandler implements HttpHandler {
     Headers responseHeaders = this.httpExchange.getResponseHeaders();
     responseHeaders.add(headerKey, headerValue);
   }
+  
+  /*
+   * Handle the common exceptions in processRequest. 
+   * @params {String} [illegalArgumentMessage] - Message when illegal argument 
+   * exception is thrown. Optional - May be null. 
+   */
+  protected void handleException(Exception e, String illegalArgumentMessage) {
+    if (e instanceof IllegalArgumentException) {
+      this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+      this.response = illegalArgumentMessage;
+    } else if(e instanceof NumberFormatException) { 
+      this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+      this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
+    } else if (e instanceof IOException || e instanceof InstantiationException
+      || e instanceof IllegalAccessException || e instanceof ClassNotFoundException) {
+        this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
+        this.response = "Internal Server Error.";
+    } else {
+      Debug.println("Unknown Exception", e.toString());
+      this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
+      this.response = "Unknown exception occured.";
+    }
+  }
+  
   /*
    * Implement this method in inherited classes. This method MUST set statusCode
    * and response (or responseBytes) class members appropriately. In case the Content type

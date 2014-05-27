@@ -77,16 +77,15 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     try {
       clazz = Class.forName(debugConfigFileName);
       debugConfig = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
+      debugConfig.readConfig(getConf());
       LOG.info("Successfully created a DebugConfig file from: " + debugConfigFileName);
-      ParameterizedType parameterizedType = (ParameterizedType) debugConfig.getClass()
-        .getGenericSuperclass();
-      vertexIdClazz = parameterizedType.getActualTypeArguments()[0];
-      vertexValueClazz = parameterizedType.getActualTypeArguments()[1];
-      edgeValueClazz = parameterizedType.getActualTypeArguments()[2];
-      incomingMessageClazz = parameterizedType.getActualTypeArguments()[3];
-      outgoingMessageClazz = parameterizedType.getActualTypeArguments()[4];
+      vertexIdClazz = getConf().getVertexIdClass();
+      vertexValueClazz = getConf().getVertexValueClass();
+      edgeValueClazz = getConf().getEdgeValueClass();
+      incomingMessageClazz = getConf().getIncomingMessageValueClass();
+      outgoingMessageClazz =getConf().getOutgoingMessageValueClass();
     } catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
-      System.err.println("Could not create a new DebugConfig instance of " + debugConfigFileName);
+      LOG.error("Could not create a new DebugConfig instance of " + debugConfigFileName);
       e.printStackTrace();
       throw new RuntimeException(e);
     }
@@ -107,7 +106,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     LOG.info("compute " + vertex + " " + messages);
     vertexId = vertex.getId();
     shouldDebugVertex = debugConfig.shouldDebugSuperstep(getSuperstep())
-      && debugConfig.shouldDebugVertex(vertex.getId()) && (numVerticesLogged <= NUM_VERTICES_TO_LOG);
+      && debugConfig.shouldDebugVertex(vertex) && (numVerticesLogged <= NUM_VERTICES_TO_LOG);
     if (shouldDebugVertex) {
       initGiraphVertexScenario();
       debugVertexBeforeComputation(vertex, messages);

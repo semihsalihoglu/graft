@@ -1,7 +1,5 @@
 package stanford.infolab.debugger.instrumenter;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.NotImplementedException;
 
 /**

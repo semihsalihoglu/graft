@@ -192,21 +192,24 @@ ValidationPanel.prototype.showMessageViolations = function() {
     this.expand();
     this.currentLabel = 'M';
     // Empty the content container and add violations table.
-    // TODO(vikesh) Better visualization/search.
     this.contentContainer.empty();
     // The data should already be present in the buttonData cache.
-    violations = this.buttonData[this.currentLabel].data.violations;
+    var data = this.buttonData[this.currentLabel].data;
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<tr><th>Source</th><th>Destination</th><th>Message</th></tr>')
+        .html('<thead><tr><th>Task ID</th><th>Source</th><th>Destination</th><th>Message</th></tr></thead>')
         .appendTo(this.contentContainer);
-
-    if (violations) {
-        for (var i = 0; i < violations.length; ++i) {
-            var violation = violations[i];
-            table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(violation.srcId, violation.destinationId, violation.message)));
+    if (data) {
+        for (var taskId in data) {
+            var violations = data[taskId].violations;
+            for (var i = 0; violations && i < violations.length; ++i) {
+                var violation = violations[i];
+                table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".format(
+                            taskId, violation.srcId, violation.destinationId, violation.message)));
+            }
         }
     }
+    $(table).DataTable();
 }
 
 /*
@@ -216,24 +219,28 @@ ValidationPanel.prototype.showMessageViolations = function() {
 ValidationPanel.prototype.showVertexViolations = function() {
     this.expand();
     this.currentLabel = 'V';
-    violations = this.buttonData[this.currentLabel].data.violations;
     // Empty the content container and add violations table.
-    // TODO(vikesh) Better visualization/search.
     this.contentContainer.empty();
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<tr><th>Vertex ID</th><th>Vertex Value</th></tr>')
+        .html('<thead><tr><th>Task ID</th><th>Vertex ID</th><th>Vertex Value</th></tr></thead>')
         .appendTo(this.contentContainer);
     var violationIds = [];
-    if (violations) {
-        for (var i = 0; violations && i < violations.length; ++i) {
-            var violation = violations[i];
-            violationIds.push(violation.vertexId);
-            table.append($("<tr><td>{0}</td><td>{1}</td></tr>".format(violation.vertexId, violation.vertexValue)));
+    var data = this.buttonData[this.currentLabel].data;
+    if (data) {
+        for (var taskId in data) {
+            var violations = data[taskId].violations;
+            for (var i = 0; violations && i < violations.length; ++i) {
+                var violation = violations[i];
+                violationIds.push(violation.vertexId);
+                table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(
+                            taskId, violation.vertexId, violation.vertexValue)));
+            }
         }
     }
     // Color the vertices with violations
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
+    $(table).DataTable();
 }
 
 /*
@@ -243,11 +250,11 @@ ValidationPanel.prototype.showExceptions = function() {
     this.expand();
     this.currentLabel = 'E';
     // Empty the content container and add violations table.
-    // TODO(vikesh) Better visualization/search.
+    // TODO(vikesh) Master exceptions.
     this.contentContainer.empty();
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<tr><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr>')
+        .html('<thead><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr>')
         .appendTo(this.contentContainer);
     var data = this.buttonData[this.currentLabel].data; 
     var violationIds = [];
@@ -258,6 +265,7 @@ ValidationPanel.prototype.showExceptions = function() {
     }
     // Color the nodes with exception.
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
+    $(table).DataTable();
 }
 
 

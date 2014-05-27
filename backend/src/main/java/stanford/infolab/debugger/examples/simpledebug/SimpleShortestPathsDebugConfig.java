@@ -1,8 +1,11 @@
 package stanford.infolab.debugger.examples.simpledebug;
 
+import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 
 import stanford.infolab.debugger.instrumenter.DebugConfig;
 
@@ -20,7 +23,7 @@ public class SimpleShortestPathsDebugConfig extends DebugConfig<
   }
 
   @Override
-  public boolean shouldDebugVertex(LongWritable vertexId) {
+  public boolean shouldDebugVertex(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex) {
     return true;
   }
 }
