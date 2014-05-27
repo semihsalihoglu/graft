@@ -27,12 +27,16 @@
 # 
 # To browse what has been captured in an individual trace, run:
 # 
-#     giraph-debug dump JOB_ID TRACE_ID
+#     giraph-debug dump JOB_ID SUPERSTEP VERTEX_ID
 # 
 # 
-# To generate a JUnit test case code into from a trace, run:
+# To generate a JUnit test case for a vertex Computation from a trace, run:
 # 
-#     giraph-debug mktest JOB_ID TRACE_ID TEST_NAME
+#     giraph-debug mktest JOB_ID SUPERSTEP VERTEX_ID TEST_NAME
+# 
+# To generate a JUnit test case for a MasterCompute from a trace, run:
+# 
+#     giraph-debug mktest-master JOB_ID SUPERSTEP TEST_NAME
 # 
 # It will generate TEST_NAME.java and other necessary files as TEST_NAME.*.
 # 
@@ -114,10 +118,22 @@ case $1 in
         VertexId=$1; shift
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
-        pwd
         exec_java stanford.infolab.debugger.utils.CommandLine mktest \
             "$JobId" "$Superstep" "$VertexId" "$TestName" "$@"
         ;;
+
+    mktest-master)
+        shift
+        [ $# -gt 0 ] || usage "JOB_ID is missing"
+        JobId=$1; shift
+        [ $# -gt 0 ] || usage "SUPERSTEP to dump is missing"
+        Superstep=$1; shift
+        [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
+        TestName=$1; shift
+        exec_java stanford.infolab.debugger.utils.CommandLine mktest-master \
+            "$JobId" "$Superstep" "$TestName" "$@"
+        ;;
+
 
     *)
         # otherwise, instrument and launch the job
