@@ -3,9 +3,9 @@ package org.apache.giraph.debugger.utils;
 import java.io.IOException;
 import java.io.InputStream;
 
-import stanford.infolab.debugger.Scenario.CommonVertexMasterContext;
-import stanford.infolab.debugger.Scenario.Exception;
-import stanford.infolab.debugger.Scenario.GiraphMasterScenario;
+import org.apache.giraph.debugger.Scenario.CommonVertexMasterContext;
+import org.apache.giraph.debugger.Scenario.Exception;
+import org.apache.giraph.debugger.Scenario.GiraphMasterScenario;
 
 import com.google.protobuf.GeneratedMessage;
 

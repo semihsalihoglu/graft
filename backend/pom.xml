@@ -9,8 +9,6 @@
   <version>0.0-SNAPSHOT</version>
 
   <properties>
-    <top.dir>${user.dir}/..</top.dir>
-    <giraph.dir>${user.dir}/../../giraph</giraph.dir>
     <project.build.targetJdk>1.7</project.build.targetJdk>
   </properties>
 
@@ -71,10 +69,10 @@
                <mkdir dir="target/generated-sources"/>
                <exec executable="protoc">
                  <arg value="--java_out=target/generated-sources"/>
-                 <arg value="--proto_path=${top.dir}/proto/"/> 
-                 <arg value="${top.dir}/proto/giraph_aggregator.proto"/>
-                 <arg value="${top.dir}/proto/scenario.proto"/>
-                 <arg value="${top.dir}/proto/integrity.proto"/>
+                 <arg value="--proto_path=src/main/protobuf/"/> 
+                 <arg value="src/main/protobuf/giraph_aggregator.proto"/>
+                 <arg value="src/main/protobuf/scenario.proto"/>
+                 <arg value="src/main/protobuf/integrity.proto"/>
                <!-- mvn compile assembly:single;  -->
                </exec>
              </tasks>

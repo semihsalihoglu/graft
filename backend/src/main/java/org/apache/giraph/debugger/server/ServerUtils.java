@@ -31,7 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
+import org.apache.giraph.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
 import sun.security.ssl.Debug;
 
 import com.sun.net.httpserver.Headers;

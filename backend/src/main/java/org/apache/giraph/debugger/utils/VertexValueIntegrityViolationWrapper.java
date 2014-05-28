@@ -9,8 +9,8 @@ import java.util.List;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation;
-import stanford.infolab.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
+import org.apache.giraph.debugger.Integrity.VertexValueIntegrityViolation;
+import org.apache.giraph.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
 
 import com.google.protobuf.GeneratedMessage;
 

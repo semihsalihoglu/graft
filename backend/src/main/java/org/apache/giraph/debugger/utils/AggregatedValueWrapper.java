@@ -6,7 +6,7 @@ import java.io.InputStream;
 import org.apache.giraph.utils.WritableUtils;
 import org.apache.hadoop.io.Writable;
 
-import stanford.infolab.debugger.GiraphAggregator.AggregatedValue;
+import org.apache.giraph.debugger.GiraphAggregator.AggregatedValue;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;

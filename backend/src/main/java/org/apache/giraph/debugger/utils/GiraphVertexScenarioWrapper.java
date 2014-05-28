@@ -11,14 +11,14 @@ import org.apache.hadoop.io.WritableComparable;
 
 import com.google.protobuf.GeneratedMessage;
 
-import stanford.infolab.debugger.Scenario;
-import stanford.infolab.debugger.Scenario.CommonVertexMasterContext;
-import stanford.infolab.debugger.Scenario.Exception;
-import stanford.infolab.debugger.Scenario.GiraphVertexScenario;
-import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexContext;
-import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexContext.Neighbor;
-import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexContext.OutgoingMessage;
-import stanford.infolab.debugger.Scenario.GiraphVertexScenario.VertexScenarioClasses;
+import org.apache.giraph.debugger.Scenario;
+import org.apache.giraph.debugger.Scenario.CommonVertexMasterContext;
+import org.apache.giraph.debugger.Scenario.Exception;
+import org.apache.giraph.debugger.Scenario.GiraphVertexScenario;
+import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext;
+import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext.Neighbor;
+import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext.OutgoingMessage;
+import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexScenarioClasses;
 
 /**
  * Wrapper class around {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario}

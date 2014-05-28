@@ -1,4 +1,4 @@
-package stanford.infolab.debugger;
+package org.apache.giraph.debugger;
 
 message Aggregator {
   required string aggregatorClass = 1;

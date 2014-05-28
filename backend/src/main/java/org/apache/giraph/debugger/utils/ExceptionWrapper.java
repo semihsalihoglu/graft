@@ -5,8 +5,8 @@ import java.io.InputStream;
 
 import org.apache.giraph.utils.WritableUtils;
 
-import stanford.infolab.debugger.GiraphAggregator.AggregatedValue;
-import stanford.infolab.debugger.Scenario.Exception;
+import org.apache.giraph.debugger.GiraphAggregator.AggregatedValue;
+import org.apache.giraph.debugger.Scenario.Exception;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;

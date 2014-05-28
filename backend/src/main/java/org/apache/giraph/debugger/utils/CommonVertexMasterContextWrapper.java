@@ -8,8 +8,8 @@ import java.util.Collection;
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 
-import stanford.infolab.debugger.GiraphAggregator.AggregatedValue;
-import stanford.infolab.debugger.Scenario.CommonVertexMasterContext;
+import org.apache.giraph.debugger.GiraphAggregator.AggregatedValue;
+import org.apache.giraph.debugger.Scenario.CommonVertexMasterContext;
 
 import com.google.protobuf.GeneratedMessage;
 

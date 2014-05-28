@@ -1,4 +1,4 @@
-package stanford.infolab.debugger;
+package org.apache.giraph.debugger;
 
 import "giraph_aggregator.proto";
 

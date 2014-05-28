@@ -1,4 +1,4 @@
-package stanford.infolab.debugger;
+package org.apache.giraph.debugger;
 
 // Stores a list of messages that are violating an
 // integrity constraint designed by the user.

@@ -7,8 +7,8 @@ import org.apache.giraph.aggregators.Aggregator;
 import org.apache.giraph.utils.WritableUtils;
 import org.apache.hadoop.io.Writable;
 
-import stanford.infolab.debugger.GiraphAggregator.AggregatedValue;
-import stanford.infolab.debugger.GiraphAggregator.Aggregator.Builder;
+import org.apache.giraph.debugger.GiraphAggregator.AggregatedValue;
+import org.apache.giraph.debugger.GiraphAggregator.Aggregator.Builder;
 
 import com.google.protobuf.GeneratedMessage;
 
@@ -31,7 +31,7 @@ public class AggregatorWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    Builder aggregatorProtoBuilder = stanford.infolab.debugger.GiraphAggregator.Aggregator.newBuilder();
+    Builder aggregatorProtoBuilder = org.apache.giraph.debugger.GiraphAggregator.Aggregator.newBuilder();
     aggregatorProtoBuilder.setAggregatorClass(aggregator.getClass().getName());
     aggregatorProtoBuilder.setAggregatedValue((AggregatedValue)
       new AggregatedValueWrapper(key, aggregator.getAggregatedValue()).buildProtoObject());
@@ -40,14 +40,14 @@ public class AggregatorWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
-    return stanford.infolab.debugger.GiraphAggregator.Aggregator.parseFrom(inputStream);
+    return org.apache.giraph.debugger.GiraphAggregator.Aggregator.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
     IOException, InstantiationException, IllegalAccessException {
-    stanford.infolab.debugger.GiraphAggregator.Aggregator aggregatorProto = 
-      (stanford.infolab.debugger.GiraphAggregator.Aggregator) protoObject;
+    org.apache.giraph.debugger.GiraphAggregator.Aggregator aggregatorProto = 
+      (org.apache.giraph.debugger.GiraphAggregator.Aggregator) protoObject;
     Aggregator<Writable> giraphAggregator = 
       (org.apache.giraph.aggregators.Aggregator<Writable>)
       Class.forName(aggregatorProto.getAggregatorClass()).newInstance();
