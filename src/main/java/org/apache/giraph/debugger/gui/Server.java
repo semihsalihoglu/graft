@@ -1,9 +1,7 @@
 package org.apache.giraph.debugger.gui;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -39,14 +37,8 @@ public class Server {
 	private static final Logger LOG = Logger.getLogger(Server.class);
 	private static final int SERVER_PORT = Integer.parseInt(System.getProperty(
 			"giraph.debugger.guiPort", "8000"));
-	// TODO use Class#getResource() instead
-	private static String EDITOR_ROOT = System.getProperty(
-			"giraph.debugger.guiPath",
-			new File(System.getProperty("user.dir")).toPath()
-			.resolve("gui").toAbsolutePath().toString());
 
 public static void main(String[] args) throws Exception {
-	EDITOR_ROOT = new File(EDITOR_ROOT).getCanonicalPath().toString();
     HttpServer server = HttpServer.create(new InetSocketAddress(SERVER_PORT), 0);
     // Attach JobHandler instance to handle /job GET call.
     server.createContext("/job", new GetJob());
@@ -62,64 +54,52 @@ public static void main(String[] args) throws Exception {
     server.start();
   }
 
-	static class GetEditor implements HttpHandler {
+  static class GetEditor implements HttpHandler {
 
-		@Override
-		public void handle(HttpExchange t) {
-			URI uri = t.getRequestURI();
-			try {
-				try {
-				  // TODO use Class#getResource() instead
-					File file = new File(EDITOR_ROOT + uri.getPath()).getCanonicalFile();
-					LOG.info(uri);
-					if (!file.getPath().startsWith(EDITOR_ROOT)) {
-						// Suspected path traversal attack: reject with 403 error.
-						String response = "403 (Forbidden)\n";
-						t.sendResponseHeaders(403, response.length());
-						OutputStream os = t.getResponseBody();
-						os.write(response.getBytes());
-						os.close();
-					} else {
-						if (file.isDirectory()) {
-							file = new File(file, "index.html");
-						}
-						if (!file.isFile()) {
-							// Object does not exist or is not a file: reject
-							// with 404 error.
-							String response = "404 (Not Found)\n";
-							t.sendResponseHeaders(404, response.length());
-							OutputStream os = t.getResponseBody();
-							os.write(response.getBytes());
-							os.close();
-						} else {
-							// Object exists and is a file: accept with response
-							// code 200.
-							t.sendResponseHeaders(200, 0);
-							OutputStream os = t.getResponseBody();
-							FileInputStream fs = new FileInputStream(file);
-							final byte[] buffer = new byte[0x10000];
-							int count = 0;
-							while ((count = fs.read(buffer)) >= 0) {
-								os.write(buffer, 0, count);
-							}
-							fs.close();
-							os.close();
-						}
-					}
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-					t.sendResponseHeaders(404, 0);
-				} catch (IOException e) {
-					e.printStackTrace();
-					t.sendResponseHeaders(404, 0);
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+    @Override
+    public void handle(HttpExchange t) {
+      URI uri = t.getRequestURI();
+      try {
+        try {
+          String path = uri.getPath();
+          LOG.info(path);
+          if (path.endsWith("/"))
+            path += "index.html";
+          path = path.replaceFirst("^/", "");
+          LOG.info("resource path to look for = " + path);
+          LOG.info("resource URL = " + getClass().getResource(path));
+          InputStream fs = getClass().getResourceAsStream(path);
+          if (fs == null) {
+            // Object does not exist or is not a file: reject
+            // with 404 error.
+            String response = "404 (Not Found)\n";
+            t.sendResponseHeaders(404, response.length());
+            OutputStream os = t.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+          } else {
+            // Object exists and is a file: accept with response
+            // code 200.
+            t.sendResponseHeaders(200, 0);
+            OutputStream os = t.getResponseBody();
+            final byte[] buffer = new byte[0x10000];
+            int count = 0;
+            while ((count = fs.read(buffer)) >= 0) {
+              os.write(buffer, 0, count);
+            }
+            fs.close();
+            os.close();
+          }
+        } catch (IOException e) {
+          e.printStackTrace();
+          t.sendResponseHeaders(404, 0);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
 
-	}
+  }
 
   /*
    * Handles /job HTTP GET call. Returns the details of the given jobId.
