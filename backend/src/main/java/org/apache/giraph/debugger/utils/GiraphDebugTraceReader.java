@@ -2,7 +2,7 @@ package org.apache.giraph.debugger.utils;
 
 import java.io.IOException;
 
-import org.apache.giraph.debugger.server.ServerUtils;
+import org.apache.giraph.debugger.gui.ServerUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;

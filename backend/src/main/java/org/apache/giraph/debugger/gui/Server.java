@@ -1,4 +1,4 @@
-package org.apache.giraph.debugger.server;
+package org.apache.giraph.debugger.gui;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,9 +14,9 @@ import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.giraph.debugger.gui.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
 import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
-import org.apache.giraph.debugger.server.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
@@ -39,10 +39,11 @@ public class Server {
 	private static final Logger LOG = Logger.getLogger(Server.class);
 	private static final int SERVER_PORT = Integer.parseInt(System.getProperty(
 			"giraph.debugger.guiPort", "8000"));
+	// TODO use Class#getResource() instead
 	private static String EDITOR_ROOT = System.getProperty(
-			"giraph.debugger.editorPath",
+			"giraph.debugger.guiPath",
 			new File(System.getProperty("user.dir")).toPath()
-			.resolve("../editor").toAbsolutePath().toString());
+			.resolve("gui").toAbsolutePath().toString());
 
 public static void main(String[] args) throws Exception {
 	EDITOR_ROOT = new File(EDITOR_ROOT).getCanonicalPath().toString();
@@ -68,6 +69,7 @@ public static void main(String[] args) throws Exception {
 			URI uri = t.getRequestURI();
 			try {
 				try {
+				  // TODO use Class#getResource() instead
 					File file = new File(EDITOR_ROOT + uri.getPath()).getCanonicalFile();
 					LOG.info(uri);
 					if (!file.getPath().startsWith(EDITOR_ROOT)) {

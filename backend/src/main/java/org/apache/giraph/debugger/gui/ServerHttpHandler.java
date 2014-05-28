@@ -1,4 +1,4 @@
-package org.apache.giraph.debugger.server;
+package org.apache.giraph.debugger.gui;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

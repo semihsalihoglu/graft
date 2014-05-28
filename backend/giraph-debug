@@ -100,8 +100,8 @@ case $1 in
         echo "Starting Debugger GUI at http://$HOSTNAME:$GUI_PORT/"
         exec_java \
             -D"giraph.debugger.guiPort=$GUI_PORT" \
-            -D"giraph.debugger.editorPath=$Here/../editor" \
-            org.apache.giraph.debugger.server.Server
+            -D"giraph.debugger.guiPath=$Here/gui" \
+            org.apache.giraph.debugger.gui.Server
         ;;
 
     ls|list)

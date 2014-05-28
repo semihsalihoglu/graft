@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import org.apache.giraph.debugger.gui.ServerUtils;
+import org.apache.giraph.debugger.gui.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
 import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
-import org.apache.giraph.debugger.server.ServerUtils;
-import org.apache.giraph.debugger.server.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 
