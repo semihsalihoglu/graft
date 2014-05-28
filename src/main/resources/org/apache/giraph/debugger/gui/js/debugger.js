@@ -525,19 +525,11 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
             url : this.debuggerServerRoot + "/supersteps",
             data : {'jobId' : this.currentJobId}
     })
-    .retry({
-            times : 5, 
-            timeout : 2000,
-            retryCallback : function(remainingTimes) {
-                // Failed intermediately. Will be retried. 
-                noty({text : 'Failed to fetch job. Retrying ' + remainingTimes + ' more times...', type : 'warning', timeout : 1000});
-            }
-    })
+    
     .done((function(response) {
         this.maxSuperstepNumber = Math.max.apply(Math, response);
     }).bind(this))
     .fail(function(response) {
-        noty({text : 'Failed to fetch job. Please check your network and debugger server.', type : 'error'});
     });
 
     // If scenario is already cached, don't fetch again.
@@ -551,6 +543,14 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
             url : this.debuggerServerRoot + '/scenario',
             dataType : 'json',
             data: { 'jobId' : jobId, 'superstepId' : superstepNumber }
+        })
+        .retry({
+            times : 5, 
+            timeout : 2000,
+            retryCallback : function(remainingTimes) {
+                // Failed intermediately. Will be retried. 
+                noty({text : 'Failed to fetch job. Retrying ' + remainingTimes + ' more times...', type : 'warning', timeout : 1000});
+            }
         })
         .done((function(data) {
             console.log(data);
@@ -569,7 +569,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
             }
         }).bind(this))
         .fail(function(error) {
-            console.log(error);
+            noty({text : 'Failed to fetch job. Please check your network and debugger server.', type : 'error'});
         })
         .always((function() {
             // Hide Editor's preloader.
