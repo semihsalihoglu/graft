@@ -9,6 +9,8 @@ import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
+
 import sun.security.ssl.Debug;
 
 import com.sun.net.httpserver.Headers;
@@ -19,6 +21,7 @@ import com.sun.net.httpserver.HttpHandler;
  * The Abstract class for HTTP handlers. 
  */
 public abstract class ServerHttpHandler implements HttpHandler {
+  private static final Logger LOG = Logger.getLogger(ServerHttpHandler.class);
   // Response body.
   protected String response;
   // Response body as a byte array
@@ -106,6 +109,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
    * exception is thrown. Optional - May be null. 
    */
   protected void handleException(Exception e, String illegalArgumentMessage) {
+    LOG.error(e);
     if (e instanceof IllegalArgumentException) {
       this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
       this.response = illegalArgumentMessage;
