@@ -71,6 +71,8 @@ set -eu
 # some defaults
 : ${TRACE_ROOT:=/giraph-debug-traces} # HDFS path to where the traces are stored
 : ${CLASSNAME_SUFFIX:=Original}       # A suffix for user computation class used by instrumenter
+: ${JARCACHE_HDFS:=$TRACE_ROOT/jars}         # HDFS path to where the jars are cached
+: ${JARCACHE_LOCAL:=~/.giraph-debugger/jars} # local path to where the jars are cached
 
 error() { echo >&2 "$@"; false; }
 usage() {
@@ -92,6 +94,19 @@ javaOpts=(
     -D"giraph.debugger.traceRootAtHDFS=$TRACE_ROOT" # pass the TRACE_ROOT at HDFS
 )
 exec_java() { exec java -cp "$CLASSPATH" "${javaOpts[@]}" "$@"; }
+exec_java_command_line() {
+    local jobId=${2:-}
+    if [ -n "$jobId" ] &&
+        jarFileSig=$(hadoop fs -cat "$TRACE_ROOT"/"$jobId"/jar.signature); then
+        # get a copy of the job's jar in local cache if necessary
+        mkdir -p "$JARCACHE_LOCAL"
+        jarFileCachedLocal="$JARCACHE_LOCAL"/"$jarFileSig".jar
+        [ -e "$jarFileCachedLocal" ] ||
+            hadoop fs -get "$JARCACHE_HDFS"/"$jarFileSig".jar "$jarFileCachedLocal"
+        CLASSPATH="$jarFileCachedLocal:$CLASSPATH"
+    fi
+    exec_java org.apache.giraph.debugger.CommandLine "$@"
+}
 
 # handle modes other than launching GiraphJob first
 case $1 in
@@ -107,11 +122,12 @@ case $1 in
         shift
         if [ $# -gt 0 ]; then
             JobId=$1; shift
-            exec_java org.apache.giraph.debugger.CommandLine list \
+            exec_java_command_line list \
                 "$JobId" "$@"
         else
             set -o pipefail
             hadoop fs -ls "$TRACE_ROOT" |
+            grep -v "$JARCACHE_HDFS" |
             tail -n +2 | sed 's:.*/:list  :'
             exit $?
         fi
@@ -125,7 +141,7 @@ case $1 in
         Superstep=$1; shift
         [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
         VertexId=$1; shift
-        exec_java org.apache.giraph.debugger.CommandLine dump \
+        exec_java_command_line dump \
             "$JobId" "$Superstep" "$VertexId" "$@"
         ;;
 
@@ -139,7 +155,7 @@ case $1 in
         VertexId=$1; shift
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
-        exec_java org.apache.giraph.debugger.CommandLine mktest \
+        exec_java_command_line mktest \
             "$JobId" "$Superstep" "$VertexId" "$TestName" "$@"
         ;;
 
@@ -151,7 +167,7 @@ case $1 in
         Superstep=$1; shift
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
-        exec_java org.apache.giraph.debugger.CommandLine mktest-master \
+        exec_java_command_line mktest-master \
             "$JobId" "$Superstep" "$TestName" "$@"
         ;;
 
@@ -288,6 +304,25 @@ runJar=$instrumentedJarFile
 #jar cf "$instrumentedJarFile" -C "$tmpDir"/classes .
 #runJar=$jarFile
 #hadoopJarOpts+=(-libjars "$instrumentedJarFile")
+
+# keep the submitted jar file around, in order to read the captured traces later
+jarFileSig=$( (sha1sum || shasum) <"$jarFile" 2>/dev/null)
+jarFileSig=${jarFileSig%%[[:space:]]*}
+jarFileCachedLocal="$JARCACHE_LOCAL"/"$jarFileSig".jar
+jarFileCachedHDFS="$JARCACHE_HDFS"/"$jarFileSig".jar
+echo >&2 "Caching the job jar locally: $jarFileCachedLocal"
+[ -e "$jarFileCachedLocal" ] || {
+    mkdir -p "$(dirname "$jarFileCachedLocal")"
+    ln -f "$jarFile" "$jarFileCachedLocal" ||
+        cp -f "$jarFile" "$jarFileCachedLocal"
+}
+echo >&2 "Caching the job jar at HDFS: $jarFileCachedHDFS"
+hadoop fs -test -e "$jarFileCachedHDFS" || {
+    hadoop fs -mkdir "$(dirname "$jarFileCachedHDFS")"
+    hadoop fs -put "$jarFile" "$jarFileCachedHDFS"
+}
+# let AbstractInterceptingComputation record the jar signature under the job trace dir
+hadoopJarOpts+=(-D"giraph.debugger.jarSignature=$jarFileSig")
 
 # submit a job to run the new instrumented jar with the original
 HADOOP_CLASSPATH="$runJar:$HADOOP_CLASSPATH" \
