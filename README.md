@@ -5,7 +5,7 @@ TODO(semih): Write
 ## Synopsis
 ### Get Giraph Trunk
     git clone https://github.com/apache/giraph.git -b trunk
-    mvn install
+    mvn install -DskipTests
 
 ### Build
     git clone https://github.com/semihsalihoglu/distributed_graph_debugger.git
