@@ -85,7 +85,7 @@ if [ $# -lt 1 ]; then
 fi
 
 Here=$(cd "$(dirname "$0")" && pwd -P)
-jars=($Here/target/backend-*.jar)
+jars=($Here/target/giraph-debugger-*.jar)
 [ -e "${jars[0]}" ] || error "Cannot find giraph-debugger JAR"
 CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${jars[*]}"):$(hadoop classpath)"
 javaOpts=(
