@@ -1,0 +1,158 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.giraph.debugger</groupId>
+  <artifactId>giraph-debugger</artifactId>
+  <packaging>jar</packaging>
+  <version>0.0-SNAPSHOT</version>
+
+  <properties>
+    <project.build.targetJdk>1.7</project.build.targetJdk>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+	      <artifactSet>
+                <excludes>
+		  <exclude>org.apache.velocity:velocity:*:jar</exclude>
+		  <exclude>org.eclipse.*:*</exclude>               
+		  <exclude>org.eclipse:*</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
+        <configuration>
+          <source>${project.build.targetJdk}</source>
+          <target>${project.build.targetJdk}</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+	        <configuration>
+             <tasks>
+               <mkdir dir="target/generated-sources"/>
+               <exec executable="protoc">
+                 <arg value="--java_out=target/generated-sources"/>
+                 <arg value="--proto_path=src/main/protobuf/"/> 
+                 <arg value="src/main/protobuf/giraph_aggregator.proto"/>
+                 <arg value="src/main/protobuf/scenario.proto"/>
+                 <arg value="src/main/protobuf/integrity.proto"/>
+               <!-- mvn compile assembly:single;  -->
+               </exec>
+             </tasks>
+             <sourceRoot>target/generated-sources</sourceRoot>
+           </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+   <dependency>
+     <groupId>com.google.protobuf</groupId>
+     <artifactId>protobuf-java</artifactId>
+     <version>2.5.0</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.giraph</groupId>
+     <artifactId>giraph-core</artifactId>
+     <version>1.1.0-SNAPSHOT</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.giraph</groupId>
+     <artifactId>giraph-examples</artifactId>
+     <version>1.1.0-SNAPSHOT</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.hadoop</groupId>
+     <artifactId>hadoop-core</artifactId>
+     <version>1.2.1</version>
+   </dependency>
+   <dependency>
+     <groupId>org.mockito</groupId>
+     <artifactId>mockito-all</artifactId>
+     <version>1.9.5</version>
+   </dependency>
+   <dependency>
+     <groupId>org.apache.velocity</groupId>
+     <artifactId>velocity</artifactId>
+     <version>1.7</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.ui</groupId>
+     <artifactId>ide</artifactId>
+     <version>3.3.0-I20070620</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.core</groupId>
+     <artifactId>org.eclipse.core.runtime</artifactId>
+     <version>3.7.0</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.core</groupId>
+     <artifactId>org.eclipse.core.resources</artifactId>
+     <version>3.7.100</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.swt.carbon</groupId>
+     <artifactId>macosx</artifactId>
+     <version>3.3.0-v3346</version>
+   </dependency>
+   <dependency>
+     <groupId>org.eclipse.jdt</groupId>
+     <artifactId>ui</artifactId>
+     <version>3.3.0-v20070607-0010</version>
+   </dependency>
+   <dependency>
+     <groupId>junit</groupId>
+     <artifactId>junit</artifactId>
+     <version>4.11</version>
+     <scope>test</scope>
+   </dependency>
+   <dependency>
+	 <groupId>org.javassist</groupId>
+	 <artifactId>javassist</artifactId>
+	 <version>3.18.1-GA</version>
+   </dependency>
+  </dependencies>
+</project>

@@ -7,8 +7,7 @@ TODO(semih): Write
     git clone https://github.com/apache/giraph.git -b trunk
     mvn install
 
-### Build Backend
-    cd backend
+### Build
     mvn package
 
 ### Download a Sample Graph
@@ -17,7 +16,7 @@ TODO(semih): Write
 
 ### Launch Giraph's Shortest Path Example
     hadoop jar \
-        target/backend-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
+        target/giraph-debugger-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
         org.apache.giraph.examples.SimpleShortestPathsComputation \
         -vif org.apache.giraph.io.formats.JsonLongDoubleFloatDoubleVertexInputFormat \
         -vip shortestPathsInputGraph \
@@ -31,7 +30,7 @@ TODO(semih): Write
 You can launch any Giraph program with debugging support by simply replacing the first two words (`hadoop jar`) of the command:
 
     ./giraph-debug \
-        target/backend-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
+        target/giraph-debugger-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
         org.apache.giraph.examples.SimpleShortestPathsComputation \
         -vif org.apache.giraph.io.formats.JsonLongDoubleFloatDoubleVertexInputFormat \
         -vip shortestPathsInputGraph \
@@ -46,7 +45,7 @@ Find the job identifier from the output, e.g., `job_201405221715_0005` and copy 
 You can optionally specify the supersteps and vertex IDs to debug:
 
     ./giraph-debug -S 0 -S 1 -S 2 -V 1 -V 2 -V 3 \
-        target/backend-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
+        target/giraph-debugger-0.0-SNAPSHOT.jar org.apache.giraph.GiraphRunner \
         # ... rest are same as above
 
 ### Launch Debugger GUI
