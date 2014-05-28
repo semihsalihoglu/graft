@@ -1,8 +1,10 @@
 package org.apache.giraph.debugger.instrumenter;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.giraph.conf.StrConfOption;
 import org.apache.giraph.debugger.DebugConfig;
@@ -15,6 +17,8 @@ import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.log4j.Logger;
@@ -40,6 +44,8 @@ import org.apache.log4j.Logger;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class AbstractInterceptingComputation<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
   extends AbstractComputation<I, V, E, M1, M2> {
+
+  private static final String JAR_SIGNATURE_KEY = "giraph.debugger.jarSignature";
 
   public static final String CONFIG_CLASS_KEY = "giraph.debugger.configClass";
 
@@ -73,6 +79,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private static int numVerticesLogged = -1;
 
   final protected void interceptInitializeEnd() {
+    commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
+      getContext().getJobID().toString());
+
     String debugConfigFileName = DEBUG_CONFIG_CLASS.get(getConf());
     LOG.info("debugConfigFileName: " + debugConfigFileName);
     Class<?> clazz;
@@ -90,6 +99,22 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       LOG.error("Could not create a new DebugConfig instance of " + debugConfigFileName);
       e.printStackTrace();
       throw new RuntimeException(e);
+    }
+    // record jar signature if necessary
+    String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
+    if (jarSignature != null) {
+      FileSystem fs = CommonVertexMasterInterceptionUtil.getFileSystem();
+      Path jarSignaturePath = new Path(commonVertexMasterInterceptionUtil.getTraceDirectory() + "/"
+        + "jar.signature");
+      try {
+        if (!fs.exists(jarSignaturePath)) {
+          OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
+          IOUtils.write(jarSignature, f);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -226,8 +251,6 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
 
   final protected void interceptPreSuperstepBegin() {
     numVerticesLogged = 0;
-    commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
-      getContext().getJobID().toString());
     if (debugConfig.shouldCheckMessageIntegrity()) {
       LOG.info("creating a msgIntegrityViolationWrapper. superstepNo: " + getSuperstep());
       msgIntegrityViolationWrapper = new MsgIntegrityViolationWrapper<>((Class<I>) vertexIdClazz,

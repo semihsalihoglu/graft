@@ -128,6 +128,12 @@ public class ServerUtils {
     }
   }
 
+  public static String getCachedJobJarPath(String jobId) {
+    // TODO read the "jar.signature" file under the TRACE_ROOT/jobId
+    // TODO then return the path: TRACE_ROOT/jars/jarSignature
+    return null;
+  }
+  
   /*
    * Returns the path of the vertex trace file on HDFS.
    * @param debugTrace - Must be one of VERTEX_* types. 
@@ -184,6 +190,8 @@ public class ServerUtils {
       throw new IllegalArgumentException(
         "DebugTrace type is invalid. Use REGULAR, EXCEPTION or ALL_VERTICES");
     }
+    // TODO Before loading any trace, add the job jar at getCachedJobJarPath() to the ClassLoader's CLASSPATH.
+    // TODO Alternatively, the GUI can tell the Server to augment the CLASSPATH whenever it's told to load a new job id, because CLASSPATH for command-line operations are completely handled by the giraph-debug script.
     FileSystem fs = ServerUtils.getFileSystem();
     GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
     // If debugTrace is regular or null, try reading the regular trace first.
