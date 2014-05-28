@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.giraph.conf.StrConfOption;
+import org.apache.giraph.debugger.DebugConfig;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;

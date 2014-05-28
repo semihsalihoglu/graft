@@ -1,4 +1,4 @@
-package org.apache.giraph.debugger.instrumenter;
+package org.apache.giraph.debugger;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -78,7 +78,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     superstepsToDebugSet = null;
   }
   
-  void readConfig(GiraphConfiguration config) {
+  public final void readConfig(GiraphConfiguration config) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(DEBUG_NEIGHBORS_FLAG,
       false);
 

@@ -1,6 +1,6 @@
 package org.apache.giraph.debugger.examples.simpledebug;
 
-import org.apache.giraph.debugger.instrumenter.DebugConfig;
+import org.apache.giraph.debugger.DebugConfig;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;

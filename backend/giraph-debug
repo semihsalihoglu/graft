@@ -27,7 +27,7 @@
 # If the DEBUG_OPTIONS are insufficient, a custom code that can specify more
 # complex conditions for capturing traces can be written and passed as
 # DEBUG_CONFIG_CLASS, which extends
-# org.apache.giraph.debugger.instrumenter.DebugConfig.
+# org.apache.giraph.debugger.DebugConfig.
 # 
 # By default all trace data for debugging will be stored under
 # /giraph-debug-trace/ at HDFS.  To change this path set the environment
@@ -108,7 +108,7 @@ case $1 in
         shift
         [ $# -gt 0 ] || usage "JOB_ID to list is missing"
         JobId=$1; shift
-        exec_java org.apache.giraph.debugger.utils.CommandLine list \
+        exec_java org.apache.giraph.debugger.CommandLine list \
             "$JobId" "$@"
         ;;
 
@@ -120,7 +120,7 @@ case $1 in
         Superstep=$1; shift
         [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
         VertexId=$1; shift
-        exec_java org.apache.giraph.debugger.utils.CommandLine dump \
+        exec_java org.apache.giraph.debugger.CommandLine dump \
             "$JobId" "$Superstep" "$VertexId" "$@"
         ;;
 
@@ -134,7 +134,7 @@ case $1 in
         VertexId=$1; shift
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
-        exec_java org.apache.giraph.debugger.utils.CommandLine mktest \
+        exec_java org.apache.giraph.debugger.CommandLine mktest \
             "$JobId" "$Superstep" "$VertexId" "$TestName" "$@"
         ;;
 
@@ -146,7 +146,7 @@ case $1 in
         Superstep=$1; shift
         [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
         TestName=$1; shift
-        exec_java org.apache.giraph.debugger.utils.CommandLine mktest-master \
+        exec_java org.apache.giraph.debugger.CommandLine mktest-master \
             "$JobId" "$Superstep" "$TestName" "$@"
         ;;
 
@@ -178,7 +178,7 @@ if [ -f "$debugConfigClassName" ]; then
     # the DebugConfig class name is optional, and
     # we use the default DebugConfig if the first argument seems to be a jar file
     jarFile=$debugConfigClassName
-    debugConfigClassName=org.apache.giraph.debugger.instrumenter.DebugConfig
+    debugConfigClassName=org.apache.giraph.debugger.DebugConfig
 else
     jarFile=$1; shift
 fi
@@ -248,7 +248,7 @@ instrumenterArgs=("$origClassName"  "$tmpDir"/classes  $masterComputeClassName)
 [ ${#ComputationClasses[@]} -eq 0 ] || instrumenterArgs+=("${ComputationClasses[@]}")
 java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" \
     -D"giraph.debugger.classNameSuffix=$classNameSuffix" \
-    org.apache.giraph.debugger.instrumenter.InstrumentGiraphComputationClasses \
+    org.apache.giraph.debugger.instrumenter.InstrumentGiraphClasses \
         "${instrumenterArgs[@]}"
 instrumentedClassName="$origClassName"
 

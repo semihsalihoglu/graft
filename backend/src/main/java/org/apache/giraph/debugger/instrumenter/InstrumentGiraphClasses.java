@@ -27,13 +27,13 @@ import com.google.common.collect.Sets;
  * 
  * @author netj
  */
-public class InstrumentGiraphComputationClasses {
+public class InstrumentGiraphClasses {
 
-  private static Logger LOG = Logger.getLogger(InstrumentGiraphComputationClasses.class);
+  private static Logger LOG = Logger.getLogger(InstrumentGiraphClasses.class);
 
   private static final String ORIGINAL_CLASS_NAME_SUFFIX = System.getProperty(
     "giraph.debugger.classNameSuffix", "Original");
-  private static final String tmpDirNamePrefix = InstrumentGiraphComputationClasses.class
+  private static final String tmpDirNamePrefix = InstrumentGiraphClasses.class
     .getSimpleName();
 
   public static void main(String[] args) throws IOException, Exception {

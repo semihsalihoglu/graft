@@ -1,4 +1,4 @@
-package org.apache.giraph.debugger.utils;
+package org.apache.giraph.debugger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,6 +10,8 @@ import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
 import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
 import org.apache.giraph.debugger.server.ServerUtils;
 import org.apache.giraph.debugger.server.ServerUtils.DebugTrace;
+import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
+import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 
 /**
  * This main class is the command line interface for the debugger. The command

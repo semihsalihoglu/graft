@@ -1,6 +1,6 @@
 package org.apache.giraph.debugger.examples.integrity;
 
-import org.apache.giraph.debugger.instrumenter.DebugConfig;
+import org.apache.giraph.debugger.DebugConfig;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
