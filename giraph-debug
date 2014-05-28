@@ -85,9 +85,9 @@ if [ $# -lt 1 ]; then
 fi
 
 Here=$(cd "$(dirname "$0")" && pwd -P)
-jars=($Here/target/giraph-debugger-*.jar)
-[ -e "${jars[0]}" ] || error "Cannot find giraph-debugger JAR" # TODO check CLASSPATH before failing
-CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${jars[*]}"):$(hadoop classpath)"
+cps=("$Here"/target/giraph-debugger-*.jar)
+[ -e "${cps[0]}" ] || cps=("$Here"/target/classes)
+CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${cps[*]}"):$(hadoop classpath)"
 javaOpts=(
     -D"giraph.debugger.traceRootAtHDFS=$TRACE_ROOT" # pass the TRACE_ROOT at HDFS
 )
