@@ -46,7 +46,7 @@ import com.google.common.collect.Sets;
  * adapted to represent additional qualities that could affect the
  * ordering of the final result array.
  */
-public class SimpleTriangleClosingActualComputation extends BasicComputation<
+public class BuggySimpleTriangleClosingComputation extends BasicComputation<
   IntWritable, IntWritable, NullWritable, IntWritable> {
   /** Vertices to close the triangle, ranked by frequency of in-msgs */
   private Map<IntWritable, Integer> closeMap =

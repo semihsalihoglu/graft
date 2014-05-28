@@ -24,7 +24,7 @@ import org.apache.hadoop.io.NullWritable;
  *
  * http://www.cs.cmu.edu/~ukang/papers/PegasusKAIS.pdf
  */
-public class ConnectedComponentsActualComputation extends
+public class BuggyConnectedComponentsComputation extends
   BasicComputation<IntWritable, IntWritable, NullWritable, IntWritable> {
 
   /**
@@ -54,9 +54,11 @@ public class ConnectedComponentsActualComputation extends
     for (IntWritable message : messages) {
       int candidateComponent = message.get();
       // INTENTIONAL BUG: in the original algorithm the value of the comparison sign should be <.
+      // We note that this algorithm will end up finding the components correctly, but the ID of
+      // each component will be the minimum vertex ID in the component.
+      // In the original org.apache.giraph.examples.ConnectedComponentsComputation, the ID of each
+      // component is the maximum vertex ID in the component.
       if (candidateComponent > currentComponent) {
-        System.out.println("changing value in superstep: " + getSuperstep() + " vertex.id: "
-          + vertex.getId() +  " newComponent: "+ candidateComponent);
         currentComponent = candidateComponent;
         changed = true;
       }

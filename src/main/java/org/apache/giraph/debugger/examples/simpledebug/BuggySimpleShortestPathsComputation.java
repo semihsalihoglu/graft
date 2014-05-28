@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
     name = "Shortest paths",
     description = "Finds all shortest paths from a selected vertex"
 )
-public class SimpleShortestPathsActualComputation extends BasicComputation<
+public class BuggySimpleShortestPathsComputation extends BasicComputation<
     LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
 
   /** The shortest paths id */
@@ -29,7 +29,7 @@ public class SimpleShortestPathsActualComputation extends BasicComputation<
           "The shortest paths id");
   /** Class logger */
   private static final Logger LOG =
-      Logger.getLogger(SimpleShortestPathsActualComputation.class);
+      Logger.getLogger(BuggySimpleShortestPathsComputation.class);
 
   /**
    * Is this vertex the source id?
@@ -74,7 +74,7 @@ public class SimpleShortestPathsActualComputation extends BasicComputation<
               edge.getTargetVertexId() + " = " + distance);
         }
         // INTENTIONAL BUG:Instead of sending the distance (i.e. by adding edge values),
-        // we send the vertex value.
+        // we send minDist, which is the vertex value.
         sendMessage(edge.getTargetVertexId(), new DoubleWritable(minDist));
       }
     }

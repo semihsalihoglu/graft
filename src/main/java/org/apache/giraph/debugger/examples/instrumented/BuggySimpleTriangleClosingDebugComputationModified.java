@@ -1,11 +1,13 @@
-package org.apache.giraph.debugger.examples.exceptiondebug;
+package org.apache.giraph.debugger.examples.instrumented;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.giraph.debugger.examples.exceptiondebug.BuggySimpleTriangleClosingComputation;
 import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
 import org.apache.giraph.edge.Edge;
+import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.utils.ArrayListWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -16,6 +18,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
+ * WARNING: This class is should be used only for development. It is put in the Graft source tree
+ * to demonstrate to users the two classes that Graft generates at runtime when instrumenting a
+ * {@link Computation} class. This is the example for {@link BuggySimpleTriangleClosingComputation}.
+ * The other class Graft generates is {@link BuggySimpleTriangleClosingDebugComputationToRun}. 
+ * Please see the Graft documentation for more details on how Graft instruments {@link Computation}
+ * classes.
+ * 
  * Demonstrates triangle closing in simple,
  * unweighted graphs for Giraph.
  *
@@ -46,7 +55,7 @@ import com.google.common.collect.Sets;
  * adapted to represent additional qualities that could affect the
  * ordering of the final result array.
  */
-public abstract class SimpleTriangleClosingDebugComputationModified extends AbstractInterceptingComputation<
+public abstract class BuggySimpleTriangleClosingDebugComputationModified extends AbstractInterceptingComputation<
   IntWritable, IntWritable,
   NullWritable, IntWritable, IntWritable> {
   /** Vertices to close the triangle, ranked by frequency of in-msgs */

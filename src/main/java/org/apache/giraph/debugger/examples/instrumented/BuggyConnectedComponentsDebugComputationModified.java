@@ -1,14 +1,19 @@
-package org.apache.giraph.debugger.examples.integrity;
+package org.apache.giraph.debugger.examples.instrumented;
 
 import java.io.IOException;
 
 import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
 import org.apache.giraph.edge.Edge;
+import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
+ * WARNING: This class is should be used only for development. It is put in the Graft source tree
+ * to demonstrate to users the two classes that Graft generates when instrumenting a
+ * {@link Computation} class. This is the example for org.apache.examples.ConnectedComponentsComputation,
+ * 
  * Implementation of the HCC algorithm that identifies connected components and
  * assigns each vertex its "component identifier" (the smallest vertex id
  * in the component)
@@ -24,7 +29,7 @@ import org.apache.hadoop.io.NullWritable;
  *
  * http://www.cs.cmu.edu/~ukang/papers/PegasusKAIS.pdf
  */
-public abstract class ConnectedComponentsDebugComputationModified extends
+public abstract class BuggyConnectedComponentsDebugComputationModified extends
   AbstractInterceptingComputation<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
   /**

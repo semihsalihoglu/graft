@@ -1,17 +1,27 @@
-package org.apache.giraph.debugger.examples.integrity;
+package org.apache.giraph.debugger.examples.instrumented;
 
 import java.io.IOException;
 
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
+import org.apache.giraph.debugger.examples.integrity.BuggyConnectedComponentsComputation;
+import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
 
+/**
+ * WARNING: This class is should be used only for development. It is put in the Graft source tree
+ * to demonstrate to users the two classes that Graft generates at runtime when instrumenting a
+ * {@link Computation} class. This is the example for {@link BuggyConnectedComponentsComputation}.
+ * The other class Graft generates is {@link BuggyConnectedComponentsDebugComputationModified}.
+ * Please see the Graft documentation for more details on how Graft instruments {@link Computation}
+ * classes.
+ */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class ConnectedComponentsDebugComputationToRun extends
-		ConnectedComponentsDebugComputationModified {
+public class BuggyConnectedComponentsDebugComputationToRun extends
+		BuggyConnectedComponentsDebugComputationModified {
 
 	@Override
 	public void initialize(GraphState graphState,

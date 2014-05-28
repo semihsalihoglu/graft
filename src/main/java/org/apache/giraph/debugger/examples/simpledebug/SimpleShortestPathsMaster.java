@@ -1,13 +1,13 @@
 package org.apache.giraph.debugger.examples.simpledebug;
 
 import org.apache.giraph.aggregators.LongSumAggregator;
-import org.apache.giraph.debugger.examples.exceptiondebug.SimpleTriangleClosingActualComputation;
+import org.apache.giraph.debugger.examples.exceptiondebug.BuggySimpleTriangleClosingComputation;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.LongWritable;
 
 /**
- * Master compute associated with {@link SimpleShortestPathsActualComputation}. It handles
+ * Master compute associated with {@link BuggySimpleShortestPathsComputation}. It handles
  * dangling nodes.
  */
 public class SimpleShortestPathsMaster extends DefaultMasterCompute {
@@ -28,7 +28,7 @@ public class SimpleShortestPathsMaster extends DefaultMasterCompute {
     // Dummy code for testing Instrumenter analysis 
     if (getSuperstep() == 100000) {
     	// which is extremely less likely to happen,
-    	setComputation(SimpleTriangleClosingActualComputation.class);
+    	setComputation(BuggySimpleTriangleClosingComputation.class);
     } else if (getSuperstep() == 200000) {
     	try {
 			setComputation((Class<? extends Computation>) Class.forName("org.apache.giraph.debugger.examples.integrity.ConnectedComponentsActualComputation"));

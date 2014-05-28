@@ -1,12 +1,15 @@
 
-package org.apache.giraph.debugger.examples.simpledebug;
+package org.apache.giraph.debugger.examples.instrumented;
 
 import java.io.IOException;
 
 import org.apache.giraph.Algorithm;
 import org.apache.giraph.conf.LongConfOption;
+import org.apache.giraph.debugger.examples.simpledebug.BuggySimpleShortestPathsComputation;
+import org.apache.giraph.debugger.examples.simpledebug.SimpleShortestPathsMaster;
 import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
 import org.apache.giraph.edge.Edge;
+import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
@@ -14,13 +17,20 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.log4j.Logger;
 
 /**
+ * WARNING: This class is should be used only for development. It is put in the Graft source tree
+ * to demonstrate to users the two classes that Graft generates at runtime when instrumenting a
+ * {@link Computation} class. This is the example for {@link BuggySimpleShortestPathsComputation}.
+ * The other class Graft generates is {@link BuggySimpleShortestPathsDebugComputationToRun}. 
+ * Please see the Graft documentation for more details on how Graft instruments {@link Computation}
+ * classes.
+ * 
  * Debug version of SimpleShortestPathsComputation.
  */
 @Algorithm(
     name = "Shortest paths",
     description = "Finds all shortest paths from a selected vertex"
 )
-public abstract class SimpleShortestPathsDebugComputationModified extends AbstractInterceptingComputation<
+public abstract class BuggySimpleShortestPathsDebugComputationModified extends AbstractInterceptingComputation<
     LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
 
   /** The shortest paths id */
@@ -29,7 +39,7 @@ public abstract class SimpleShortestPathsDebugComputationModified extends Abstra
           "The shortest paths id");
   /** Class logger */
   private static final Logger LOG =
-      Logger.getLogger(SimpleShortestPathsDebugComputationModified.class);
+      Logger.getLogger(BuggySimpleShortestPathsDebugComputationModified.class);
 
   /**
    * Is this vertex the source id?
