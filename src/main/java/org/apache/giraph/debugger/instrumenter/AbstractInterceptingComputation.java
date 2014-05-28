@@ -112,8 +112,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
           IOUtils.write(jarSignature, f);
         }
       } catch (IOException e) {
+        // When multiple workers try to write the jar.signature, some of them may cause
+        // AlreadyBeingCreatedException to be thrown, which we ignore.
         e.printStackTrace();
-        throw new RuntimeException(e);
       }
     }
   }
