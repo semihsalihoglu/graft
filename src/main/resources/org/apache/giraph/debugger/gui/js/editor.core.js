@@ -592,6 +592,5 @@ Editor.prototype.buildGraphFromSimpleAdjList = function(simpleAdjList) {
             scenario[vertexId].neighbors.push({ neighborId : neighborId });
         });
     });
-    console.log(scenario);
     this.buildGraphFromAdjList(scenario);
 }

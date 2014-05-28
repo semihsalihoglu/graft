@@ -79,6 +79,15 @@ GiraphDebugger.prototype.onCaptureVertex = function(done, fail) {
 }
 
 /*
+ * Deferred callbacks for generate test graph.
+ */
+GiraphDebugger.prototype.onGenerateTestGraph = function(done, fail) {
+    this.onGenerateTestGraph.done = done;
+    this.onGenerateTestGraph.fail = fail;
+}
+
+
+/*
  * Deferred callbacks for capture scenario
  */
 GiraphDebugger.prototype.onCaptureMaster = function(done, fail) {
@@ -120,6 +129,8 @@ GiraphDebugger.prototype.initIds = function() {
         _nodeAttrError : 'node-attr-error',
         _btnNodeAttrSave : 'btn-node-attr-save',
         _btnNodeAttrCancel : 'btn-node-attr-cancel',
+        // IDs of elements in Edit Mode controls.
+        _selectSampleGraphs : 'sel-sample-graphs',
         // IDs of elements in Superstep controls.
         _btnPrevStep : 'btn-prev-step',
         _btnNextStep : 'btn-next-step',
@@ -242,39 +253,65 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
  * @param superstepControlsContainer - Selector for the superstep controls container.
  */
 GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsContainer) {
-    // Create the form that fetches the superstep data from debugger server.
-    this.formFetchJob = $('<div />')
-        .attr('class', 'form-inline')
+    /*** Edit Mode controls ***/
+    // Create the div with controls visible in Edit Mode
+    this.editModeGroup = $('<div />')
         .appendTo(superstepControlsContainer);
 
-    var fetchJobGroup = $('<div />')
-        .attr('class', 'form-group')
-        .appendTo(this.formFetchJob);
+    // Create the form that fetches the superstep data from debugger server.
+    var formFetchJob = $('<div />')
+        .attr('class', 'form-inline')
+        .appendTo(this.editModeGroup);
 
     // Fetch job details for job id textbox.
     this.fetchJobIdInput = $('<input>')
         .attr('type', 'text')
         .attr('class', 'form-control ')
         .attr('placeholder', 'Job ID')
-        .appendTo(fetchJobGroup);
+        .appendTo(formFetchJob);
 
     this.btnFetchJob = $('<button />')
         .attr('id', this.ids._btnFetchJob)
         .attr('type', 'button')
         .attr('class', 'btn btn-danger form-control')
         .html('Fetch')
-        .appendTo(fetchJobGroup);
+        .appendTo(formFetchJob);
+
+    // Create the control for creating sample graphs.
+    var formSampleGraphs = $('<div />')
+        .attr('class', 'form-inline')
+        .appendTo(this.editModeGroup);
+
+    this.selectSampleGraphs = $('<select />')
+        .attr('class', 'form-control')
+        .attr('id', this.ids._selectSampleGraphs)
+        .appendTo(formSampleGraphs);
+
+    // Add the graph names to the select drop down.
+    $.each(Utils.sampleGraphs, (function (key, value) {
+        $(this.selectSampleGraphs).append($('<option />').attr('value', key).html(key));
+    }).bind(this));
+
+    this.sampleGraphsInput = $('<input />')
+        .attr('class', 'form-control')
+        .attr('placeholder', '# of vertices')
+        .appendTo(formSampleGraphs);
+
+    this.btnSampleGraph = $('<button />')
+        .attr('class', 'btn btn-primary form-control')
+        .html('Generate')
+        .appendTo(formSampleGraphs);
+
+    /*** DEBUG MODE controls ***/
+    this.debugModeGroup = $('<div />')
+        .appendTo(superstepControlsContainer)
+        .hide();
 
     // Initialize the actual controls.
-    this.formControls = $('<div />')
+    var formControls = $('<div />')
         .attr('id', 'controls')
         .attr('class', 'form-inline')
-        .hide()
-        .appendTo(superstepControlsContainer);
-
-    var controlsGroup = $('<div />')
-        .attr('class', 'form-group')
-        .appendTo(this.formControls);
+        .appendTo(this.debugModeGroup);
 
     this.btnPrevStep = $('<button />')
         .attr('class', 'btn btn-default bt-step form-control')
@@ -285,11 +322,11 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
             .attr('class', 'glyphicon glyphicon-chevron-left')
             .html(' Previous')
         )
-        .appendTo(controlsGroup);
+        .appendTo(formControls);
 
     var superstepLabel = $('<h2><span id="superstep">-1</span>' +
         '<small> Superstep</small></h2>')
-        .appendTo(controlsGroup);
+        .appendTo(formControls);
 
     // Set this.superstepLabel to the actual label that will be updated.
     this.superstepLabel = $('#superstep');
@@ -302,7 +339,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
             .attr('class', 'glyphicon glyphicon-chevron-right')
             .html(' Next')
         )
-        .appendTo(controlsGroup);
+        .appendTo(formControls);
 
     // Return to the edit mode - Exiting the debug mode.
     this.btnEditMode = $('<button />')
@@ -313,7 +350,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
             .attr('class', 'glyphicon glyphicon-pencil')
             .html(' Edit Mode')
         )
-        .appendTo(controlsGroup);
+        .appendTo(formControls);
 
    // Toggle the editor between the table and graph view.
    this.btnToggleView = $('<button />')
@@ -324,19 +361,19 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
                 .attr('class', 'glyphicon glyphicon-cog')
                 .html('')
         )
-        .appendTo(controlsGroup);
+        .appendTo(formControls);
 
     // Capture Scenario group
-    var captureScenarioGroup = $('<div />')
-        .attr('class', 'form-group')
-        .appendTo(this.formControls);
+    var captureScenarioForm = $('<div />')
+        .attr('class', 'form-inline')
+        .appendTo(this.debugModeGroup);
     
     // Input text box to input the vertexId
     this.captureVertexIdInput = $('<input>')
         .attr('type', 'text')
         .attr('class', 'form-control ')
         .attr('placeholder', 'Vertex ID')
-        .appendTo(captureScenarioGroup);
+        .appendTo(captureScenarioForm);
 
     // Capture Vertex Scenario Scenario button.
     this.btnCaptureVertexScenario = $('<button>')
@@ -344,7 +381,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('id', this.ids._btnCaptureVertexScenario)
         .attr('class', 'btn btn-primary form-control')
         .html('Capture Vertex')
-        .appendTo(captureScenarioGroup);
+        .appendTo(captureScenarioForm);
 
     // Capture Master
     this.btnCaptureMasterScenario = $('<button>')
@@ -352,7 +389,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('id', this.ids._btnCaptureMasterScenario)
         .attr('class', 'btn btn-danger form-control')
         .html('Capture Master')
-        .appendTo(captureScenarioGroup);
+        .appendTo(captureScenarioForm);
 
     // Initialize handlers for events
     this.initSuperstepControlEvents();
@@ -432,6 +469,26 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     // Handle the toggle view button.
     $(this.btnToggleView).click((function(event) {
         this.editor.toggleView();
+    }).bind(this));
+
+    // Handle the generate sample graph button.
+    $(this.btnSampleGraph).click((function(event) { 
+        var numVertices = $(this.sampleGraphsInput).val();
+        var graphTypeKey = $(this.selectSampleGraphs).val();
+        this.editor.buildGraphFromSimpleAdjList(Utils.sampleGraphs[graphTypeKey](numVertices));
+
+        $.ajax({
+            url : this.debuggerServerRoot + '/test/graph',
+            data : { 'adjList' : this.editor.getAdjList() }
+        })
+        .done((function(response) {
+            this.onGenerateTestGraph.done({ code : response, 
+                    filename : "{0}_{1}.graph".format(graphTypeKey, numVertices)
+            });
+        }).bind(this))
+        .fail((function(response) {
+            this.onGenerateTestGraph.fail(response.responseText);
+        }).bind(this));
     }).bind(this));
 }
 
@@ -728,8 +785,8 @@ GiraphDebugger.prototype.toggleMode = function() {
         this.editor.readonly = false;
         this.editor.buildSample();
         // Show Fetch Job and hide controls
-        $(this.formControls).hide();
-        $(this.formFetchJob).show();
+        $(this.debugModeGroup).hide();
+        $(this.editModeGroup).show();
         // Reset vars
         this.resetVars();
     } else {
@@ -737,7 +794,7 @@ GiraphDebugger.prototype.toggleMode = function() {
         // Set the editor in readonly mode.
         this.editor.readonly = true;
         // Show Form controls and hide fetch job.
-        $(this.formControls).show();
-        $(this.formFetchJob).hide();
+        $(this.debugModeGroup).show();
+        $(this.editModeGroup).hide();
     }
 }
