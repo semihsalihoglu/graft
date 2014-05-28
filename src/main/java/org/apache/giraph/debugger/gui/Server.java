@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.giraph.debugger.gui.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
 import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
+import org.apache.giraph.debugger.mock.TestGraphGenerator;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
@@ -48,6 +49,7 @@ public static void main(String[] args) throws Exception {
     server.createContext("/integrity", new GetIntegrity());
     server.createContext("/test/vertex", new GetVertexTest());
     server.createContext("/test/master", new GetMasterTest());
+    server.createContext("/test/graph", new GetTestGraph());
     server.createContext("/", new GetEditor());
     // Creates a default executor.
     server.setExecutor(null);
@@ -98,7 +100,6 @@ public static void main(String[] args) throws Exception {
         e.printStackTrace();
       }
     }
-
   }
 
   /*
@@ -329,7 +330,6 @@ public static void main(String[] args) throws Exception {
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       String violationType = paramMap.get(ServerUtils.INTEGRITY_VIOLATION_TYPE_KEY);
       Debug.println("/integrity", paramMap.toString());
-      // Check both jobId and superstepId are present
       try {
         if (jobId == null || superstepId == null || violationType == null) {
           throw new IllegalArgumentException("Missing mandatory parameters");
@@ -409,4 +409,30 @@ public static void main(String[] args) throws Exception {
       }
     }
   }
+  
+  /*
+   * Returns the TestGraph JAVA code. 
+   * @URLParam adjList - Adjacency list of the graph
+   */
+  static class GetTestGraph extends ServerHttpHandler {
+    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+      Debug.println("/test/graph", paramMap.toString());
+      String adjList = paramMap.get(ServerUtils.ADJLIST_KEY);
+      // Check both jobId and superstepId are present
+      try {
+        if (adjList == null) {
+          throw new IllegalArgumentException("Missing mandatory parameters");
+        }
+        TestGraphGenerator testGraphGenerator = new TestGraphGenerator();
+        String testGraph = testGraphGenerator.generate(adjList.split("\n"));
+        this.statusCode = HttpURLConnection.HTTP_OK;
+        this.response = testGraph;
+        this.responseContentType = MediaType.TEXT_PLAIN;
+      } catch(Exception e) {
+        this.handleException(e, 
+          String.format("Invalid parameters. %s is mandatory parameter.",
+            ServerUtils.ADJLIST_KEY));
+      }
+    }
+  }  
 }

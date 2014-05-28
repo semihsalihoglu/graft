@@ -594,7 +594,7 @@ Editor.prototype.restartTable = function() {
         var dataRow = {};
         var scenario = this.currentScenario[nodeId];
         dataRow.vertexId = nodeId;
-        dataRow.vertexValue = scenario.vertexValues.length > 0 ? scenario.vertexValues[0] : '-',
+        dataRow.vertexValue = scenario.vertexValues && scenario.vertexValues.length > 0 ? scenario.vertexValues[0] : '-',
         dataRow.outgoingMessages = { 
             numOutgoingMessages : Utils.count(scenario.outgoingMessages), 
             data : scenario.outgoingMessages

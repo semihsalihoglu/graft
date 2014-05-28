@@ -389,7 +389,14 @@ Editor.prototype.keyup = function() {
  * Format:
  * {
  *  nodeId: {
- *            neighbors : [adjId1, adjId2...],
+ *            neighbors : [{ 
+ *                      neighborId: "neighborId1",
+ *                      edgeValue: "edgeValue1"
+ *                  },
+ *                  {
+ *                      neighborId: "neighborId2",
+ *                      edgeValue: "edgeValue2"
+ *                  }],
  *            vertexValues : [attr1, attr2...],
  *            outgoingMessages : {
  *                    receiverId1: "message1",
@@ -411,7 +418,7 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         // For every node in the adj list of this node,
         // add the node to this.nodes and add the edge to this.links
         for (var i = 0; adj && i < adj.length; i++) {
-            var adjId = adj[i]['neighborId'];
+            var adjId = adj[i]['neighborId'].toString();
             var edgeValue = adj[i]['edgeValue'];
             var adjNode = this.getNodeWithId(adjId);
             if (!adjNode) {
@@ -564,4 +571,27 @@ Editor.prototype.toggleView = function() {
         this.view = Editor.ViewEnum.GRAPH;
         $(this.tablet[0]).slideUp('slow');
     }
+}
+
+/*
+ * Creates graph from a simple adj list of the format given below.
+ * @param {object} simpleAdjList : A simple adjacency list.
+ * Format:
+ * {
+ *     "vertexId1" : [ "neighborId1", "neighborId2" ...],
+ *     "vertexId2" : [ "neighborId1", "neighborId2" ...],
+ *     ...
+ * }
+ */
+Editor.prototype.buildGraphFromSimpleAdjList = function(simpleAdjList) {
+    var scenario = {};
+    $.each(simpleAdjList, function(vertexId, neighbors) {
+        scenario[vertexId] = {}
+        scenario[vertexId].neighbors = [];
+        $.each(neighbors, function(index, neighborId) {
+            scenario[vertexId].neighbors.push({ neighborId : neighborId });
+        });
+    });
+    console.log(scenario);
+    this.buildGraphFromAdjList(scenario);
 }

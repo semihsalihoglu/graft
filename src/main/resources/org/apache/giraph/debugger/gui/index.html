@@ -20,7 +20,9 @@
 		<script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
 		<script src="js/noty/packaged/jquery.noty.packaged.min.js"></script>
 		<script src="js/slider/bootstrap-slider.js"></script>
+		<!--TODO(vikesh) : Load all JS files asychronously in a single script - requirejs -->
 		<script src="js/utils.js"></script>
+		<script src="js/utils.sampleGraphs.js"></script>
 		<script src="js/editor.core.js"></script>
 		<script src="js/editor.utils.js"></script>
 		<script src="js/valpanel.js"></script>
@@ -93,12 +95,22 @@
 						setCode();
 						noty({text : 'Failed to fetch the master scenario. Message from server : ' + response, type : 'error'});
 					});
+
+					// Attach events to generate test graph.
+					giraphDebugger.onGenerateTestGraph(function(response) {
+						setCode(response);
+						noty({text : 'Fetched the test graph successfully.', type : 'success', timeout: 1000});
+					},
+					function(response) {
+						setCode();
+						noty({text : 'Failed to fetch the test graph. Message from server : ' + response, type : 'error'});
+					});
 			
 					var editor = giraphDebugger.editor;
 					// Undirected behaviour.
 					$(".graph-type").change(function(event) {
 							editor.undirected = event.target.value === "undirected" ? true : false;
-							editor.restart();
+							editor.restartGraph();
 					});
 
 					// Btn attr-view 
@@ -143,7 +155,7 @@
 									editor.nodes[i].attrs = rows[i].value.split(",");
 								}
 							}
-							editor.restart();
+							editor.restartGraph();
 							$("#attr-view").dialog("close");
 						});
 
