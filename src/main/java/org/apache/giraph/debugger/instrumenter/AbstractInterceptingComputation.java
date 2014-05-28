@@ -131,7 +131,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     // We first figure out whether we should be debugging this vertex in
     // this iteration.
     // Other calls will use the value of shouldDebugVertex later on.
-    LOG.info("compute " + vertex + " " + messages);
+    LOG.debug("compute " + vertex + " " + messages);
     vertexId = vertex.getId();
     shouldDebugVertex = debugConfig.shouldDebugSuperstep(getSuperstep())
       && debugConfig.shouldDebugVertex(vertex) && (numVerticesLogged <= NUM_VERTICES_TO_LOG);
@@ -176,9 +176,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     Iterable<Edge<I, E>> returnVal = vertex.getEdges();
     for (Edge<I, E> edge : returnVal) {
       if (edge.getTargetVertexId() == null) {
-        LOG.info("the targetVertexId is null!!!");
+        LOG.debug("the targetVertexId is null!!!");
       } else if (edge.getValue() == null) {
-        LOG.info("edge value is null!!! targetVertexId: " + edge.getTargetVertexId());
+        LOG.debug("edge value is null!!! targetVertexId: " + edge.getTargetVertexId());
       }
       giraphVertexScenarioWrapper.getContextWrapper().addNeighborWrapper(edge.getTargetVertexId(),
         edge.getValue());
