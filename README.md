@@ -8,6 +8,14 @@ TODO(semih): Write
     cd giraph/giraph-core
     mvn install -DskipTests
 
+### Get Protocol Buffers Package
+    wget https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.gz
+    tar xf protobuf-2.5.0.tar.gz 
+    cd protobuf-2.5.0
+    ./configure
+    make
+    make check
+    make install
 ### Build
     git clone https://github.com/semihsalihoglu/distributed_graph_debugger.git
     cd distributed_graph_debugger
