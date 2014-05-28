@@ -16,7 +16,7 @@ TODO(semih): Write
     make
     make check
     make install
-### Build
+### Build Graft
     git clone https://github.com/semihsalihoglu/distributed_graph_debugger.git
     cd distributed_graph_debugger
     mvn package
