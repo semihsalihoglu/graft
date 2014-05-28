@@ -8,6 +8,8 @@ TODO(semih): Write
     mvn install
 
 ### Build
+    git clone https://github.com/semihsalihoglu/distributed_graph_debugger.git
+    cd distributed_graph_debugger
     mvn package
 
 ### Download a Sample Graph
