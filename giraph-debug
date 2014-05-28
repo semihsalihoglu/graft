@@ -105,10 +105,16 @@ case $1 in
 
     ls|list)
         shift
-        [ $# -gt 0 ] || usage "JOB_ID to list is missing"
-        JobId=$1; shift
-        exec_java org.apache.giraph.debugger.CommandLine list \
-            "$JobId" "$@"
+        if [ $# -gt 0 ]; then
+            JobId=$1; shift
+            exec_java org.apache.giraph.debugger.CommandLine list \
+                "$JobId" "$@"
+        else
+            set -o pipefail
+            hadoop fs -ls "$TRACE_ROOT" |
+            tail -n +2 | sed 's:.*/:list  :'
+            exit $?
+        fi
         ;;
 
     dump)
