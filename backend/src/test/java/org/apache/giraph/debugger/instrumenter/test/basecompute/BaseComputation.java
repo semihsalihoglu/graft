@@ -8,25 +8,21 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 
-public abstract class BaseComputation
-		extends
-		BasicComputation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
+public abstract class BaseComputation extends
+  BasicComputation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
 
-	@Override
-	public final void compute(
-			Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
-			Iterable<DoubleWritable> messages) throws IOException {
-		collect(vertex, messages);
-		signal(vertex, messages);
-		vertex.voteToHalt();
-	}
+  @Override
+  public final void compute(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+    Iterable<DoubleWritable> messages) throws IOException {
+    collect(vertex, messages);
+    signal(vertex, messages);
+    vertex.voteToHalt();
+  }
 
-	protected abstract void signal(
-			Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
-			Iterable<DoubleWritable> messages);
+  protected abstract void signal(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+    Iterable<DoubleWritable> messages);
 
-	protected abstract void collect(
-			Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
-			Iterable<DoubleWritable> messages);
+  protected abstract void collect(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+    Iterable<DoubleWritable> messages);
 
 }

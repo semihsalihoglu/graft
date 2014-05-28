@@ -16,12 +16,11 @@ import org.apache.hadoop.io.WritableComparable;
  */
 @SuppressWarnings("rawtypes")
 public abstract class UserComputation<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
-		extends AbstractInterceptingComputation<I, V, E, M1, M2> {
+  extends AbstractInterceptingComputation<I, V, E, M1, M2> {
 
-	@Override
-	public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
-			throws IOException {
-		throw new NotImplementedException();
-	}
+  @Override
+  public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
+    throw new NotImplementedException();
+  }
 
 }

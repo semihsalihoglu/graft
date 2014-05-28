@@ -12,10 +12,10 @@ import org.apache.commons.lang.NotImplementedException;
 public abstract class UserMasterCompute extends AbstractInterceptingMasterCompute {
 
   @Override
-  public void compute()  {
+  public void compute() {
     throw new NotImplementedException();
   }
-  
+
   @Override
   public void initialize() throws InstantiationException, IllegalAccessException {
     throw new NotImplementedException();

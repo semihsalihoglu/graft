@@ -20,8 +20,10 @@ public class BottomInterceptingMasterCompute extends UserMasterCompute {
   }
 
   @Override
-  public void readFields(DataInput arg0) throws IOException {}
+  public void readFields(DataInput arg0) throws IOException {
+  }
 
   @Override
-  public void write(DataOutput arg0) throws IOException {}
+  public void write(DataOutput arg0) throws IOException {
+  }
 }

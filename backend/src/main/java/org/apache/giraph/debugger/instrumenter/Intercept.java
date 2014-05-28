@@ -15,11 +15,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @interface Intercept {
-	/**
-	 * The name to which this method should be renamed by the instrumenter. This
-	 * is for telling the instrumenter to rename certain methods that are not
-	 * normally overridable because of its final modifier.
-	 */
-	String renameTo() default "";
+  /**
+   * The name to which this method should be renamed by the instrumenter. This
+   * is for telling the instrumenter to rename certain methods that are not
+   * normally overridable because of its final modifier.
+   */
+  String renameTo() default "";
 
 }
