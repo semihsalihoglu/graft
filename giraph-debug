@@ -85,7 +85,7 @@ if [ $# -lt 1 ]; then
 fi
 
 Here=$(cd "$(dirname "$0")" && pwd -P)
-cps=("$Here"/target/giraph-debugger-*.jar)
+cps=("$Here"/target/giraph-debugger-*-jar-with-dependencies.jar)
 [ -e "${cps[0]}" ] || cps=("$Here"/target/classes)
 CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${cps[*]}"):$(hadoop classpath)"
 javaOpts=(
