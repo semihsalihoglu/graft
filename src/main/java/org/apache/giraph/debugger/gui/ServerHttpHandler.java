@@ -118,7 +118,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
       this.response = String.format("%s must be an integer >= -1.", ServerUtils.SUPERSTEP_ID_KEY);
     } else if(e instanceof FileNotFoundException) {
       this.statusCode = HttpURLConnection.HTTP_NOT_FOUND;
-      this.response = "File not found on the server. Please ensure this vertex was debugged.";
+      this.response = "File not found on the server. Please ensure this vertex/master was debugged.";
     } else if (e instanceof IOException || e instanceof InstantiationException 
       || e instanceof IllegalAccessException || e instanceof ClassNotFoundException) {
         this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
