@@ -4,9 +4,11 @@ TODO(semih): Write
 
 ## Synopsis
 
-### Get Protocol Buffers Package
+### Get Protocol Buffers
+If your system doesn't have `protoc` command, you need to install [Protocol Buffers](https://code.google.com/p/protobuf/):
+
     wget https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.gz
-    tar xf protobuf-2.5.0.tar.gz 
+    tar xfz protobuf-2.5.0.tar.gz
     cd protobuf-2.5.0
     ./configure
     make
@@ -16,16 +18,17 @@ TODO(semih): Write
 ### Get Giraph Trunk
     git clone https://github.com/apache/giraph.git -b trunk
     cd giraph
+    mvn -DskipTests --projects .,giraph-core install
 
 ### Get Graft under Giraph, Build and Install It
     git clone https://github.com/semihsalihoglu/distributed_graph_debugger.git giraph-debugger
     cd giraph-debugger
     mvn -DskipTests compile
     
-    PATH=$PWD:$PATH  # Add current directory to PATH, so we can easily run giraph-debug
+    PATH=$PWD:$PATH  # Add current directory to PATH, so we can easily run giraph-debug later
 
 ### Download a Sample Graph
-    curl -L http://ece.northwestern.edu/~aching/shortestPathsInputGraph.tar.gz | tar xf -
+    curl -L http://ece.northwestern.edu/~aching/shortestPathsInputGraph.tar.gz | tar xfz -
     hadoop fs -put shortestPathsInputGraph shortestPathsInputGraph
 
 ### Launch Giraph's Shortest Path Example
@@ -81,6 +84,7 @@ You can access all information that has been recorded by the debugging Giraph jo
 
 #### List Recorded Traces
 
+    giraph-debug list
     giraph-debug list job_201405221715_0005
 
 #### Dump a Trace
@@ -89,5 +93,6 @@ You can access all information that has been recorded by the debugging Giraph jo
 
 #### Generate JUnit Test Case Code from a Trace
 
-    giraph-debug mktest job_201405221715_0005 0 6 Test_job_201405221715_0005_S0_V6
+    giraph-debug mktest        job_201405221715_0005 0 6 Test_job_201405221715_0005_S0_V6
+    giraph-debug mktest-master job_201405221715_0005 0   TestMaster_job_201405221715_0005_S0
 
