@@ -2,13 +2,12 @@ package org.apache.giraph.debugger.examples.simpledebug;
 
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.debugger.examples.exceptiondebug.SimpleTriangleClosingActualComputation;
-import org.apache.giraph.examples.RandomWalkComputation;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.LongWritable;
 
 /**
- * Master compute associated with {@link RandomWalkComputation}. It handles
+ * Master compute associated with {@link SimpleShortestPathsActualComputation}. It handles
  * dangling nodes.
  */
 public class SimpleShortestPathsMaster extends DefaultMasterCompute {
