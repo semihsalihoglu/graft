@@ -19,6 +19,7 @@
 #     -N                To also debug the neighbors of the given vertices
 #     -C CLASS          Name of Computation classes to debug
 #                       (if MasterCompute uses many)
+#     -f                Force instrumentation, don't use cached one
 # 
 # For VERTEX_ID, only LongWritable and IntWritable are supported.  All
 # supersteps will be captured if none were specified, and only the specified
@@ -74,7 +75,8 @@ set -eu
 : ${JARCACHE_HDFS:=$TRACE_ROOT/jars}         # HDFS path to where the jars are cached
 : ${JARCACHE_LOCAL:=~/.giraph-debugger/jars} # local path to where the jars are cached
 
-error() { echo >&2 "$@"; false; }
+msg() { echo >&2 "giraph-debug:" "$@"; }
+error() { local msg=; for msg; do echo >&2 "$msg"; done; false; }
 usage() {
     sed -n '2,/^#$/ s/^# //p' <"$0"
     [ $# -eq 0 ] || error "$@"
@@ -92,6 +94,8 @@ cps=("$Here"/target/giraph-debugger-*-jar-with-dependencies.jar)
 CLASSPATH="${CLASSPATH:+$CLASSPATH:}$(IFS=:; echo "${cps[*]}"):$(hadoop classpath)"
 javaOpts=(
     -D"giraph.debugger.traceRootAtHDFS=$TRACE_ROOT" # pass the TRACE_ROOT at HDFS
+    -D"giraph.debugger.jarCacheLocal=$JARCACHE_LOCAL"
+    -D"giraph.debugger.jarCacheAtHDFS=$JARCACHE_HDFS"
 )
 exec_java() { exec java -cp "$CLASSPATH" "${javaOpts[@]}" "$@"; }
 exec_java_command_line() {
@@ -112,7 +116,7 @@ exec_java_command_line() {
 case $1 in
     gui)
         GUI_PORT=${2:-8000}
-        echo "Starting Debugger GUI at http://$HOSTNAME:$GUI_PORT/"
+        msg "Starting Debugger GUI at http://$HOSTNAME:$GUI_PORT/"
         exec_java \
             -D"giraph.debugger.guiPort=$GUI_PORT" \
             org.apache.giraph.debugger.gui.Server
@@ -181,12 +185,14 @@ SuperstepsToDebug=()
 VerticesToDebug=()
 ComputationClasses=()
 NoDebugNeighbors=true
-while getopts "S:V:NC:" o; do
+UseCachedJars=true
+while getopts "S:V:C:Nf" o; do
     case $o in
         S) SuperstepsToDebug+=("$OPTARG") ;;
         V) VerticesToDebug+=("$OPTARG") ;;
-        N) NoDebugNeighbors=false ;;
         C) ComputationClasses+=("$OPTARG") ;;
+        N) NoDebugNeighbors=false ;;
+        f) UseCachedJars=false ;;
         *)
             error "$o: Unrecognized option"
     esac
@@ -211,18 +217,17 @@ giraphRunnerClass=$1
 case $giraphRunnerClass in
     org.apache.giraph.GiraphRunner) ;;
     *)
-        #usage
-        echo >&2 "Error: Unrecognized way to start Giraph job"
-        echo >&2 "Only the following form is supported:"
-        echo >&2
-        echo >&2 "  $0 CONFIG_CLASSNAME JARFILE org.apache.giraph.GiraphRunner COMPUTATION_CLASSNAME ..."
-        echo >&2
-        exit 1
+        error \
+            "Error: Unrecognized way to start Giraph job: $giraphRunnerClass" \
+            "" \
+            "Only the following form is supported:" \
+            "    giraph-debug [DEBUG_OPTIONS] [DEBUG_CONFIG_CLASS] JAR_FILE org.apache.giraph.GiraphRunner COMPUTATION_CLASS GIRAPH_RUNNER_ARG..." \
+            #
 esac
 # skip hadoop jar options
 hadoopJarOpts=(
-$giraphRunnerClass
-"${javaOpts[@]}"
+    $giraphRunnerClass
+    "${javaOpts[@]}"
 )
 while shift; do
     case $1 in
@@ -266,39 +271,53 @@ $NoDebugNeighbors ||
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
 
 # first, instrument the given class
-classNameSuffix=$CLASSNAME_SUFFIX
-tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/giraph-debug.XXXXXX")
-trap 'rm -rf "$tmpDir"' EXIT
-instrumenterArgs=("$origClassName"  "$tmpDir"/classes.instrumented  $masterComputeClassName)
-[ ${#ComputationClasses[@]} -eq 0 ] || instrumenterArgs+=("${ComputationClasses[@]}")
-java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" \
-    -D"giraph.debugger.classNameSuffix=$classNameSuffix" \
-    org.apache.giraph.debugger.instrumenter.InstrumentGiraphClasses \
-        "${instrumenterArgs[@]}"
+jarFileSig=$( (sha1sum || shasum) <"$jarFile" 2>/dev/null)
+jarFileSig=${jarFileSig%%[[:space:]]*}
 instrumentedClassName="$origClassName"
-
-# And, create a new jar that contains all the instrumented code
-instrumentedJarFile="$tmpDir/$(basename "$jarFile" .jar)-instrumented.jar"
-echo >&2 "Creating instrumented jar: $instrumentedJarFile"
-#  (To make sure giraph-debugger classes are included in the final
-#   instrumented jar, we update giraph-debugger jar with user's jar contents
-#   and the instrumented code.)
-if [ -d "${cps[0]}" ]; then
-    jar cf "$instrumentedJarFile" "${cps[0]}"
+instrumentedJarFileCached="$JARCACHE_LOCAL/$jarFileSig-instrumented.jar"
+if $UseCachedJars && [ "$instrumentedJarFileCached" -nt "$jarFile" ]; then
+    # pick up the previously instrumented jar
+    instrumentedJarFile=$instrumentedJarFileCached
+    msg "Using previously instrumented jar: $instrumentedJarFile"
 else
-    cp -f "${cps[0]}" "$instrumentedJarFile"
+    tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/giraph-debug.XXXXXX")
+    trap 'rm -rf "$tmpDir"' EXIT
+    instrumentedJarFile="$tmpDir/$(basename "$jarFile" .jar)-instrumented.jar"
+    instrumenterArgs=("$origClassName"  "$tmpDir"/classes.instrumented  $masterComputeClassName)
+    [ ${#ComputationClasses[@]} -eq 0 ] || instrumenterArgs+=("${ComputationClasses[@]}")
+    java -cp "$HADOOP_CLASSPATH${CLASSPATH:+:$CLASSPATH}" \
+        -D"giraph.debugger.classNameSuffix=$CLASSNAME_SUFFIX" \
+        org.apache.giraph.debugger.instrumenter.InstrumentGiraphClasses \
+            "${instrumenterArgs[@]}"
+
+    # And, create a new jar that contains all the instrumented code
+    msg "Creating instrumented jar: $instrumentedJarFile"
+    #  (To make sure giraph-debugger classes are included in the final
+    #   instrumented jar, we update giraph-debugger jar with user's jar contents
+    #   and the instrumented code.)
+    if [ -d "${cps[0]}" ]; then
+        jar cf "$instrumentedJarFile" "${cps[0]}"
+    else
+        cp -f "${cps[0]}" "$instrumentedJarFile"
+    fi
+    # To embed giraph-debugger classes, we need to extract user's jar.
+    # TODO This is very inefficient.  We should definitely figure out how to send
+    # multiple jars without manipulating them.
+    (
+    mkdir -p "$tmpDir"/classes.orig
+    jarFile="$(cd "$(dirname "$jarFile")" && pwd)/$(basename "$jarFile")"
+    cd "$tmpDir"/classes.orig/
+    jar xf "$jarFile"
+    )
+    jar uf "$instrumentedJarFile" -C "$tmpDir"/classes.orig         .
+    jar uf "$instrumentedJarFile" -C "$tmpDir"/classes.instrumented .
+    # cache the instrumentedJarFile for repeated debugging
+    ( set +e
+    msg "Caching instrumented jar: $instrumentedJarFileCached"
+    mkdir -p "$(dirname "$instrumentedJarFileCached")"
+    cp -f "$instrumentedJarFile" "$instrumentedJarFileCached"
+    )
 fi
-# To embed giraph-debugger classes, we need to extract user's jar.
-# TODO This is very inefficient.  We should definitely figure out how to send
-# multiple jars without manipulating them.
-(
-mkdir -p "$tmpDir"/classes.orig
-jarFile="$(cd "$(dirname "$jarFile")" && pwd)/$(basename "$jarFile")"
-cd "$tmpDir"/classes.orig/
-jar xf "$jarFile"
-)
-jar uf "$instrumentedJarFile" -C "$tmpDir"/classes.orig         .
-jar uf "$instrumentedJarFile" -C "$tmpDir"/classes.instrumented .
 runJar=$instrumentedJarFile
 # TODO can we create a thin new jar and send it with -libjars to shadow the original classes?
 #jar cf "$instrumentedJarFile" -C "$tmpDir"/classes .
@@ -306,17 +325,15 @@ runJar=$instrumentedJarFile
 #hadoopJarOpts+=(-libjars "$instrumentedJarFile")
 
 # keep the submitted jar file around, in order to read the captured traces later
-jarFileSig=$( (sha1sum || shasum) <"$jarFile" 2>/dev/null)
-jarFileSig=${jarFileSig%%[[:space:]]*}
 jarFileCachedLocal="$JARCACHE_LOCAL"/"$jarFileSig".jar
 jarFileCachedHDFS="$JARCACHE_HDFS"/"$jarFileSig".jar
-echo >&2 "Caching the job jar locally: $jarFileCachedLocal"
+msg "Caching job jar locally: $jarFileCachedLocal"
 [ -e "$jarFileCachedLocal" ] || {
     mkdir -p "$(dirname "$jarFileCachedLocal")"
     ln -f "$jarFile" "$jarFileCachedLocal" ||
         cp -f "$jarFile" "$jarFileCachedLocal"
 }
-echo >&2 "Caching the job jar at HDFS: $jarFileCachedHDFS"
+msg "Caching job jar at HDFS: $jarFileCachedHDFS"
 hadoop fs -test -e "$jarFileCachedHDFS" || {
     hadoop fs -mkdir "$(dirname "$jarFileCachedHDFS")"
     hadoop fs -put "$jarFile" "$jarFileCachedHDFS"
