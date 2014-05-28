@@ -6,11 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-
 import org.apache.giraph.debugger.Integrity.MessageIntegrityViolation;
 import org.apache.giraph.debugger.Integrity.MessageIntegrityViolation.ExtendedOutgoingMessage;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 
 import com.google.protobuf.GeneratedMessage;
 

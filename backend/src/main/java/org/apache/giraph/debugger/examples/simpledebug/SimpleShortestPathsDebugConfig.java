@@ -4,9 +4,7 @@ import org.apache.giraph.debugger.instrumenter.DebugConfig;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 
 /**
  * Debug configuration file for SimpleShortestPathDebugComputation.

@@ -1,13 +1,8 @@
 package org.apache.giraph.debugger.examples.simpledebug;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.debugger.examples.exceptiondebug.SimpleTriangleClosingActualComputation;
-import org.apache.giraph.debugger.instrumenter.AbstractInterceptingMasterCompute;
-import org.apache.giraph.debugger.instrumenter.BottomInterceptingMasterCompute;
+import org.apache.giraph.examples.RandomWalkComputation;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.LongWritable;

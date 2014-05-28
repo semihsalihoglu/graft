@@ -1,20 +1,19 @@
 package org.apache.giraph.debugger.examples.exceptiondebug;
 
-import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.giraph.edge.Edge;
-import org.apache.giraph.utils.ArrayListWritable;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.utils.ArrayListWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Demonstrates triangle closing in simple,

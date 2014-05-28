@@ -3,21 +3,17 @@ package org.apache.giraph.debugger.server;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
-import java.util.List;
-import java.io.UnsupportedEncodingException;
 
 import javax.ws.rs.core.MediaType;
 
 import sun.security.ssl.Debug;
 
-import com.google.common.net.HttpHeaders;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 
 /*
  * The Abstract class for HTTP handlers. 

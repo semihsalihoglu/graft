@@ -1,16 +1,15 @@
 package org.apache.giraph.debugger.instrumenter;
 
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.giraph.conf.StrConfOption;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
+import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.giraph.debugger.utils.VertexValueIntegrityViolationWrapper;
-import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.Computation;

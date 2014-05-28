@@ -4,7 +4,6 @@ package org.apache.giraph.debugger.examples.simpledebug;
 import java.io.IOException;
 
 import org.apache.giraph.Algorithm;
-import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.conf.LongConfOption;
 import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
 import org.apache.giraph.edge.Edge;

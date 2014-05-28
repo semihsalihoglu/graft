@@ -5,13 +5,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.giraph.graph.Computation;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-
-import com.google.protobuf.GeneratedMessage;
-
-import org.apache.giraph.debugger.Scenario;
 import org.apache.giraph.debugger.Scenario.CommonVertexMasterContext;
 import org.apache.giraph.debugger.Scenario.Exception;
 import org.apache.giraph.debugger.Scenario.GiraphVertexScenario;
@@ -19,6 +12,11 @@ import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext;
 import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext.Neighbor;
 import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext.OutgoingMessage;
 import org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexScenarioClasses;
+import org.apache.giraph.graph.Computation;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
+
+import com.google.protobuf.GeneratedMessage;
 
 /**
  * Wrapper class around {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario}

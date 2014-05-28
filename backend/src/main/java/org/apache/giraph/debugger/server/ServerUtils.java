@@ -1,27 +1,26 @@
 package org.apache.giraph.debugger.server;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.regex.Pattern;
-import java.net.URLDecoder;
-import java.nio.file.Files;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.io.File;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
-import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
-import org.apache.giraph.debugger.utils.VertexValueIntegrityViolationWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.NeighborWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.OutgoingMessageWrapper;
+import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper.ExtendedOutgoingMessageWrapper;
+import org.apache.giraph.debugger.utils.VertexValueIntegrityViolationWrapper;
 import org.apache.giraph.debugger.utils.VertexValueIntegrityViolationWrapper.VertexIdValuePairWrapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -31,12 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.apache.giraph.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
 import sun.security.ssl.Debug;
-
-import com.sun.net.httpserver.Headers;
-
-import java.util.regex.Matcher;
 
 /*
  * Utility methods for Debugger Server.

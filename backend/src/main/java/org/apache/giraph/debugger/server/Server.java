@@ -21,12 +21,8 @@ import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.giraph.debugger.utils.VertexValueIntegrityViolationWrapper;
-import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
-import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.NeighborWrapper;
-import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper.OutgoingMessageWrapper;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import sun.security.ssl.Debug;

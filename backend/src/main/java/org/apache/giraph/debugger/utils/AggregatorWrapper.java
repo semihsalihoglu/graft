@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.giraph.aggregators.Aggregator;
-import org.apache.giraph.utils.WritableUtils;
-import org.apache.hadoop.io.Writable;
-
 import org.apache.giraph.debugger.GiraphAggregator.AggregatedValue;
 import org.apache.giraph.debugger.GiraphAggregator.Aggregator.Builder;
+import org.apache.giraph.utils.WritableUtils;
+import org.apache.hadoop.io.Writable;
 
 import com.google.protobuf.GeneratedMessage;
 

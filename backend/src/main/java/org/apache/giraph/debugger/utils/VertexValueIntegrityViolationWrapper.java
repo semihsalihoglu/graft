@@ -6,11 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-
 import org.apache.giraph.debugger.Integrity.VertexValueIntegrityViolation;
 import org.apache.giraph.debugger.Integrity.VertexValueIntegrityViolation.VertexIdValuePair;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 
 import com.google.protobuf.GeneratedMessage;
 
