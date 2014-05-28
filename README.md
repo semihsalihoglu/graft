@@ -5,6 +5,7 @@ TODO(semih): Write
 ## Synopsis
 ### Get Giraph Trunk
     git clone https://github.com/apache/giraph.git -b trunk
+    cd giraph/giraph-core
     mvn install -DskipTests
 
 ### Build
