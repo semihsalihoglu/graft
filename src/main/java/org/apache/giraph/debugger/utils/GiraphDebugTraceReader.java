@@ -15,7 +15,7 @@ import org.apache.hadoop.fs.Path;
 public class GiraphDebugTraceReader {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-    String traceDir = DebugUtils.TRACE_ROOT + "/" + "job_201405120024_0010" + "/";
+    String traceDir = DebuggerUtils.TRACE_ROOT + "/" + "job_201405120024_0010" + "/";
     System.out.println("traceDir: " + traceDir);
     String coreSitePath = "/Users/semihsalihoglu/projects/hadoop-1.2.1/conf/core-site.xml";
     Configuration configuration = new Configuration();

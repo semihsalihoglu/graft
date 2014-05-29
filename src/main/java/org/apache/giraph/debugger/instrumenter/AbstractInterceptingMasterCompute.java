@@ -5,8 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.giraph.debugger.utils.DebugUtils;
-import org.apache.giraph.debugger.utils.DebugUtils.DebugTrace;
+import org.apache.giraph.debugger.utils.DebuggerUtils;
+import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.master.MasterCompute;
@@ -63,7 +63,7 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
       ExceptionUtils.getStackTrace(e));
     giraphMasterScenarioWrapper.setExceptionWrapper(exceptionWrapper);
     commonVertexMasterInterceptionUtil.saveScenarioWrapper(giraphMasterScenarioWrapper,
-      DebugUtils.getFullMasterTraceFileName(DebugTrace.MASTER_EXCEPTION,
+      DebuggerUtils.getFullMasterTraceFileName(DebugTrace.MASTER_EXCEPTION,
         commonVertexMasterInterceptionUtil.getJobId(),
         getSuperstep()));
   }
@@ -73,7 +73,7 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
    */
   public void interceptComputeEnd() {
     commonVertexMasterInterceptionUtil.saveScenarioWrapper(giraphMasterScenarioWrapper,
-      DebugUtils.getFullMasterTraceFileName(DebugTrace.MASTER_REGULAR, 
+      DebuggerUtils.getFullMasterTraceFileName(DebugTrace.MASTER_REGULAR, 
         commonVertexMasterInterceptionUtil.getJobId(), getSuperstep()));
   }
 

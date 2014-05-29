@@ -8,8 +8,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.giraph.conf.StrConfOption;
 import org.apache.giraph.debugger.DebugConfig;
-import org.apache.giraph.debugger.utils.DebugUtils;
-import org.apache.giraph.debugger.utils.DebugUtils.DebugTrace;
+import org.apache.giraph.debugger.utils.DebuggerUtils;
+import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContextWrapper;
@@ -115,7 +115,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
     if (jarSignature != null) {
       FileSystem fs = commonVertexMasterInterceptionUtil.getFileSystem();
-      Path jarSignaturePath = new Path(DebugUtils.getTraceFileRoot(
+      Path jarSignaturePath = new Path(DebuggerUtils.getTraceFileRoot(
         commonVertexMasterInterceptionUtil.getJobId()) + "/" + "jar.signature");
       try {
         if (!fs.exists(jarSignaturePath)) {
@@ -147,7 +147,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       numVertexViolationsLogged < NUM_VIOLATIONS_TO_LOG) ||
       (debugConfig.shouldCheckMessageIntegrity() &&
         numMessageViolationsLogged < NUM_VIOLATIONS_TO_LOG)) {
-      previousVertexValue = DebugUtils.makeCloneOf(vertex.getValue(), 
+      previousVertexValue = DebuggerUtils.makeCloneOf(vertex.getValue(), 
         getConf().getVertexValueClass());
     }
     return debugConfig.shouldCatchExceptions();
@@ -172,7 +172,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       ExceptionUtils.getStackTrace(e));
     giraphVertexScenarioWrapperForExceptionTrace.setExceptionWrapper(exceptionWrapper);
     commonVertexMasterInterceptionUtil.saveScenarioWrapper(
-        giraphVertexScenarioWrapperForExceptionTrace, DebugUtils.getFullTraceFileName(
+        giraphVertexScenarioWrapperForExceptionTrace, DebuggerUtils.getFullTraceFileName(
           DebugTrace.VERTEX_EXCEPTION, commonVertexMasterInterceptionUtil.getJobId(),
           getSuperstep(), vertexId.toString()));
   }
@@ -201,7 +201,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     GiraphVertexScenarioWrapper<I, V, E, M1, M2> giraphVertexScenarioWrapper =
       getGiraphVertexScenarioToSave(vertex, messages);
     commonVertexMasterInterceptionUtil.saveScenarioWrapper(giraphVertexScenarioWrapper,
-      DebugUtils.getFullTraceFileName(debugTrace, commonVertexMasterInterceptionUtil.getJobId(),
+      DebuggerUtils.getFullTraceFileName(debugTrace, commonVertexMasterInterceptionUtil.getJobId(),
         getSuperstep(), vertexId.toString()));
   }
 
@@ -298,7 +298,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     if (debugConfig.shouldCheckMessageIntegrity()
       && msgIntegrityViolationWrapper.numMsgWrappers() > 0) {
       commonVertexMasterInterceptionUtil.saveScenarioWrapper(msgIntegrityViolationWrapper,
-        DebugUtils.getMessageIntegrityAllTraceFullFileName(getSuperstep(),
+        DebuggerUtils.getMessageIntegrityAllTraceFullFileName(getSuperstep(),
           commonVertexMasterInterceptionUtil.getJobId(),
           getContext().getTaskAttemptID().getTaskID().getId()));
     }

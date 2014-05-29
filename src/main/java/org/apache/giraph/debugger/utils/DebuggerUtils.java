@@ -20,7 +20,7 @@ import org.apache.hadoop.io.Writable;
  * </ul>
  * @author semihsalihoglu
  */
-public class DebugUtils {
+public class DebuggerUtils {
 
   public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
   public static final String JARCACHE_HDFS = System.getProperty("giraph.debugger.jobCacheAtHDFS", TRACE_ROOT + "/jars");
@@ -173,6 +173,6 @@ public class DebugUtils {
    * Returns the root directory of the trace files for the given job.
    */
   public static String getTraceFileRoot(String jobId) {
-    return String.format("%s/%s", DebugUtils.TRACE_ROOT, jobId);
+    return String.format("%s/%s", DebuggerUtils.TRACE_ROOT, jobId);
   }
 }

@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
-import org.apache.giraph.debugger.utils.DebugUtils;
-import org.apache.giraph.debugger.utils.DebugUtils.DebugTrace;
+import org.apache.giraph.debugger.utils.DebuggerUtils;
+import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
@@ -78,15 +78,15 @@ public class ServerUtils {
 
   public static URL getCachedJobJarPath(String jobId) throws IOException {
     // read the jar signature file under the TRACE_ROOT/jobId/
-    Path jarSignaturePath = new Path(DebugUtils.getTraceFileRoot(jobId) + "/"
+    Path jarSignaturePath = new Path(DebuggerUtils.getTraceFileRoot(jobId) + "/"
       + "jar.signature");
     FileSystem fs = getFileSystem();
     String jarSignature = IOUtils.readLines(fs.open(jarSignaturePath)).get(0);
     // check if jar is already in JARCACHE_LOCAL
-    File localFile = new File(DebugUtils.JARCACHE_LOCAL + "/" + jarSignature + ".jar");
+    File localFile = new File(DebuggerUtils.JARCACHE_LOCAL + "/" + jarSignature + ".jar");
     if (!localFile.exists()) {
       // otherwise, download from HDFS
-      Path hdfsPath = new Path(fs.getUri().resolve(DebugUtils.JARCACHE_HDFS + "/" + jarSignature + ".jar"));
+      Path hdfsPath = new Path(fs.getUri().resolve(DebuggerUtils.JARCACHE_HDFS + "/" + jarSignature + ".jar"));
       Logger.getLogger(ServerUtils.class).info("Copying from HDFS: " + hdfsPath + " to " + localFile);
       localFile.getParentFile().mkdirs();
       fs.copyToLocalFile(hdfsPath, new Path(localFile.toURI()));
@@ -104,8 +104,8 @@ public class ServerUtils {
     assert EnumSet.of(DebugTrace.VERTEX_EXCEPTION, 
       DebugTrace.VERTEX_REGULAR, DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
     return String.format("%s/%s",
-        DebugUtils.getTraceFileRoot(jobId),
-        String.format(DebugUtils.getTraceFileFormat(debugTrace), superstepNo, vertexId));
+        DebuggerUtils.getTraceFileRoot(jobId),
+        String.format(DebuggerUtils.getTraceFileFormat(debugTrace), superstepNo, vertexId));
   }
   
   /*
@@ -116,8 +116,8 @@ public class ServerUtils {
     long superstepNo, DebugTrace debugTrace) {
     assert EnumSet.of(DebugTrace.INTEGRITY_MESSAGE_ALL).contains(debugTrace);
     return String.format("%s/%s",
-        DebugUtils.getTraceFileRoot(jobId),
-        String.format(DebugUtils.getTraceFileFormat(debugTrace), taskId, superstepNo));
+        DebuggerUtils.getTraceFileRoot(jobId),
+        String.format(DebuggerUtils.getTraceFileFormat(debugTrace), taskId, superstepNo));
   }
   
   /*
@@ -128,8 +128,8 @@ public class ServerUtils {
     assert EnumSet.of(DebugTrace.MASTER_ALL, DebugTrace.MASTER_EXCEPTION, 
       DebugTrace.MASTER_REGULAR).contains(debugTrace);
     return String.format("%s/%s",
-        DebugUtils.getTraceFileRoot(jobId),
-        String.format(DebugUtils.getTraceFileFormat(debugTrace), superstepNo));
+        DebuggerUtils.getTraceFileRoot(jobId),
+        String.format(DebuggerUtils.getTraceFileFormat(debugTrace), superstepNo));
   }
 
   /*
@@ -350,9 +350,9 @@ public class ServerUtils {
     DebugTrace debugTrace) throws IOException {
     ArrayList<String> vertexIds = new ArrayList<String>();
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFileRoot = DebugUtils.getTraceFileRoot(jobId);
+    String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
     // Use this regex to match the file name and capture the vertex id.
-    String regex = String.format(DebugUtils.getTraceFileFormat(debugTrace), 
+    String regex = String.format(DebuggerUtils.getTraceFileFormat(debugTrace), 
       superstepNo, "(.*?)");
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
@@ -379,9 +379,9 @@ public class ServerUtils {
       DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
     ArrayList<String> taskIds = new ArrayList<String>();
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFileRoot = DebugUtils.getTraceFileRoot(jobId);
+    String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
     // Use this regex to match the file name and capture the vertex id.
-    String regex = String.format(DebugUtils.getTraceFileFormat(debugTrace), "(.*?)", superstepNo);
+    String regex = String.format(DebuggerUtils.getTraceFileFormat(debugTrace), "(.*?)", superstepNo);
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
     // Iterate through each file in this directory and match the regex.
@@ -403,7 +403,7 @@ public class ServerUtils {
   public static ArrayList<Long> getSuperstepsDebugged(String jobId) throws IOException {
       ArrayList<Long> superstepIds = new ArrayList<Long>();
       FileSystem fs = ServerUtils.getFileSystem();
-      String traceFileRoot = DebugUtils.getTraceFileRoot(jobId);
+      String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
       // Use this regex to match the file name and capture the vertex id.
       String regex = String.format("(reg|err)_stp_(.*?)_vid_(.*?).tr$");
       Pattern p = Pattern.compile(regex);
