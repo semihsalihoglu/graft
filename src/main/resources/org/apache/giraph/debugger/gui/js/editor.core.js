@@ -43,6 +43,7 @@ function Editor(options) {
     this.lastKeyDown = -1;
     this.init();
     this.buildSample();
+    return this;
 }
 
 /*
@@ -100,6 +101,19 @@ Editor.prototype.init = function() {
     // Initializes the force layout.
     this.initForce();
     this.restartGraph();
+}
+
+/* 
+ * Wrapper for restarting both graph and table. Automatically switches to table
+ * view if the number of nodes is too large.
+ */
+Editor.prototype.restart = function() {
+    this.restartGraph();
+    this.restartTable();
+
+    if (this.numNodes > 50 && this.view != Editor.ViewEnum.TABLET ) {
+        this.toggleView();
+    }
 }
 
 /*
@@ -403,6 +417,7 @@ Editor.prototype.keyup = function() {
  *                    receiverId2: "message2",
  *                    ...
  *                  }
+ *            enabled : true/false
  *          }
  * }
  */
@@ -429,8 +444,6 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
         }
     }
     this.updateGraphData(adjList);
-    this.restartGraph();
-    this.restartTable();
 }
 
 /*
@@ -449,7 +462,9 @@ Editor.prototype.updateGraphData = function(scenario) {
         if (scenario[nodeId]['vertexValues']) {
             node.attrs = scenario[nodeId]['vertexValues'];
         }
-        var adj = scenario[nodeId]['neighbors'];
+        if (scenario[nodeId].enabled != undefined) {
+            node.enabled = scenario[nodeId].enabled;
+        }
         var msgs = scenario[nodeId]['outgoingMessages'];
         // Build this.messages
         if (msgs) {
@@ -467,6 +482,8 @@ Editor.prototype.updateGraphData = function(scenario) {
             this.aggregators[key] = aggregators[key];
         }
     }
+    // Restart the graph and table to show new values.
+    this.restart();
 }
 
 /*
