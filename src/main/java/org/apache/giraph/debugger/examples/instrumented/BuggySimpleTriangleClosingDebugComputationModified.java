@@ -153,6 +153,7 @@ public abstract class BuggySimpleTriangleClosingDebugComputationModified extends
 
   /** Utility class for delivering the array of vertices THIS vertex
     * should connect with to close triangles with neighbors */
+  @SuppressWarnings("serial")
   public static class IntArrayListWritable
     extends ArrayListWritable<IntWritable> {
     /** Default constructor for reflection */

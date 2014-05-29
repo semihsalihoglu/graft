@@ -20,4 +20,5 @@ public abstract class UserMasterCompute extends AbstractInterceptingMasterComput
   public void initialize() throws InstantiationException, IllegalAccessException {
     throw new NotImplementedException();
   }
+
 }

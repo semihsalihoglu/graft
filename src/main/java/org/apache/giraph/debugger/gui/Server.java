@@ -7,7 +7,6 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
@@ -23,6 +22,7 @@ import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.python.google.common.collect.Lists;
 
 import sun.security.ssl.Debug;
 
@@ -196,6 +196,7 @@ public static void main(String[] args) throws Exception {
    * vertices. If 'raw' parameter is specified, returns the raw protocol buffer.
    */
   static class GetScenario extends ServerHttpHandler {
+    @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
@@ -222,7 +223,7 @@ public static void main(String[] args) throws Exception {
           vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo, DebugTrace.VERTEX_ALL);
         } else {
           // Split the vertices by comma.
-          vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
+          vertexIds = Lists.newArrayList(rawVertexIds.split(","));
         }
         // Send JSON by default.
         JSONObject scenarioObj = new JSONObject();
@@ -249,6 +250,7 @@ public static void main(String[] args) throws Exception {
    * @desc traceType : Can be one of reg, err, msg or vv
    */
   static class GetVertexTest extends ServerHttpHandler {
+    @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       Debug.println("/test/vertex", paramMap.toString());
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
@@ -331,6 +333,7 @@ public static void main(String[] args) throws Exception {
    * It is an optional parameter and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
+    @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
@@ -379,7 +382,7 @@ public static void main(String[] args) throws Exception {
               DebugTrace.VERTEX_EXCEPTION);
           } else {
             // Split the vertices by comma.
-            vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
+            vertexIds = Lists.newArrayList(rawVertexIds.split(","));
           }
           // Send JSON by default.
           JSONObject scenarioObj = new JSONObject();

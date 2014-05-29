@@ -81,6 +81,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     superstepsToDebugSet = null;
   }
   
+  @SuppressWarnings("unchecked")
   public final void readConfig(GiraphConfiguration config) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(DEBUG_NEIGHBORS_FLAG,
       false);

@@ -46,6 +46,7 @@ under the License.
 
     <!-- already declared in Giraph parent POM
     <dep.commons-cli.version>1.2</dep.commons-cli.version>
+    <dep.commons-io.version>2.1</dep.commons-io.version>
     <dep.guava.version>14.0.1</dep.guava.version>
     <dep.json.version>20090211</dep.json.version>
     <dep.junit.version>4.11</dep.junit.version>

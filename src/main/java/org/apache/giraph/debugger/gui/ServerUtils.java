@@ -38,6 +38,7 @@ import sun.security.ssl.Debug;
 /*
  * Utility methods for Debugger Server.
  */
+@SuppressWarnings("rawtypes")
 public class ServerUtils {
   public static final String JOB_ID_KEY = "jobId";
   public static final String VERTEX_ID_KEY = "vertexId";

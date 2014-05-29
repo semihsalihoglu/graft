@@ -18,6 +18,7 @@ import com.google.protobuf.GeneratedMessage;
  * 
  * @author semihsalihoglu
  */
+@SuppressWarnings("rawtypes")
 public class CommonVertexMasterContextWrapper extends BaseWrapper {
   private ImmutableClassesGiraphConfiguration immutableClassesConfig = null;
   private long superstepNo;
@@ -77,7 +78,6 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
     return previousAggregatedValueWrappers;
   }
 
-  @SuppressWarnings("rawtypes")
   public ImmutableClassesGiraphConfiguration getConfig() {
     return immutableClassesConfig;
   }

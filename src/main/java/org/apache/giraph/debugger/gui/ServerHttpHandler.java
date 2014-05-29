@@ -44,7 +44,6 @@ public abstract class ServerHttpHandler implements HttpHandler {
     this.responseContentType = MediaType.APPLICATION_JSON;
     String rawUrl = httpExchange.getRequestURI().getQuery();
     HashMap<String, String> paramMap;
-    int statusCode;
     try {
       paramMap = ServerUtils.getUrlParams(rawUrl);
       // Call the method implemented by inherited classes.

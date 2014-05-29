@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
  * not intercept aggregators that were never called.
  * @author semihsalihoglu
  */
+@SuppressWarnings("rawtypes")
 public class CommonVertexMasterInterceptionUtil {
   private static final Logger LOG = Logger.getLogger(AbstractInterceptingMasterCompute.class);
   private static FileSystem fileSystem = null;
