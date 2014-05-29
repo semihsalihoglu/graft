@@ -74,6 +74,7 @@ set -eu
 : ${CLASSNAME_SUFFIX:=Original}       # A suffix for user computation class used by instrumenter
 : ${JARCACHE_HDFS:=$TRACE_ROOT/jars}         # HDFS path to where the jars are cached
 : ${JARCACHE_LOCAL:=~/.giraph-debugger/jars} # local path to where the jars are cached
+DEFAULT_DEBUG_CONFIG=org.apache.giraph.debugger.DebugConfig
 
 msg() { echo >&2 "giraph-debug:" "$@"; }
 error() { local msg=; for msg; do echo >&2 "$msg"; done; false; }
@@ -207,7 +208,7 @@ if [ -f "$debugConfigClassName" ]; then
     # the DebugConfig class name is optional, and
     # we use the default DebugConfig if the first argument seems to be a jar file
     jarFile=$debugConfigClassName
-    debugConfigClassName=org.apache.giraph.debugger.DebugConfig
+    debugConfigClassName=$DEFAULT_DEBUG_CONFIG
 else
     jarFile=$1; shift
     [ -f "$jarFile" ] ||
@@ -261,8 +262,13 @@ set -- "$@" -ca "giraph.debugger.configClass=$debugConfigClassName"
 [ ${#SuperstepsToDebug[@]} -eq 0 ] ||
     set -- "$@" -ca "giraph.debugger.superstepsToDebug=$(IFS=:; echo "${SuperstepsToDebug[*]}")"
 #  verticesToDebug
-[ ${#VerticesToDebug[@]} -eq 0 ] ||
-    set -- "$@" -ca "giraph.debugger.verticesToDebug=$(IFS=:; echo "${VerticesToDebug[*]}")"
+if [ ${#VerticesToDebug[@]} -gt 0 ]; then
+    set -- "$@" -ca "giraph.debugger.debugAllVertices=false" \
+        -ca "giraph.debugger.verticesToDebug=$(IFS=:; echo "${VerticesToDebug[*]}")"
+elif [ x"$debugConfigClassName" = x"$DEFAULT_DEBUG_CONFIG" ]; then
+    # debug all vertices if none were specified and default DebugConfig is being used
+    set -- "$@" -ca "giraph.debugger.debugAllVertices=true"
+fi
 #  debugNeighbors
 $NoDebugNeighbors ||
     set -- "$@" -ca "giraph.debugger.debugNeighbors=true"
