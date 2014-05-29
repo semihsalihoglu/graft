@@ -47,8 +47,9 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
   }
 
   public void addVertexIdPairWrapper(I vertexId, V vertexValue) {
-    vertexIdValuePairWrappers.add(new VertexIdValuePairWrapper(makeCloneOf(vertexId, vertexIdClass),
-      makeCloneOf(vertexValue, vertexValueClass)));
+    vertexIdValuePairWrappers.add(new VertexIdValuePairWrapper(
+      DebugUtils.makeCloneOf(vertexId, vertexIdClass),
+      DebugUtils.makeCloneOf(vertexValue, vertexValueClass)));
   }
 
   public int numVerteIdValuePairWrappers() {
@@ -107,9 +108,9 @@ public class VertexValueIntegrityViolationWrapper<I extends WritableComparable, 
     public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
       IOException, InstantiationException, IllegalAccessException {
       VertexIdValuePair vertexIdValuePair = (VertexIdValuePair) generatedMessage;
-      this.vertexId = newInstance(vertexIdClass);
+      this.vertexId = DebugUtils.newInstance(vertexIdClass);
       fromByteString(vertexIdValuePair.getVertexId(), vertexId);
-      this.vertexValue = newInstance(vertexValueClass);
+      this.vertexValue = DebugUtils.newInstance(vertexValueClass);
       fromByteString(vertexIdValuePair.getVertexValue(), vertexValue);
     }
   }

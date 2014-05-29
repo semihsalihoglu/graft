@@ -24,30 +24,6 @@ import com.google.protobuf.GeneratedMessage;
  */
 public abstract class BaseWrapper {
 
-  <T extends Writable> T makeCloneOf(T actualWritable, Class<T> clazz) {
-    T idCopy = newInstance(clazz);
-    // Return value is null if clazz is assignable to NullWritable.
-    if (idCopy == null) {
-      return actualWritable;
-    }
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-    try {
-      actualWritable.write(dataOutputStream);
-    } catch (IOException e) {
-      // Throwing a runtime exception because the methods that call other methods
-      // such as addNeighborWrapper or addOutgoingMessageWrapper, implement abstract classes
-      // or interfaces of Giraph that we can't edit to include a throws statement.
-      throw new RuntimeException(e);
-    }
-    // 
-    if (byteArrayOutputStream.toByteArray() != null) {
-      WritableUtils.readFieldsFromByteArray(byteArrayOutputStream.toByteArray(), idCopy);
-      byteArrayOutputStream.reset();
-    }
-    return idCopy;
-  }
-
   @SuppressWarnings("unchecked")
   protected <U> Class<U> castClassToUpperBound(Class<?> clazz, Class<U> upperBound) {
     if (!upperBound.isAssignableFrom(clazz)) {
@@ -66,12 +42,6 @@ public abstract class BaseWrapper {
   ByteString toByteString(Writable writable) {
     return ByteString.copyFrom(WritableUtils.writeToByteArray(writable));
   }
-  
-  static <T> T newInstance(Class<T> theClass) {
-    return NullWritable.class.isAssignableFrom(theClass) 
-        ? null : ReflectionUtils.newInstance(theClass);
-  }
-
   
   public void save(String fileName) throws IOException {
     try (FileOutputStream output = new FileOutputStream(fileName)) {

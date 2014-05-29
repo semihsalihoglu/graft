@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
+import org.apache.giraph.debugger.gui.ServerUtils;
+import org.apache.giraph.debugger.gui.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.BaseWrapper;
 import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
@@ -82,24 +84,29 @@ public class CommonVertexMasterInterceptionUtil {
   @SuppressWarnings("rawtypes")
   public void saveVertexScenarioWrapper(GiraphVertexScenarioWrapper vertexScenarioWrapper,
     String vertexId, boolean isException) {
-    saveScenarioWrapper(vertexScenarioWrapper, false /* is vertex scenario */, isException,
-      vertexId);
+    DebugTrace debugTrace = isException ? DebugTrace.VERTEX_EXCEPTION : DebugTrace.VERTEX_REGULAR;
+    saveScenarioWrapper(vertexScenarioWrapper,
+      String.format(ServerUtils.getTraceFileFormat(debugTrace),
+        commonVertexMasterContextWrapper.getSuperstepNoWrapper(), vertexId));
   }
 
   public void saveMasterScenarioWrapper(GiraphMasterScenarioWrapper masterScenarioWrapper,
     boolean isException) {
-    saveScenarioWrapper(masterScenarioWrapper, true /* is master scenario */, isException,
-      null /* no vertexId to specify */);
+    DebugTrace debugTrace = isException ? DebugTrace.MASTER_EXCEPTION : DebugTrace.MASTER_REGULAR;
+    saveScenarioWrapper(masterScenarioWrapper, 
+      String.format(ServerUtils.getTraceFileFormat(debugTrace),
+        commonVertexMasterContextWrapper.getSuperstepNoWrapper()));
   }
 
   private void saveScenarioWrapper(BaseWrapper masterOrVertexScenarioWrapper,
-    boolean isMaster, boolean isException, String vertexId) {
-    String optFirstSuffix = isMaster ? "master_" : "";
-    String secondSuffix = isException ? "err" : "reg";
-    String optVertexPrefix = vertexId != null ? "_vid_" + vertexId : "";
-    String fileName = getTraceDirectory() + "/" + optFirstSuffix + secondSuffix
-      + "_stp_" + commonVertexMasterContextWrapper.getSuperstepNoWrapper()
-      + optVertexPrefix + ".tr";
+    String fileName) {
+//    boolean isMaster, boolean isException, String vertexId) {
+//    String optFirstSuffix = isMaster ? "master_" : "";
+//    String secondSuffix = isException ? "err" : "reg";
+//    String optVertexPrefix = vertexId != null ? "_vid_" + vertexId : "";
+//    String fileName = getTraceDirectory() + "/" + optFirstSuffix + secondSuffix
+//      + "_stp_" + commonVertexMasterContextWrapper.getSuperstepNoWrapper()
+//      + optVertexPrefix + ".tr";
     LOG.info("saving trace at: " + fileName);
     try {
       masterOrVertexScenarioWrapper.saveToHDFS(fileSystem, fileName);

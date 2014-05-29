@@ -48,8 +48,9 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
 
   public void addMsgWrapper(I srcId, I destinationId, M2 message) {
     extendedOutgoingMessageWrappers.add(
-      new ExtendedOutgoingMessageWrapper(makeCloneOf(srcId, vertexIdClass),
-      makeCloneOf(destinationId, vertexIdClass), makeCloneOf(message, outgoingMessageClass)));
+      new ExtendedOutgoingMessageWrapper(DebugUtils.makeCloneOf(srcId, vertexIdClass),
+      DebugUtils.makeCloneOf(destinationId, vertexIdClass),
+      DebugUtils.makeCloneOf(message, outgoingMessageClass)));
   }
 
   public int numMsgWrappers() {
@@ -111,11 +112,11 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
       IOException, InstantiationException, IllegalAccessException {
       ExtendedOutgoingMessage extendedOutgoingMessage =
         (ExtendedOutgoingMessage) generatedMessage;
-      this.srcId = newInstance(vertexIdClass);
+      this.srcId = DebugUtils.newInstance(vertexIdClass);
       fromByteString(extendedOutgoingMessage.getSrcId(), this.srcId);
-      this.destinationId = newInstance(vertexIdClass);
+      this.destinationId = DebugUtils.newInstance(vertexIdClass);
       fromByteString(extendedOutgoingMessage.getDestinationId(), this.destinationId);
-      this.message = newInstance(outgoingMessageClass);
+      this.message = DebugUtils.newInstance(outgoingMessageClass);
       fromByteString(extendedOutgoingMessage.getMsgData(), this.message);
     }
   }
