@@ -323,10 +323,7 @@ public static void main(String[] args) throws Exception {
   /*
    * Returns the integrity violations based on the requested parameter.
    * The requested parameter (type) may be one of M, E or V.
-   * @URLParams : jobId, superstepId, violiationType, [taskIds], [vertexIds]
-   * @desc taskIds - Task IDs for which message integrity violations are required. 
-   * It is an optional parameter and is only used when violationType = M
-   * @desc vertexIds - Vertex IDs for which vertex integrity violations are required. 
+   * @URLParams : jobId, superstepId, violiationType
    * It is an optional parameter and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
@@ -347,19 +344,9 @@ public static void main(String[] args) throws Exception {
         JSONObject integrityObj = new JSONObject();
         // Message violation
         if(violationType.equals("M")) {
-          // See if task ids are already supplied. 
-          ArrayList<String> taskIds  = null;
-          // Get the single taskId or the list of taskIds (comma-separated).
-          String rawTaskIds = paramMap.get(ServerUtils.TASK_ID_KEY);
-          if (rawTaskIds != null) {
-            taskIds = new ArrayList(Arrays.asList(rawTaskIds.split(",")));
-          }
-          // No task Id supplied
-          if (rawTaskIds == null) {
-            // Read exceptions for all vertices.
-            taskIds  = ServerUtils.getTasksWithIntegrityViolations(jobId, superstepNo, 
-              DebugTrace.INTEGRITY_MESSAGE);
-          }
+          ArrayList<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
+            jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE);
+          
           for(String taskId : taskIds) {
             MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 
               ServerUtils.readMsgIntegrityViolationFromTrace(jobId, taskId, superstepNo);
@@ -369,18 +356,8 @@ public static void main(String[] args) throws Exception {
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
           // See if task ids are already supplied. 
-          ArrayList<String> vertexIds  = null;
-          // Get the single taskId or the list of taskIds (comma-separated).
-          String rawVertexIds = paramMap.get(ServerUtils.TASK_ID_KEY);
-          if (rawVertexIds != null) {
-            vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
-          }
-          // Get the single taskId or the list of taskIds (comma-separated).
-          if (rawVertexIds == null) {
-            // Read exceptions for all vertices.
-            vertexIds  = ServerUtils.getTasksWithIntegrityViolations(jobId, superstepNo, 
-              DebugTrace.INTEGRITY_VERTEX);
-          }
+          ArrayList<String> vertexIds = ServerUtils.getTasksWithIntegrityViolations(
+            jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
           for(String vertexId : vertexIds) {
             GiraphVertexScenarioWrapper giraphVertexScenarioWrapper =
               ServerUtils.readVertexIntegrityViolationFromTrace(jobId, superstepNo, vertexId);
