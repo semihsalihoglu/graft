@@ -245,7 +245,9 @@ public static void main(String[] args) throws Exception {
   
   /*
    * Returns the JAVA code for vertex scenario.
-   * @URLParams : {jobId, superstepId, vertexId}
+   * @URLParams : {jobId, superstepId, vertexId, traceType}
+   * @desc - traceType defines the debug trace to use for reading the protobuf
+   * Must be one of 'reg', 'err', 'msg' or 'vv'
    */
   static class GetVertexTest extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {

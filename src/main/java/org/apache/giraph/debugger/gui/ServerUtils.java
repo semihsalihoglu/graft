@@ -51,6 +51,7 @@ public class ServerUtils {
   public static final String SUPERSTEP_ID_KEY = "superstepId";
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
   public static final String TASK_ID_KEY = "taskId";
+  public static final String VERTEX_TEST_TRACE_TYPE_KEY = "traceType";
   public static final String ADJLIST_KEY = "adjList";
 
   public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
