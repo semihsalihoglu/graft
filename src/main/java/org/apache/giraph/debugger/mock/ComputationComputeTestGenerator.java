@@ -87,7 +87,7 @@ public class ComputationComputeTestGenerator extends TestGenerator {
   
   @SuppressWarnings({"rawtypes"})
   public String generateTestCompute(GiraphVertexScenarioWrapper input) throws VelocityException, IOException {
-    getWritableReadFromString().clear();
+    resetComplexWritableList();
     
     VelocityContext context = buildContext(input);
     

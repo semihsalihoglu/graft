@@ -26,10 +26,7 @@
       // assertEquals($vertexValueAfter, vertex.getValue().get(), 0.001f);
 #end
 
-      // mockEnv.verifyNoMessageSent();
-
-      // $vertexValueType outMessage = new $outMsgType();
-      // mockEnv.verifyMessageSentToAllEdges(vertex, outMessage);
+      // verifyZeroInteractions(processor);
 
 #foreach ($outMsg in $outMsgs)
       // verify(processor, times($outMsg.times)).sendMessageRequest($helper.formatWritable($outMsg.msg.destinationId), $helper.formatWritable($outMsg.msg.Message));
