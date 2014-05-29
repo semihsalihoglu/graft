@@ -96,7 +96,7 @@ public class ServerUtils {
     case INTEGRITY_MESSAGE:
       return "task_%s_msg_intgrty_stp_%d.tr";
     case INTEGRITY_VERTEX:
-      return "task_%s_vv_intgrty_stp_%d.tr";
+      return "vv_intgrty_stp_%d_vid_%d.tr";
      case MASTER_REGULAR:
       return "master_reg_stp_%d.tr";
     case MASTER_EXCEPTION:
@@ -136,12 +136,13 @@ public class ServerUtils {
   
   /*
    * Returns the path of the vertex trace file on HDFS.
-   * @param debugTrace - Must be one of VERTEX_* types. 
+   * @param debugTrace - Must be one of VERTEX_* or
+   * INTEGRITY_VERTEX types. 
    */
   public static String getVertexTraceFilePath(String jobId, long superstepNo, 
     String vertexId, DebugTrace debugTrace) {
     assert EnumSet.of(DebugTrace.VERTEX_EXCEPTION, 
-      DebugTrace.VERTEX_REGULAR).contains(debugTrace);
+      DebugTrace.VERTEX_REGULAR, DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
     return String.format("%s/%s",
         ServerUtils.getTraceFileRoot(jobId, debugTrace),
         String.format(ServerUtils.getTraceFileFormat(debugTrace), superstepNo, vertexId));
@@ -149,12 +150,11 @@ public class ServerUtils {
   
   /*
    * Returns the path of the vertex trace file on HDFS.
-   * @param debugTrace - Must be one of INTEGRITY_* types. 
+   * @param debugTrace - Must be INTEGRITY_MESSAGE. 
    */
   public static String getIntegrityTraceFilePath(String jobId, String taskId, 
     long superstepNo, DebugTrace debugTrace) {
-    assert EnumSet.of(DebugTrace.INTEGRITY_MESSAGE, 
-      DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
+    assert EnumSet.of(DebugTrace.INTEGRITY_MESSAGE).contains(debugTrace);
     return String.format("%s/%s",
         ServerUtils.getTraceFileRoot(jobId, debugTrace),
         String.format(ServerUtils.getTraceFileFormat(debugTrace), taskId, superstepNo));
@@ -286,15 +286,16 @@ public class ServerUtils {
   /*
    * Returns the MessageIntegrityViolationWrapper from trace file.
    */
-  public static VertexValueIntegrityViolationWrapper readVertexIntegrityViolationFromTrace(
-    String jobId, String taskId, long superstepNo) throws IOException, 
+  public static GiraphVertexScenarioWrapper readVertexIntegrityViolationFromTrace(
+    String jobId, long superstepNo, String vertexId) throws IOException, 
     ClassNotFoundException, InstantiationException, IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
-    String traceFilePath = ServerUtils.getIntegrityTraceFilePath(jobId, taskId, 
-      superstepNo, DebugTrace.INTEGRITY_VERTEX);
-    VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper = new VertexValueIntegrityViolationWrapper();
-    vertexValueIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
-    return vertexValueIntegrityViolationWrapper;
+    String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
+      vertexId, DebugTrace.INTEGRITY_VERTEX);
+    GiraphVertexScenarioWrapper giraphScenarioWrapper = 
+      new GiraphVertexScenarioWrapper();
+    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+    return giraphScenarioWrapper;
   }
 
   /*
@@ -374,18 +375,12 @@ public class ServerUtils {
    * Converts the vertex integrity violation wrapper to JSON.
    */
   public static JSONObject vertexIntegrityToJson(
-    VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper) throws JSONException {
+    GiraphVertexScenarioWrapper giraphVertexScenarioWrapper) throws JSONException {
     JSONObject scenarioObj = new JSONObject();
-    ArrayList<JSONObject> violationsList = new ArrayList<JSONObject>();
-    scenarioObj.put("superstepId", vertexValueIntegrityViolationWrapper.getSuperstepNo());
-    for (Object pair : vertexValueIntegrityViolationWrapper.getVertexIdValuePairWrappers()) {
-      VertexIdValuePairWrapper vertexIdValuePair = (VertexIdValuePairWrapper) pair;
-      JSONObject violationObj = new JSONObject();
-      violationObj.put("vertexId", vertexIdValuePair.vertexId);
-      violationObj.put("vertexValue", vertexIdValuePair.vertexValue);
-      violationsList.add(violationObj);
-    }
-    scenarioObj.put("violations", violationsList);
+    VertexContextWrapper vertexContextWrapper = 
+      giraphVertexScenarioWrapper.getContextWrapper();
+    scenarioObj.put("vertexId", vertexContextWrapper.getVertexIdWrapper());
+    scenarioObj.put("vertexValue", vertexContextWrapper.getVertexValueAfterWrapper());
     return scenarioObj;
   }
 
