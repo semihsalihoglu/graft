@@ -8,7 +8,9 @@ TODO(semih): Write
 
 ## Quick Start
 
-### Get Prerequisites
+### Installing Graft
+
+#### Get Prerequisites
 The following are required to build and run Graft:
 
 * Protocol Buffers
@@ -23,7 +25,7 @@ Make sure everything required for Giraph is also installed, such as:
 * Hadoop
 
 
-### Get Giraph Trunk
+#### Get Giraph Trunk
 Graft must be built as a module for Giraph trunk, so let's grab a copy of it:
 ```bash
 git clone https://github.com/apache/giraph.git -b trunk
@@ -31,7 +33,7 @@ cd giraph
 mvn -DskipTests --projects .,giraph-core install
 ```
 
-### Get Graft under Giraph, Build and Install It
+#### Get Graft under Giraph, Build and Install It
 Get a copy of Graft as giraph-debugger module in Giraph trunk:
 ```bash
 git clone https://github.com/semihsalihoglu/graft.git  giraph-debugger
@@ -49,7 +51,10 @@ echo PATH=$PWD:\$PATH >>~/.bash_profile
 ```
 Now, let's debug an example Giraph job.
 
-### Download a Sample Graph
+
+### Launching Giraph Jobs with Graft
+
+#### Download a Sample Graph
 Before we move on, let's download a small sample graph:
 ```bash
 curl -L http://ece.northwestern.edu/~aching/shortestPathsInputGraph.tar.gz | tar xfz -
@@ -81,7 +86,6 @@ hadoop jar \
     #
 ```
 
-
 ### Launch It in Debugging Mode with Graft
 Now, you can launch the Giraph job in debugging mode by simply replacing the first two words (`hadoop jar`) of the command with `giraph-debug`:
 
@@ -101,8 +105,9 @@ giraph-debug -S{0,1,2} -V{1,2,3,4,5} -S 2 \
     # ...
 ```
 
+### Accessing Captured Debug Traces with Graft
 
-### Launch Debugger GUI
+#### Launch Debugger GUI
 Launch the debugger GUI with the following command:
 ```bash
 giraph-debug gui
@@ -114,21 +119,21 @@ If necessary, you can specify a different port number when you launch the GUI.
 giraph-debug gui 12345
 ```
 
-### Or, Stay on the Command-line to Debug
+#### Or, Stay on the Command-line to Debug
 You can access all information that has been recorded by the debugging Giraph job using the following commands.
 
-#### List Recorded Traces
+##### List Recorded Traces
 ```bash
 giraph-debug list
 giraph-debug list job_201405221715_0005
 ```
 
-#### Dump a Trace
+##### Dump a Trace
 ```bash
 giraph-debug dump job_201405221715_0005 0 6
 ```
 
-#### Generate JUnit Test Case Code from a Trace
+##### Generate JUnit Test Case Code from a Trace
 ```bash
 giraph-debug mktest        job_201405221715_0005 0 6 Test_job_201405221715_0005_S0_V6
 giraph-debug mktest-master job_201405221715_0005 0   TestMaster_job_201405221715_0005_S0
