@@ -151,9 +151,6 @@ public abstract class TestGenerator {
         return String.format("new Text(%s)", ((Text) writable).toString());
       } else {
         complexWritables.add(writable.getClass());
-//        String str = new String(WritableUtils.writeToByteArray(writable));
-//        return String.format("(%s)read%sFromString(\"%s\")", writable.getClass().getSimpleName(),
-//            writable.getClass().getSimpleName(), str);
         String str = toByteArrayString(WritableUtils.writeToByteArray(writable));
         return String.format("(%s)read%sFromByteArray(new byte[] {%s})", writable.getClass().getSimpleName(),
             writable.getClass().getSimpleName(), str);
