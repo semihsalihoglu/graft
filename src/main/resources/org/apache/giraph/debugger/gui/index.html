@@ -209,7 +209,7 @@
 		</div>
 
 		<div class="container bs-docs-container">
-			<h1>Graft <small>In-browser graph editor</small></h1>
+			<h1>Graft <small>GUI</small></h1>
 		</div>
 
 		<div id="debugger-container">
@@ -219,7 +219,7 @@
 		<div class="container bs-docs-container">
 			<div class="row"> <!--Row1 begins-->
 				<!--Column for left side controls-->
-				<div class="col-md-6">
+				<div class="col-md-4">
 					<!-- This is a row for the directed/undirected controls-->
 					<div class="row"> 
 						<!--Internal col begins-->
@@ -236,7 +236,7 @@
 										<input type="radio" name="options" id="options_undirected" class="graph-type form-control" value="undirected" /> Undirected
 									</label>
 								</div>
-								<button type="button" class="btn btn-primary btn-danger form-control" id="btn-attr-view">Attribute view</button>
+								<button type="button" class="btn btn-primary btn-danger form-control btn-sm" id="btn-attr-view">Attribute view</button>
 							</form> <!--Form ends-->
 						</div><!--Internal column ends-->
 					</div><!--Directed/Undirected Row ends-->
@@ -246,11 +246,10 @@
 						<div class="col-md-12">							
 							<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
 							<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
-							<button type="button" class="btn btn-warning" id="btn-node-list-get">Download Node List</button>
 						</div><!--Internal column ends-->
 					</div>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-8">
 					<!--Debugger Superstep controls container begin-->
 					<div id="controls-container">
 					</div>
@@ -274,9 +273,7 @@
 					<button type="button" class="btn btn-danger btn-sm" id="btn-code-download">Download</button>
 				</div>
 				<pre>
-					<code id="code-container">import author;
-						public static void main(String[] args) { System.out.println("Hello World"); }
-					</code>
+					<code id="code-container"></code>
 				</pre>
 			</div>
 

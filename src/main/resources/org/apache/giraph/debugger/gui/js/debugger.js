@@ -359,7 +359,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .append(
             $('<span />')
                 .attr('class', 'glyphicon glyphicon-cog')
-                .html('')
+                .html(' Toggle View')
         )
         .appendTo(formControls);
 
@@ -589,20 +589,18 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
     console.log(scenario); 
     // Add new nodes/links received in this scenario to graph.
     this.editor.addToGraph(scenario);
-    // Update graph data with this scenario.
-    this.editor.updateGraphData(this.marshallScenarioForEditor(scenario));
-
+    var marshalledScenario = this.marshallScenarioForEditor(scenario);
     // Disable the nodes that were not traced as part of this scenario.
     for (var i = 0; i < this.editor.nodes.length; i++) {
         var nodeId = this.editor.nodes[i].id;
         if ((nodeId in scenario) && scenario[nodeId].debugged != false) {
-            this.editor.enableNode(nodeId);
+            marshalledScenario[nodeId].enabled = true;
         } else {
-            this.editor.disableNode(nodeId);
+            marshalledScenario[nodeId].enabled = false;
         }
     }
-    this.editor.restartGraph();
-    this.editor.restartTable();
+    // Update graph data with this scenario.
+    this.editor.updateGraphData(marshalledScenario);
 }
 
 /*
