@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
 import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
 import org.apache.giraph.debugger.mock.TestGraphGenerator;
+import org.apache.giraph.debugger.utils.DebuggerUtils;
 import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
@@ -228,7 +229,7 @@ public static void main(String[] args) throws Exception {
         for (String vertexId : vertexIds) {
           GiraphVertexScenarioWrapper giraphScenarioWrapper;
           giraphScenarioWrapper = ServerUtils.readScenarioFromTrace(jobId, superstepNo,
-            vertexId.trim(), DebugTrace.VERTEX_ALL);
+            vertexId.trim(), DebugTrace.VERTEX_REGULAR);
           scenarioObj.put(vertexId, ServerUtils.scenarioToJSON(giraphScenarioWrapper));
         }
         // Set status as OK and convert JSONObject to string.
@@ -244,7 +245,8 @@ public static void main(String[] args) throws Exception {
   
   /*
    * Returns the JAVA code for vertex scenario.
-   * @URLParams : {jobId, superstepId, vertexId}
+   * @URLParams : {jobId, superstepId, vertexId, traceType}
+   * @desc traceType : Can be one of reg, err, msg or vv
    */
   static class GetVertexTest extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
@@ -252,19 +254,22 @@ public static void main(String[] args) throws Exception {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       String vertexId = paramMap.get(ServerUtils.VERTEX_ID_KEY);
+      String traceType = paramMap.get(ServerUtils.VERTEX_TEST_TRACE_TYPE_KEY);
       // Check both jobId, superstepId and vertexId are present
       try {
-        if (jobId == null || superstepId == null || vertexId == null) {
+        if (jobId == null || superstepId == null || vertexId == null 
+          || traceType == null) {
           throw new IllegalArgumentException("Missing mandatory parameters");
         }
         Long superstepNo = Long.parseLong(paramMap.get(ServerUtils.SUPERSTEP_ID_KEY));
         if (superstepNo < -1) {
           throw new NumberFormatException();
         }
+        DebugTrace debugTrace = DebuggerUtils.getVertexDebugTraceForPrefix(traceType);
         // Send JSON by default.
         GiraphVertexScenarioWrapper giraphScenarioWrapper = 
           ServerUtils.readScenarioFromTrace(jobId, superstepNo,
-            vertexId.trim(), DebugTrace.VERTEX_ALL);
+            vertexId.trim(), debugTrace);
         ComputationComputeTestGenerator testGenerator = 
           new ComputationComputeTestGenerator();
         // Set status as OK and convert JSONObject to string.
