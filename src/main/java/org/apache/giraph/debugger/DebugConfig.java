@@ -65,15 +65,18 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   public static final String VERTICES_TO_DEBUG_FLAG = "giraph.debugger.verticesToDebug";
   public static final String DEBUG_NEIGHBORS_FLAG = "giraph.debugger.debugNeighbors";
   public static final String SUPERSTEPS_TO_DEBUG_FLAG = "giraph.debugger.superstepsToDebug";
+  public static final String DEBUG_ALL_VERTICES_FLAG = "giraph.debugger.debugAllVertices";
 
   protected static final Logger LOG = Logger.getLogger(DebugConfig.class);
 
   private Set<I> verticesToDebugSet;
   private Set<Long> superstepsToDebugSet;
   private boolean debugNeighborsOfVerticesToDebug;
+  private boolean debugAllVertices = false;
 
   public DebugConfig() {
     verticesToDebugSet = null;
+    debugAllVertices = false;
     debugNeighborsOfVerticesToDebug = false;
     superstepsToDebugSet = null;
   }
@@ -93,23 +96,26 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
       }
     }
 
-    String verticesToDebugStr = config.get(VERTICES_TO_DEBUG_FLAG, null);
-    Class<? extends Computation> userComputationClass = config.getComputationClass();
-    Class<?>[] typeArguments = ReflectionUtils.getTypeArguments(Computation.class,
-      userComputationClass);
-    Class<?> idType = typeArguments[0];
-    if (verticesToDebugStr != null) {
-      String[] verticesToDebugArray = verticesToDebugStr.split(VERTEX_ID_DELIMITER);
-      this.verticesToDebugSet = new HashSet<>();
-      for (String idString : verticesToDebugArray) {
-        if (LongWritable.class.isAssignableFrom(idType)) {
-          verticesToDebugSet.add((I) new LongWritable(Long.valueOf(idString)));
-        } else if (IntWritable.class.isAssignableFrom(idType)) {
-          verticesToDebugSet.add((I) new IntWritable(Integer.valueOf(idString)));
-        } else {
-          throw new IllegalArgumentException("When using the giraph.debugger.verticesToDebug"
-            + " argument, the vertex IDs of the computation class needs to be LongWritable"
-            + " or IntWritable.");
+    debugAllVertices = config.getBoolean(DEBUG_ALL_VERTICES_FLAG, false);
+    if (!debugAllVertices) {
+      String verticesToDebugStr = config.get(VERTICES_TO_DEBUG_FLAG, null);
+      Class<? extends Computation> userComputationClass = config.getComputationClass();
+      Class<?>[] typeArguments = ReflectionUtils.getTypeArguments(Computation.class,
+        userComputationClass);
+      Class<?> idType = typeArguments[0];
+      if (verticesToDebugStr != null) {
+        String[] verticesToDebugArray = verticesToDebugStr.split(VERTEX_ID_DELIMITER);
+        this.verticesToDebugSet = new HashSet<>();
+        for (String idString : verticesToDebugArray) {
+          if (LongWritable.class.isAssignableFrom(idType)) {
+            verticesToDebugSet.add((I) new LongWritable(Long.valueOf(idString)));
+          } else if (IntWritable.class.isAssignableFrom(idType)) {
+            verticesToDebugSet.add((I) new IntWritable(Integer.valueOf(idString)));
+          } else {
+            throw new IllegalArgumentException("When using the giraph.debugger.verticesToDebug"
+              + " argument, the vertex IDs of the computation class needs to be LongWritable"
+              + " or IntWritable.");
+          }
         }
       }
     }
@@ -123,6 +129,10 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   }
   
   public boolean shouldDebugVertex(Vertex<I, V, E> vertex) {
+    if (debugAllVertices) {
+      return true;
+    } 
+    // Should not debug all vertices. Check if any vertices were special cased.
     if (verticesToDebugSet == null) {
       return false;     
     } else {
