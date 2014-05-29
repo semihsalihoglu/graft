@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
-import org.apache.giraph.debugger.gui.ServerUtils;
-import org.apache.giraph.debugger.gui.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.BaseWrapper;
 import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
+import org.apache.giraph.debugger.utils.DebugUtils;
+import org.apache.giraph.debugger.utils.DebugUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.graph.AbstractComputation;
@@ -38,7 +38,6 @@ import org.apache.log4j.Logger;
 public class CommonVertexMasterInterceptionUtil {
   private static final Logger LOG = Logger.getLogger(AbstractInterceptingMasterCompute.class);
   private static FileSystem fileSystem = null;
-  private String TRACE_ROOT = "/giraph-debug-traces";
   private String jobId;
   private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
   private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper;
@@ -59,7 +58,6 @@ public class CommonVertexMasterInterceptionUtil {
   public void initCommonVertexMasterContextWrapper(
     ImmutableClassesGiraphConfiguration immutableClassesConfig, long superstepNo,
     long totalNumVertices, long totalNumEdges) {
-    this.TRACE_ROOT = immutableClassesConfig.get("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
     this.commonVertexMasterContextWrapper =
       new CommonVertexMasterContextWrapper(immutableClassesConfig, superstepNo, totalNumVertices,
         totalNumEdges);
@@ -81,35 +79,10 @@ public class CommonVertexMasterInterceptionUtil {
     return null;
   }
 
-  @SuppressWarnings("rawtypes")
-  public void saveVertexScenarioWrapper(GiraphVertexScenarioWrapper vertexScenarioWrapper,
-    String vertexId, boolean isException) {
-    DebugTrace debugTrace = isException ? DebugTrace.VERTEX_EXCEPTION : DebugTrace.VERTEX_REGULAR;
-    saveScenarioWrapper(vertexScenarioWrapper,
-      String.format(ServerUtils.getTraceFileFormat(debugTrace),
-        commonVertexMasterContextWrapper.getSuperstepNoWrapper(), vertexId));
-  }
-
-  public void saveMasterScenarioWrapper(GiraphMasterScenarioWrapper masterScenarioWrapper,
-    boolean isException) {
-    DebugTrace debugTrace = isException ? DebugTrace.MASTER_EXCEPTION : DebugTrace.MASTER_REGULAR;
-    saveScenarioWrapper(masterScenarioWrapper, 
-      String.format(ServerUtils.getTraceFileFormat(debugTrace),
-        commonVertexMasterContextWrapper.getSuperstepNoWrapper()));
-  }
-
-  private void saveScenarioWrapper(BaseWrapper masterOrVertexScenarioWrapper,
-    String fileName) {
-//    boolean isMaster, boolean isException, String vertexId) {
-//    String optFirstSuffix = isMaster ? "master_" : "";
-//    String secondSuffix = isException ? "err" : "reg";
-//    String optVertexPrefix = vertexId != null ? "_vid_" + vertexId : "";
-//    String fileName = getTraceDirectory() + "/" + optFirstSuffix + secondSuffix
-//      + "_stp_" + commonVertexMasterContextWrapper.getSuperstepNoWrapper()
-//      + optVertexPrefix + ".tr";
-    LOG.info("saving trace at: " + fileName);
+  public void saveScenarioWrapper(BaseWrapper masterOrVertexScenarioWrapper, String fullFileName) {
+    LOG.info("saving trace at: " + fullFileName);
     try {
-      masterOrVertexScenarioWrapper.saveToHDFS(fileSystem, fileName);
+      masterOrVertexScenarioWrapper.saveToHDFS(fileSystem, fullFileName);
     } catch (IOException e) {
       LOG.error("Could not save the " + masterOrVertexScenarioWrapper.getClass().getName()
         + " protobuf trace. IOException was thrown. exceptionMessage: " + e.getMessage());
@@ -129,11 +102,11 @@ public class CommonVertexMasterInterceptionUtil {
     return commonVertexMasterContextWrapper;
   }
 
-  public String getTraceDirectory() {
-    return this.TRACE_ROOT + "/" + jobId;
+  public FileSystem getFileSystem() {
+    return fileSystem;
   }
 
-  public static FileSystem getFileSystem() {
-    return fileSystem;
+  public String getJobId() {
+    return jobId;
   }
 }
