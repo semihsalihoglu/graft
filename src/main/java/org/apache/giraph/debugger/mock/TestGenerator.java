@@ -31,7 +31,7 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 public abstract class TestGenerator {
 
   @SuppressWarnings("rawtypes")
-  private Set<Class> writableReadFromString = new HashSet<>();
+  private Set<Class> complexWritables = new HashSet<>();
 
   public TestGenerator() {
     Velocity.setProperty(VelocityEngine.RESOURCE_LOADER, "class");
@@ -41,12 +41,12 @@ public abstract class TestGenerator {
   }
 
   @SuppressWarnings("rawtypes")
-  public Set<Class> getWritableReadFromString() {
-    return writableReadFromString;
+  public Set<Class> getComplexWritableList() {
+    return complexWritables;
   }
 
-  protected void resetWritableReadFromString() {
-    this.writableReadFromString.clear();
+  protected void resetComplexWritableList() {
+    this.complexWritables.clear();
   }
 
   protected class ContextBuilder {
@@ -68,7 +68,7 @@ public abstract class TestGenerator {
     }
     
     private void addWritableReadFromString() {
-      context.put("writableReadFromString", writableReadFromString);
+      context.put("complexWritables", complexWritables);
     }
 
     public void addPackage(String testPackage) {
@@ -150,9 +150,12 @@ public abstract class TestGenerator {
       } else if (writable instanceof Text) {
         return String.format("new Text(%s)", ((Text) writable).toString());
       } else {
-        writableReadFromString.add(writable.getClass());
-        String str = new String(WritableUtils.writeToByteArray(writable));
-        return String.format("(%s)read%sFromString(\"%s\")", writable.getClass().getSimpleName(),
+        complexWritables.add(writable.getClass());
+//        String str = new String(WritableUtils.writeToByteArray(writable));
+//        return String.format("(%s)read%sFromString(\"%s\")", writable.getClass().getSimpleName(),
+//            writable.getClass().getSimpleName(), str);
+        String str = toByteArrayString(WritableUtils.writeToByteArray(writable));
+        return String.format("(%s)read%sFromByteArray(new byte[] {%s})", writable.getClass().getSimpleName(),
             writable.getClass().getSimpleName(), str);
       }
     }
@@ -178,6 +181,16 @@ public abstract class TestGenerator {
       } else {
         return input.toString();
       }
+    }
+    
+    private String toByteArrayString(byte[] byteArray) {
+      StringBuilder strBuilder = new StringBuilder();
+      for (int i = 0; i < byteArray.length; i++) {
+        if (i != 0)
+          strBuilder.append(',');
+        strBuilder.append(Byte.toString(byteArray[i]));
+      }
+      return strBuilder.toString();
     }
   }
 }
