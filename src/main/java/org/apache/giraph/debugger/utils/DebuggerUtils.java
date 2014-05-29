@@ -33,6 +33,11 @@ public class DebuggerUtils {
     MASTER_REGULAR, MASTER_EXCEPTION, MASTER_ALL,
     JAR_SIGNATURE
   }
+  // Prefixes of debug traces 
+  public static final String PREFIX_TRACE_REGULAR = "reg";
+  public static final String PREFIX_TRACE_EXCEPTION = "err";
+  public static final String PREFIX_TRACE_VERTEX = "vv";
+  public static final String PREFIX_TRACE_MESSAGE = "msg";
 
   /**
    * Makes a clone of a writable object. Giraph sometimes reuses and overwrites the bytes
@@ -147,25 +152,41 @@ public class DebuggerUtils {
   public static String getTraceFileFormat(DebugTrace debugTrace) {
     switch (debugTrace) {
     case VERTEX_REGULAR:
-      return "reg_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_REGULAR + "_stp_%d_vid_%s.tr";
     case VERTEX_EXCEPTION:
-      return "err_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_EXCEPTION + "_stp_%d_vid_%s.tr";
     case VERTEX_ALL:
-      return "(reg|err)_stp_%d_vid_%s.tr"; 
+      return String.format("(%s|%s)%s", PREFIX_TRACE_REGULAR,
+      		PREFIX_TRACE_EXCEPTION, "_stp_%d_vid_%s.tr"); 
     case INTEGRITY_MESSAGE_ALL:
       return "task_%s_msg_intgrty_stp_%d.tr";
     case INTEGRITY_MESSAGE_SINGLE_VERTEX:
-      return "msg_intgrty_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_MESSAGE + "_intgrty_stp_%d_vid_%s.tr";
     case INTEGRITY_VERTEX:
-      return "vv_intgrty_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_VERTEX +"_intgrty_stp_%d_vid_%s.tr";
      case MASTER_REGULAR:
-      return "master_reg_stp_%d.tr";
+      return "master_" + PREFIX_TRACE_REGULAR + "_stp_%d.tr";
     case MASTER_EXCEPTION:
-      return "master_err_stp_%d.tr";
+      return "master_" + PREFIX_TRACE_EXCEPTION + "_stp_%d.tr";
     case MASTER_ALL:
-      return "master_(reg|err)_stp_%d.tr";
+      return String.format("master_(%s|%s)_%s", PREFIX_TRACE_REGULAR,
+        PREFIX_TRACE_EXCEPTION, "_stp_%d.tr");
     default:
       throw new IllegalArgumentException("DebugTrace not supported.");
+    }
+  }
+  
+  public static DebugTrace getVertexDebugTraceForPrefix(String prefix) {
+    if (prefix.equals(PREFIX_TRACE_REGULAR)) {
+      return DebugTrace.VERTEX_REGULAR;
+    } else if (prefix.equals(PREFIX_TRACE_EXCEPTION)) {
+      return DebugTrace.VERTEX_EXCEPTION;
+    } else if (prefix.equals(PREFIX_TRACE_VERTEX)) {
+      return DebugTrace.INTEGRITY_VERTEX;
+    } else if (prefix.equals(PREFIX_TRACE_MESSAGE)) {
+      return DebugTrace.INTEGRITY_MESSAGE_SINGLE_VERTEX;
+    } else {
+      throw new IllegalArgumentException("Prefix not supported");
     }
   }
 

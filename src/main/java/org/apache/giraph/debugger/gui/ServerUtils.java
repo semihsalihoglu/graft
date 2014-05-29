@@ -46,7 +46,7 @@ public class ServerUtils {
   public static final String TASK_ID_KEY = "taskId";
   public static final String VERTEX_TEST_TRACE_TYPE_KEY = "traceType";
   public static final String ADJLIST_KEY = "adjList";
-
+ 
   /*
    * Returns parameters of the URL in a hash map. For instance,
    * http://localhost:9000/?key1=val1&key2=val2&key3=val3
@@ -139,44 +139,34 @@ public class ServerUtils {
    * @param jobId : ID of the job debugged.
    * @param superstepNo: Superstep number debugged.
    * @param vertexId - ID of the vertex debugged. Returns GiraphScenarioWrapper.
-   * @param [debugTrace] - Can be either REGULAR, EXCEPTION OR ALL_VERTICES. In case
-   * of null, returns whichever trace is available.
+   * @param [debugTrace] - Can be either any one of VERTEX_* and 
+   * INTEGRITY_MESSAGE_SINGLE_VERTEX. 
    */
   public static GiraphVertexScenarioWrapper readScenarioFromTrace(String jobId, long superstepNo,
     String vertexId, DebugTrace debugTrace) throws IOException, ClassNotFoundException, 
     InstantiationException, IllegalAccessException {
-    if (!EnumSet.of(DebugTrace.VERTEX_ALL, DebugTrace.VERTEX_EXCEPTION, 
-      DebugTrace.VERTEX_REGULAR).contains(debugTrace)) {
-      // Throw exception for unsupported debug trace. 
-      throw new IllegalArgumentException(
-        "DebugTrace type is invalid. Use REGULAR, EXCEPTION or ALL_VERTICES");
-    }
     FileSystem fs = ServerUtils.getFileSystem();
     GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
-    // If debugTrace is regular or null, try reading the regular trace first.
-    if (debugTrace == DebugTrace.VERTEX_REGULAR || debugTrace == DebugTrace.VERTEX_ALL) {
+    EnumSet<DebugTrace> enumSet = EnumSet.of(debugTrace);
+    if (debugTrace == DebugTrace.VERTEX_ALL) {
+      enumSet = EnumSet.of(DebugTrace.VERTEX_REGULAR, DebugTrace.VERTEX_EXCEPTION,
+        DebugTrace.INTEGRITY_VERTEX, DebugTrace.INTEGRITY_MESSAGE_SINGLE_VERTEX);
+    }
+    // Loops through all possible debug traces and returns the first one found.
+    for (DebugTrace enumValue: enumSet) {
       String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
-        vertexId, DebugTrace.VERTEX_REGULAR);
+        vertexId, enumValue);
       try {
-        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
         // If scenario is found, return it. 
+        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
         return giraphScenarioWrapper;
-      } catch(FileNotFoundException e) {
-        // If debugTrace was null, ignore this exception since 
-        // we will try reading exception trace later.
-        if ( debugTrace == DebugTrace.VERTEX_ALL) {
-          Debug.println("readScenarioFromTrace", "Regular file not found. Ignoring.");
-        } else {
-          throw e;
-        }
-      }
-    } 
-    // This code is reached only when debugTrace = exception or null. 
-    // In case of null, it is only reached when regular trace is not found already.
-    String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
-      vertexId, DebugTrace.VERTEX_EXCEPTION);
-    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
-    return giraphScenarioWrapper;
+      } catch (FileNotFoundException e) {
+        // Ignore the exception since we will try reading another traceType again.
+        Debug.println("readScenarioFromTrace", "File not found. Ignoring.");
+      } 
+    }
+    // None of the debugTrace types were found. Throw exception.
+    throw new FileNotFoundException("Debug Trace not found.");
   }
   
   /*

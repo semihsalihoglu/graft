@@ -55,6 +55,14 @@ ValidationPanel.StateEnum = {
 }
 
 /*
+ * Deferred callbacks for capture scenario
+ */
+ValidationPanel.prototype.onCaptureVertex = function(done, fail) {
+    this.onCaptureVertex.done = done;
+    this.onCaptureVertex.fail = fail;
+}
+
+/*
  * Creates HTML elements for valpanel.
  */
 ValidationPanel.prototype.initElements = function() {
@@ -197,19 +205,42 @@ ValidationPanel.prototype.showMessageViolations = function() {
     var data = this.buttonData[this.currentLabel].data;
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<thead><tr><th>Task ID</th><th>Source</th><th>Destination</th><th>Message</th></tr></thead>')
+        .attr('id', 'valpanel-M-table')
+        .html('<thead><tr><th>Source ID</th><th>Destination ID</th><th>Message</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
+
+    var captureScenarioButton = 
+        $('<button type="button" class="btn btn-sm btn-primary btn-vp-M-capture">Capture Scenario</button>');
+
+    var dataTable = $(table).DataTable({
+        'columns' : [
+            { 'data' : 'srcId' },
+            { 'data' : 'destinationId' },
+            { 'data' : 'message' },
+            {
+                'orderable' : false,
+                'data' : null,
+                'defaultContent' : $(captureScenarioButton).prop('outerHTML')
+            },
+        ]
+    });
     if (data) {
         for (var taskId in data) {
             var violations = data[taskId].violations;
             for (var i = 0; violations && i < violations.length; ++i) {
                 var violation = violations[i];
-                table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".format(
-                            taskId, violation.srcId, violation.destinationId, violation.message)));
+                violation.superstepId = this.superstepId;
+                dataTable.row.add(violation).draw();
             }
         }
     }
-    $(table).DataTable();
+    // Attach click event to the capture Scenario button.
+    $('button.btn-vp-M-capture').click((function(event) {
+        var tr = $(event.target).parents('tr');
+        var row = dataTable.row(tr);
+        var data = row.data(); 
+        console.log(data);
+    }).bind(this));
 }
 
 /*
@@ -219,28 +250,47 @@ ValidationPanel.prototype.showMessageViolations = function() {
 ValidationPanel.prototype.showVertexViolations = function() {
     this.expand();
     this.currentLabel = 'V';
+    var data = this.buttonData[this.currentLabel].data;
     // Empty the content container and add violations table.
     this.contentContainer.empty();
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<thead><tr><th>Task ID</th><th>Vertex ID</th><th>Vertex Value</th></tr></thead>')
+        .attr('id', 'valpanel-V-table')
+        .html('<thead><tr><th>Vertex ID</th><th>Vertex Value</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
+
+    var captureScenarioButton = 
+        $('<button type="button" class="btn btn-sm btn-primary btn-vp-V-capture">Capture Scenario</button>');
+
+    var dataTable = $(table).DataTable({
+        'columns' : [
+            { 'data' : 'vertexId' },
+            { 'data' : 'vertexValue' },
+            {
+                'orderable' : false,
+                'data' : null,
+                'defaultContent' : $(captureScenarioButton).prop('outerHTML')
+            },
+        ]
+    });
     var violationIds = [];
-    var data = this.buttonData[this.currentLabel].data;
     if (data) {
-        for (var taskId in data) {
-            var violations = data[taskId].violations;
-            for (var i = 0; violations && i < violations.length; ++i) {
-                var violation = violations[i];
-                violationIds.push(violation.vertexId);
-                table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(
-                            taskId, violation.vertexId, violation.vertexValue)));
-            }
+        for (var vertexId in data) {
+            var violation = data[vertexId];
+            violation.superstepId = this.superstepId;
+            dataTable.row.add(violation).draw();
+            violationIds.push(vertexId);
         }
     }
+    // Attach click event to the capture Scenario button.
+    $('button.btn-vp-V-capture').click((function(event) {
+        var tr = $(event.target).parents('tr');
+        var row = dataTable.row(tr);
+        var data = row.data(); 
+        console.log(data);
+    }).bind(this));
     // Color the vertices with violations
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
-    $(table).DataTable();
 }
 
 /*
@@ -249,26 +299,50 @@ ValidationPanel.prototype.showVertexViolations = function() {
 ValidationPanel.prototype.showExceptions = function() {
     this.expand();
     this.currentLabel = 'E';
+    var data = this.buttonData[this.currentLabel].data;
     // Empty the content container and add violations table.
     // TODO(vikesh) Master exceptions.
     this.contentContainer.empty();
     var table = $("<table />")
         .attr('class', 'table')
-        .html('<thead><th>Vertex ID</th><th>Message</th><th>Stack trace</th></tr></thead>')
+        .attr('id', 'valpanel-V-table')
+        .html('<thead><tr><th>Vertex ID</th><th>Vertex Value</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
-    var data = this.buttonData[this.currentLabel].data; 
+
+    var captureScenarioButton = 
+        $('<button type="button" class="btn btn-sm btn-primary btn-vp-E-capture">Capture Scenario</button>');
+
+    var dataTable = $(table).DataTable({
+        'columns' : [
+            { 'data' : 'vertexId' },
+            { 'data' : 'message' },
+            { 'data' : 'stackTrace' },
+            {
+                'orderable' : false,
+                'data' : null,
+                'defaultContent' : $(captureScenarioButton).prop('outerHTML')
+            }
+        ]
+    });
     var violationIds = [];
-    for (vertexId in data) {
-        table.append($("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>".format(vertexId, 
-                    data[vertexId].exception.message, data[vertexId].exception.stackTrace)));
-        violationIds.push(vertexId);
+    if (data) {
+        for (var vertexId in data) {
+            var violation = data[vertexId];
+            violation.superstepId = this.superstepId;
+            dataTable.row.add(violation).draw();
+            violationIds.push(vertexId);
+        }
     }
+    // Attach click event to the capture Scenario button.
+    $('button.btn-vp-E-capture').click((function(event) {
+        var tr = $(event.target).parents('tr');
+        var row = dataTable.row(tr);
+        var data = row.data(); 
+        console.log(data);
+    }).bind(this));
     // Color the nodes with exception.
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
-    $(table).DataTable();
 }
-
-
 
 /*
  * Handle the received data from the debugger server.
