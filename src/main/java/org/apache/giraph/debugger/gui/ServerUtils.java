@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.ExceptionWrapper;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
@@ -26,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,7 +42,8 @@ public class ServerUtils {
   public enum DebugTrace {
     VERTEX_REGULAR, VERTEX_EXCEPTION, VERTEX_ALL, 
     INTEGRITY_MESSAGE, INTEGRITY_VERTEX, 
-    MASTER_REGULAR, MASTER_EXCEPTION, MASTER_ALL
+    MASTER_REGULAR, MASTER_EXCEPTION, MASTER_ALL,
+    JAR_SIGNATURE
   }
 
   public static final String JOB_ID_KEY = "jobId";
@@ -50,6 +54,8 @@ public class ServerUtils {
   public static final String ADJLIST_KEY = "adjList";
 
   public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
+  public static final String JARCACHE_HDFS = System.getProperty("giraph.debugger.jobCacheAtHDFS", TRACE_ROOT + "/jars");
+  public static final String JARCACHE_LOCAL = System.getProperty("giraph.debugger.jobCacheLocal", System.getenv("HOME") + "/.giraph-debug/jars");
 
   /*
    * Returns parameters of the URL in a hash map. For instance,
@@ -122,16 +128,29 @@ public class ServerUtils {
       case MASTER_REGULAR:
       case MASTER_EXCEPTION:
       case MASTER_ALL:
+      case JAR_SIGNATURE:
         return String.format("%s/%s", ServerUtils.TRACE_ROOT, jobId);
       default:
         throw new IllegalArgumentException("DebugTrace not supported.");
     }
   }
 
-  public static String getCachedJobJarPath(String jobId) {
-    // TODO read the "jar.signature" file under the TRACE_ROOT/jobId
-    // TODO then return the path: TRACE_ROOT/jars/jarSignature
-    return null;
+  public static URL getCachedJobJarPath(String jobId) throws IOException {
+    // read the jar signature file under the TRACE_ROOT/jobId/
+    Path jarSignaturePath = new Path(getTraceFileRoot(jobId, DebugTrace.JAR_SIGNATURE) + "/"
+      + "jar.signature");
+    FileSystem fs = getFileSystem();
+    String jarSignature = IOUtils.readLines(fs.open(jarSignaturePath)).get(0);
+    // check if jar is already in JARCACHE_LOCAL
+    File localFile = new File(JARCACHE_LOCAL + "/" + jarSignature + ".jar");
+    if (!localFile.exists()) {
+      // otherwise, download from HDFS
+      Path hdfsPath = new Path(fs.getUri().resolve(JARCACHE_HDFS + "/" + jarSignature + ".jar"));
+      Logger.getLogger(ServerUtils.class).info("Copying from HDFS: " + hdfsPath + " to " + localFile);
+      localFile.getParentFile().mkdirs();
+      fs.copyToLocalFile(hdfsPath, new Path(localFile.toURI()));
+    }
+    return localFile.toURI().toURL();
   }
   
   /*
@@ -190,8 +209,6 @@ public class ServerUtils {
       throw new IllegalArgumentException(
         "DebugTrace type is invalid. Use REGULAR, EXCEPTION or ALL_VERTICES");
     }
-    // TODO Before loading any trace, add the job jar at getCachedJobJarPath() to the ClassLoader's CLASSPATH.
-    // TODO Alternatively, the GUI can tell the Server to augment the CLASSPATH whenever it's told to load a new job id, because CLASSPATH for command-line operations are completely handled by the giraph-debug script.
     FileSystem fs = ServerUtils.getFileSystem();
     GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
     // If debugTrace is regular or null, try reading the regular trace first.
@@ -199,7 +216,7 @@ public class ServerUtils {
       String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
         vertexId, DebugTrace.VERTEX_REGULAR);
       try {
-        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
         // If scenario is found, return it. 
         return giraphScenarioWrapper;
       } catch(FileNotFoundException e) {
@@ -216,7 +233,7 @@ public class ServerUtils {
     // In case of null, it is only reached when regular trace is not found already.
     String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
       vertexId, DebugTrace.VERTEX_EXCEPTION);
-    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
     return giraphScenarioWrapper;
   }
   
@@ -248,7 +265,7 @@ public class ServerUtils {
       String traceFilePath = ServerUtils.getMasterTraceFilePath(jobId, superstepNo,
         DebugTrace.MASTER_REGULAR);
       try {
-        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+        giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
         // If scenario is found, return it. 
         return giraphScenarioWrapper;
       } catch(FileNotFoundException e) {
@@ -265,7 +282,7 @@ public class ServerUtils {
     // In case of null, it is only reached when regular trace is not found already.
     String traceFilePath = ServerUtils.getMasterTraceFilePath(jobId, superstepNo,
       DebugTrace.MASTER_EXCEPTION);
-    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
+    giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
     return giraphScenarioWrapper;
   }
   
@@ -279,7 +296,7 @@ public class ServerUtils {
     String traceFilePath = ServerUtils.getIntegrityTraceFilePath(jobId, taskId, 
       superstepNo, DebugTrace.INTEGRITY_MESSAGE);
     MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = new MsgIntegrityViolationWrapper();
-    msgIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
+    msgIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
     return msgIntegrityViolationWrapper;
   }
 
@@ -293,7 +310,7 @@ public class ServerUtils {
     String traceFilePath = ServerUtils.getIntegrityTraceFilePath(jobId, taskId, 
       superstepNo, DebugTrace.INTEGRITY_VERTEX);
     VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper = new VertexValueIntegrityViolationWrapper();
-    vertexValueIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath);
+    vertexValueIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath, getCachedJobJarPath(jobId));
     return vertexValueIntegrityViolationWrapper;
   }
 

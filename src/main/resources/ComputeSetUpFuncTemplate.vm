@@ -14,13 +14,12 @@
 
     classUnderTest = ($classUnderTestName) conf.createComputation();
 
-    mockEnv = new MockedEnvironment<>();
-    GraphState graphState = mockEnv.getGraphState();
+    GraphState graphState = mock(GraphState.class);
     when(graphState.getSuperstep()).thenReturn($superstepNo#[[l]]#);
     when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
     when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
 
-    processor = mockEnv.getWorkerClientRequestProcessor();
+    processor = mock(WorkerClientRequestProcessor.class);
 
     WorkerAggregatorUsage aggr = mock(WorkerAggregatorUsage.class);
 #foreach ($aggr in $aggregators)
