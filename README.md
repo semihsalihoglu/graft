@@ -65,7 +65,7 @@ You must have your system configured to use a Hadoop cluster, or run one on your
 start-all.sh
 ```
 
-### Launch Giraph's Shortest Path Example
+#### Launch Giraph's Shortest Path Example
 Next, let's compile the giraph-examples module:
 ```bash
 cd ../giraph-examples
@@ -86,7 +86,7 @@ hadoop jar \
     #
 ```
 
-### Launch It in Debugging Mode with Graft
+#### Launch It in Debugging Mode with Graft
 Now, you can launch the Giraph job in debugging mode by simply replacing the first two words (`hadoop jar`) of the command with `giraph-debug`:
 
 ```bash
