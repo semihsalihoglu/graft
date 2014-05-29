@@ -323,6 +323,8 @@ public static void main(String[] args) throws Exception {
   /*
    * Returns the integrity violations based on the requested parameter.
    * The requested parameter (type) may be one of M, E or V.
+   * @URLParams : jobId, superstepId, violiationType
+   * It is an optional parameter and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
@@ -338,23 +340,13 @@ public static void main(String[] args) throws Exception {
         if (superstepNo < -1) {
           throw new NumberFormatException();
         }
-        // See if task ids are already supplied. 
-        ArrayList<String> taskIds  = null;
-        // Get the single vertexId or the list of vertexIds (comma-separated).
-        String rawTaskIds = paramMap.get(ServerUtils.TASK_ID_KEY);
-        if (rawTaskIds != null) {
-          taskIds = new ArrayList(Arrays.asList(rawTaskIds.split(",")));
-        }
         // JSON object that will be finally returned. 
         JSONObject integrityObj = new JSONObject();
         // Message violation
         if(violationType.equals("M")) {
-          // No task Id supplied. Get the tasks causing msg integrity violations.
-          if (rawTaskIds == null) {
-            // Read exceptions for all vertices.
-            taskIds  = ServerUtils.getTasksWithIntegrityViolations(jobId, superstepNo, 
-              DebugTrace.INTEGRITY_MESSAGE);
-          }
+          ArrayList<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
+            jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE);
+          
           for(String taskId : taskIds) {
             MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 
               ServerUtils.readMsgIntegrityViolationFromTrace(jobId, taskId, superstepNo);
@@ -363,16 +355,12 @@ public static void main(String[] args) throws Exception {
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
-          // No task Id supplied. Get the tasks causing msg integrity violations.
-          if (rawTaskIds == null) {
-            // Read exceptions for all vertices.
-            taskIds  = ServerUtils.getTasksWithIntegrityViolations(jobId, superstepNo, 
-              DebugTrace.INTEGRITY_VERTEX);
-          }
-          for(String taskId : taskIds) {
-            VertexValueIntegrityViolationWrapper vertexValueIntegrityViolationWrapper =
-              ServerUtils.readVertexIntegrityViolationFromTrace(jobId, taskId, superstepNo);
-            integrityObj.put(taskId, ServerUtils.vertexIntegrityToJson(vertexValueIntegrityViolationWrapper));
+          ArrayList<String> vertexIds = ServerUtils.getTasksWithIntegrityViolations(
+            jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
+          for(String vertexId : vertexIds) {
+            GiraphVertexScenarioWrapper giraphVertexScenarioWrapper =
+              ServerUtils.readVertexIntegrityViolationFromTrace(jobId, superstepNo, vertexId);
+            integrityObj.put(vertexId, ServerUtils.vertexIntegrityToJson(giraphVertexScenarioWrapper));
           }
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
