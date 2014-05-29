@@ -10,6 +10,10 @@
 		<link rel="stylesheet" href="css/valpanel.css">
 		<link rel="stylesheet" href="css/slider/slider.css">
 		<link rel="stylesheet" href="css/app.css">
+		<!--TODO(vikesh) : * Load all JS files asychronously in a single script - requirejs. 
+			* Download external JS files during mvn compile.
+			* Remove http from src to automatically load based on the protocol used to launch this file.
+		-->
 		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 		<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
@@ -18,9 +22,8 @@
 		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 		<script src="http://cdn.datatables.net/1.10.0/js/jquery.dataTables.js"></script>
 		<script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-		<script src="js/noty/packaged/jquery.noty.packaged.min.js"></script>
+		<script src="http://cdn.jsdelivr.net/noty/2.2.2/packaged/jquery.noty.packaged.min.js" />
 		<script src="js/slider/bootstrap-slider.js"></script>
-		<!--TODO(vikesh) : Load all JS files asychronously in a single script - requirejs -->
 		<script src="js/utils.js"></script>
 		<script src="js/utils.sampleGraphs.js"></script>
 		<script src="js/editor.core.js"></script>
