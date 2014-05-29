@@ -330,12 +330,12 @@ jarFileCachedHDFS="$JARCACHE_HDFS"/"$jarFileSig".jar
 msg "Caching job jar locally: $jarFileCachedLocal"
 [ -e "$jarFileCachedLocal" ] || {
     mkdir -p "$(dirname "$jarFileCachedLocal")"
-    ln -f "$jarFile" "$jarFileCachedLocal" ||
+    ln -f "$jarFile" "$jarFileCachedLocal" 2>/dev/null ||
         cp -f "$jarFile" "$jarFileCachedLocal"
 }
 msg "Caching job jar at HDFS: $jarFileCachedHDFS"
 hadoop fs -test -e "$jarFileCachedHDFS" || {
-    hadoop fs -mkdir "$(dirname "$jarFileCachedHDFS")"
+    hadoop fs -mkdir "$(dirname "$jarFileCachedHDFS")" 2>/dev/null || true
     hadoop fs -put "$jarFile" "$jarFileCachedHDFS"
 }
 # let AbstractInterceptingComputation record the jar signature under the job trace dir
