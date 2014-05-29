@@ -347,8 +347,14 @@ public class ServerUtils {
       superstepNo, "(.*?)");
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
-    // Iterate through each file in this directory and match the regex.
-    for (FileStatus fileStatus : fs.listStatus(pt)) {
+    FileStatus[] fileStatuses = null;
+    // Hadoop listStatus returns null when path is not found.
+    fileStatuses = fs.listStatus(pt);
+    if (fileStatuses == null) {
+     throw new FileNotFoundException("Debug trace file not found.");
+    }
+    // Iterate through each file in this diFilerectory and match the regex.
+    for (FileStatus fileStatus : fileStatuses) {
       String fileName = new File(fileStatus.getPath().toString()).toString();
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.
@@ -375,8 +381,14 @@ public class ServerUtils {
     String regex = String.format(DebuggerUtils.getTraceFileFormat(debugTrace), "(.*?)", superstepNo);
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
+    FileStatus[] fileStatuses = null;
+    // Hadoop listStatus returns null when path is not found.
+    fileStatuses = fs.listStatus(pt);
+    if (fileStatuses == null) {
+      throw new FileNotFoundException("Debug trace file not found.");
+    }
     // Iterate through each file in this directory and match the regex.
-    for (FileStatus fileStatus : fs.listStatus(pt)) {
+    for (FileStatus fileStatus : fileStatuses) {
       String fileName = new File(fileStatus.getPath().toString()).toString();
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.

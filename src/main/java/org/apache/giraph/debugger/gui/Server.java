@@ -258,7 +258,7 @@ public static void main(String[] args) throws Exception {
       // Check both jobId, superstepId and vertexId are present
       try {
         if (jobId == null || superstepId == null || vertexId == null 
-          || traceType == null ) {
+          || traceType == null) {
           throw new IllegalArgumentException("Missing mandatory parameters");
         }
         Long superstepNo = Long.parseLong(paramMap.get(ServerUtils.SUPERSTEP_ID_KEY));
