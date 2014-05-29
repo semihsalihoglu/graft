@@ -55,7 +55,10 @@ Before we move on, let's download a small sample graph:
 curl -L http://ece.northwestern.edu/~aching/shortestPathsInputGraph.tar.gz | tar xfz -
 hadoop fs -put shortestPathsInputGraph shortestPathsInputGraph
 ```
-
+You must have your system configured to use a Hadoop cluster, or run one on your local machine with the following command:
+```bash
+start-all.sh
+```
 
 ### Launch Giraph's Shortest Path Example
 Next, let's compile the giraph-examples module:
