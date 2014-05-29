@@ -355,7 +355,6 @@ public static void main(String[] args) throws Exception {
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
-          // See if task ids are already supplied. 
           ArrayList<String> vertexIds = ServerUtils.getTasksWithIntegrityViolations(
             jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
           for(String vertexId : vertexIds) {

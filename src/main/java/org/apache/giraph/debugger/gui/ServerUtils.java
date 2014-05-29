@@ -292,8 +292,7 @@ public class ServerUtils {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId, superstepNo, 
       vertexId, DebugTrace.INTEGRITY_VERTEX);
-    GiraphVertexScenarioWrapper giraphScenarioWrapper = 
-      new GiraphVertexScenarioWrapper();
+    GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
     giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
