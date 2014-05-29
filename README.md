@@ -10,13 +10,16 @@ TODO(semih): Write
 
 ### Get Prerequisites
 The following are required to build and run Graft:
+
 * Protocol Buffers
 * JDK 7
 * Maven 3
 * Git
+
 Please check the [wiki page for detailed installation instructions](https://github.com/semihsalihoglu/graft/wiki/Installing-Graft).
 
 Make sure everything required for Giraph is also installed, such as:
+
 * Hadoop
 
 
