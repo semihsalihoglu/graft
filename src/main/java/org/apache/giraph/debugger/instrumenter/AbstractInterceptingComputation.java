@@ -93,21 +93,21 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
       getContext().getJobID().toString());
 
-    String debugConfigFileName = DEBUG_CONFIG_CLASS.get(getConf());
-    LOG.info("debugConfigFileName: " + debugConfigFileName);
+    String debugConfigClassName = DEBUG_CONFIG_CLASS.get(getConf());
+    LOG.info("debugConfigClass: " + debugConfigClassName);
     Class<?> clazz;
     try {
-      clazz = Class.forName(debugConfigFileName);
+      clazz = Class.forName(debugConfigClassName);
       debugConfig = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
       debugConfig.readConfig(getConf());
-      LOG.info("Successfully created a DebugConfig file from: " + debugConfigFileName);
+      LOG.debug("Successfully created a DebugConfig file from: " + debugConfigClassName);
       vertexIdClazz = getConf().getVertexIdClass();
       vertexValueClazz = getConf().getVertexValueClass();
       edgeValueClazz = getConf().getEdgeValueClass();
       incomingMessageClazz = getConf().getIncomingMessageValueClass();
       outgoingMessageClazz =getConf().getOutgoingMessageValueClass();
     } catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
-      LOG.error("Could not create a new DebugConfig instance of " + debugConfigFileName);
+      LOG.error("Could not create a new DebugConfig instance of " + debugConfigClassName);
       e.printStackTrace();
       throw new RuntimeException(e);
     }
@@ -164,7 +164,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
 
   final protected void interceptComputeException(Vertex<I, V, E> vertex, Iterable<M1> messages,
     Exception e) throws IOException {
-    LOG.info("LOG.info: Caught an exception. message: " + e.getMessage()
+    LOG.info("Caught an exception. message: " + e.getMessage()
       + ". Saving a trace in HDFS.");
     GiraphVertexScenarioWrapper<I, V, E, M1, M2> giraphVertexScenarioWrapperForExceptionTrace =
       getGiraphVertexScenarioToSave(vertex, messages);
