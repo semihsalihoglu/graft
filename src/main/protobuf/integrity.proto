@@ -16,15 +16,3 @@ message MessageIntegrityViolation {
     required bytes msgData = 3;
   }
 }
-
-message VertexValueIntegrityViolation {
-  required string vertexIdClass = 1;
-  required string vertexValueClass = 2;
-  required int64 superstepNo = 3;
-  repeated VertexIdValuePair vertexIdValuePair = 4;
-
-  message VertexIdValuePair {
-    required bytes vertexId = 1;
-    required bytes vertexValue = 2;
-  }
-}

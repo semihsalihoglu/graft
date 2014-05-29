@@ -12,14 +12,13 @@ import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.giraph.debugger.gui.ServerUtils.DebugTrace;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
 import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
 import org.apache.giraph.debugger.mock.TestGraphGenerator;
+import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
-import org.apache.giraph.debugger.utils.VertexValueIntegrityViolationWrapper;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -347,7 +346,7 @@ public static void main(String[] args) throws Exception {
         // Message violation
         if(violationType.equals("M")) {
           ArrayList<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
-            jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE);
+            jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE_ALL);
           
           for(String taskId : taskIds) {
             MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 

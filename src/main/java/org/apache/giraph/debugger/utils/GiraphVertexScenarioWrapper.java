@@ -148,21 +148,21 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       // both of our copies end up pointing to the same object (in this case to
       // the value passed to setVertexValueAfterWrapper, because it was called
       // later).
-      this.vertexValueBeforeWrapper = makeCloneOf(vertexValueBefore,
+      this.vertexValueBeforeWrapper = DebuggerUtils.makeCloneOf(vertexValueBefore,
         getVertexScenarioClassesWrapper().vertexValueClass);
     }
 
     public void setVertexValueAfterWrapper(V vertexValueAfter) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      this.vertexValueAfterWrapper = makeCloneOf(vertexValueAfter,
+      this.vertexValueAfterWrapper = DebuggerUtils.makeCloneOf(vertexValueAfter,
         getVertexScenarioClassesWrapper().vertexValueClass);
     }
 
     public void addIncomingMessageWrapper(M1 message) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      inMsgsWrapper.add(makeCloneOf(message, getVertexScenarioClassesWrapper().incomingMessageClass));
+      inMsgsWrapper.add(DebuggerUtils.makeCloneOf(message, getVertexScenarioClassesWrapper().incomingMessageClass));
     }
 
     public Collection<M1> getIncomingMessageWrappers() {
@@ -172,9 +172,9 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     public void addOutgoingMessageWrapper(I receiverId, M2 message) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      outMsgsWrapper.add(new OutgoingMessageWrapper(makeCloneOf(receiverId,
+      outMsgsWrapper.add(new OutgoingMessageWrapper(DebuggerUtils.makeCloneOf(receiverId,
         getVertexScenarioClassesWrapper().vertexIdClass),
-        makeCloneOf(message, getVertexScenarioClassesWrapper().outgoingMessageClass)));
+        DebuggerUtils.makeCloneOf(message, getVertexScenarioClassesWrapper().outgoingMessageClass)));
     }
 
     public Collection<OutgoingMessageWrapper> getOutgoingMessageWrappers() {
@@ -185,8 +185,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
       neighborsWrapper.add(new NeighborWrapper(
-        makeCloneOf(neighborId, getVertexScenarioClassesWrapper().vertexIdClass),
-        makeCloneOf(edgeValue, getVertexScenarioClassesWrapper().edgeValueClass)));
+        DebuggerUtils.makeCloneOf(neighborId, getVertexScenarioClassesWrapper().vertexIdClass),
+        DebuggerUtils.makeCloneOf(edgeValue, getVertexScenarioClassesWrapper().edgeValueClass)));
     }
 
     public Collection<NeighborWrapper> getNeighborWrappers() {
@@ -268,11 +268,11 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
         IOException, InstantiationException, IllegalAccessException {
         Neighbor neighbor = (Neighbor) protoObject;
-        this.nbrId = newInstance(vertexScenarioClassesWrapper.vertexIdClass);
+        this.nbrId = DebuggerUtils.newInstance(vertexScenarioClassesWrapper.vertexIdClass);
         fromByteString(neighbor.getNeighborId(), this.nbrId);
 
         if (neighbor.hasEdgeValue()) {
-          this.edgeValue = newInstance(vertexScenarioClassesWrapper.edgeValueClass);
+          this.edgeValue = DebuggerUtils.newInstance(vertexScenarioClassesWrapper.edgeValueClass);
           fromByteString(neighbor.getEdgeValue(), this.edgeValue);
         } else {
           this.edgeValue = null;
@@ -353,9 +353,9 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
         IOException, InstantiationException, IllegalAccessException {
         OutgoingMessage outgoingMessageProto = (OutgoingMessage) generatedMessage;
-        this.destinationId = newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
+        this.destinationId = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
         fromByteString(outgoingMessageProto.getDestinationId(), destinationId);
-        this.message = newInstance(getVertexScenarioClassesWrapper().outgoingMessageClass);
+        this.message = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().outgoingMessageClass);
         fromByteString(outgoingMessageProto.getMsgData(), this.message);
       }
     }
@@ -405,15 +405,15 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       commonVertexMasterContextWrapper.loadFromProto(context.getCommonContext());
       this.commonVertexMasterContextWrapper = commonVertexMasterContextWrapper;
 
-      I vertexId = newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
+      I vertexId = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
       fromByteString(context.getVertexId(), vertexId);
       this.vertexIdWrapper = vertexId;
 
-      V vertexValueBefore = newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
+      V vertexValueBefore = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
       fromByteString(context.getVertexValueBefore(), vertexValueBefore);
       this.vertexValueBeforeWrapper = vertexValueBefore;
       if (context.hasVertexValueAfter()) {
-        V vertexValueAfter = newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
+        V vertexValueAfter = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
         fromByteString(context.getVertexValueAfter(), vertexValueAfter);
         this.vertexValueAfterWrapper = vertexValueAfter;
       }
@@ -424,7 +424,7 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
         this.neighborsWrapper.add(neighborWrapper);
       }
       for (int i = 0; i < context.getInMessageCount(); i++) {
-        M1 msg = newInstance(getVertexScenarioClassesWrapper().incomingMessageClass);
+        M1 msg = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().incomingMessageClass);
         fromByteString(context.getInMessage(i), msg);
         this.addIncomingMessageWrapper(msg);
       }
