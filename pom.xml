@@ -46,6 +46,7 @@ under the License.
 
     <!-- already declared in Giraph parent POM
     <dep.commons-cli.version>1.2</dep.commons-cli.version>
+    <dep.commons-collections.version>3.2.1</dep.commons-collections.version>
     <dep.commons-io.version>2.1</dep.commons-io.version>
     <dep.guava.version>14.0.1</dep.guava.version>
     <dep.json.version>20090211</dep.json.version>
@@ -176,6 +177,11 @@ under the License.
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>${dep.commons-io.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>${dep.commons-collections.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
