@@ -28,7 +28,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-/*
+/**
  * Entry point to the HTTP Debugger Server. 
  */
 public class Server {
@@ -100,7 +100,7 @@ public static void main(String[] args) throws Exception {
     }
   }
 
-  /*
+  /**
    * Handles /job HTTP GET call. Returns the details of the given jobId.
    * @URLparams -{jobId}
    */
@@ -117,7 +117,7 @@ public static void main(String[] args) throws Exception {
       }
     }
 
-    /*
+    /**
      * Returns superstep data of the job in JSON format. TODO(vikesh):
      * Sample/Demo method for now. Will remove after modifying the front-end
      * with the new API.
@@ -127,7 +127,7 @@ public static void main(String[] args) throws Exception {
     }
   }
 
-  /*
+  /**
    * Returns the list of vertices debugged in a given Superstep for a given job.
    * @URLParams: {jobId, superstepId}
    */
@@ -159,7 +159,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the number of supersteps traced for the given job.
    */
   static class GetSupersteps extends ServerHttpHandler {
@@ -184,7 +184,7 @@ public static void main(String[] args) throws Exception {
     }
  }
 
-  /*
+  /**
    * Returns the scenario for a given superstep of a given job.
    * @URLParams - {jobId, superstepId, [vertexId], [raw]}
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
@@ -239,7 +239,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the JAVA code for vertex scenario.
    * @URLParams : {jobId, superstepId, vertexId, traceType}
    * @desc traceType : Can be one of reg, err, msg or vv
@@ -285,7 +285,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the JAVA code for master scenario.
    * @URLParams : {jobId, superstepId}
    */
@@ -323,7 +323,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the integrity violations based on the requested parameter.
    * The requested parameter (type) may be one of M, E or V.
    * @URLParams : jobId, superstepId, violiationType
@@ -401,7 +401,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the TestGraph JAVA code. 
    * @URLParam adjList - Adjacency list of the graph
    */
