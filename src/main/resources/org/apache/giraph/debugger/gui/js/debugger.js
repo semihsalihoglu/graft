@@ -778,6 +778,9 @@ GiraphDebugger.prototype.mergeStates = function(baseState, deltaState) {
 GiraphDebugger.prototype.toggleMode = function() {
     if (this.mode === GiraphDebugger.ModeEnum.DEBUG) {
         this.mode = GiraphDebugger.ModeEnum.EDIT;
+        if (this.editor.view != Editor.ViewEnum.GRAPH) {
+            this.editor.toggleView();
+        }
         // Start with a sample graph as usual.
         this.editor.readonly = false;
         this.editor.buildSample();
