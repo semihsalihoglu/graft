@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -370,7 +371,7 @@ public static void main(String[] args) throws Exception {
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
-          ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
+          List<String> vertexIds = ServerUtils.getVerticesDebugged(
             jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
           int numViolations = 0;
           for(String vertexId : vertexIds) {
