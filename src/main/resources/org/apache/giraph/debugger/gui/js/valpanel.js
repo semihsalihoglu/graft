@@ -329,8 +329,8 @@ ValidationPanel.prototype.showExceptions = function() {
     var dataTable = $(table).DataTable({
         'columns' : [
             { 'data' : 'vertexId' },
-            { 'data' : 'message' },
-            { 'data' : 'stackTrace' },
+            { 'data' : 'exception.message' },
+            { 'data' : 'exception.stackTrace' },
             {
                 'orderable' : false,
                 'data' : null,
