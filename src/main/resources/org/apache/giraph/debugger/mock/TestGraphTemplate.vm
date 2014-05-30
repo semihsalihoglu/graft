@@ -1,15 +1,11 @@
     TestGraph<$vertexIdClass, DoubleWritable, NullWritable> graph 
-         = new TestGraph<$vertexIdClass, DoubleWritable, NullWritable>(new GiraphConfiguration());
-         
+         = new TestGraph<$vertexIdClass, DoubleWritable, NullWritable>(new GiraphConfiguration());      
 #foreach ($vertex in $vertices)
 #set ($edgeArrayName = "edges" + $foreach.index)
-    Entry<$vertexIdClass, NullWritable>[] $edgeArrayName = new Entry[$vertex.neighbors.size()];
-    
+    Entry<$vertexIdClass, NullWritable>[] $edgeArrayName = new Entry[$vertex.neighbors.size()];   
 #foreach ($neighbor in $vertex.neighbors)
     $edgeArrayName#[[[]]#$foreach.index] = new SimpleEntry<$vertexIdClass, NullWritable>(
          new $vertexIdClass($neighbor), NullWritable.get());
 #end
-
-    graph.addVertex(new $vertexIdClass($vertex.id), new DoubleWritable(0.0d), $edgeArrayName);
-    
+    graph.addVertex(new $vertexIdClass($vertex.id), new DoubleWritable(0.0d), $edgeArrayName);   
 #end
