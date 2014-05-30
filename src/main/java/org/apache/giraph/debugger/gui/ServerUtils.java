@@ -408,7 +408,7 @@ public class ServerUtils {
       FileSystem fs = ServerUtils.getFileSystem();
       String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
       // Use this regex to match the file name and capture the vertex id.
-      String regex = String.format("(reg|err)_stp_(.*?)_vid_(.*?).tr$");
+      String regex = String.format("(reg|err|msg_intgrty|vv_intgrty)_stp_(.*?)_vid_(.*?).tr$");
       Pattern p = Pattern.compile(regex);
       Path pt = new Path(traceFileRoot);
       // Iterate through each file in this directory and match the regex.

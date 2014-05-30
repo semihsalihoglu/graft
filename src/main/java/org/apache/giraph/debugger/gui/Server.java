@@ -273,10 +273,14 @@ public static void main(String[] args) throws Exception {
         ComputationComputeTestGenerator testGenerator = 
           new ComputationComputeTestGenerator();
         // Set status as OK and convert JSONObject to string.
+        JSONObject responseObject = new JSONObject();
+        responseObject.put("code", testGenerator.generateTest(giraphScenarioWrapper, 
+          null /* testPackage is optional */));
+        responseObject.put("filename", String.format("%sTest.java", 
+          giraphScenarioWrapper.getVertexScenarioClassesWrapper().
+          getClassUnderTest().getSimpleName()));
         this.statusCode = HttpURLConnection.HTTP_OK;
-        this.response = testGenerator.generateTest(giraphScenarioWrapper, 
-          null /* testPackage is optional */);
-        this.responseContentType = MediaType.TEXT_PLAIN;
+        this.response = responseObject.toString();
       } catch (Exception e) {
         this.handleException(e, 
           String.format("Invalid parameters. %s, %s and %s are mandatory parameter.",
@@ -359,7 +363,7 @@ public static void main(String[] args) throws Exception {
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
-          ArrayList<String> vertexIds = ServerUtils.getTasksWithIntegrityViolations(
+          ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
             jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
           for(String vertexId : vertexIds) {
             GiraphVertexScenarioWrapper giraphVertexScenarioWrapper =

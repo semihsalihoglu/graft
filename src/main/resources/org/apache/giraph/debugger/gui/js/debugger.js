@@ -74,8 +74,8 @@ GiraphDebugger.prototype.init = function(options) {
  * Deferred callbacks for capture scenario
  */
 GiraphDebugger.prototype.onCaptureVertex = function(done, fail) {
-    this.onCaptureVertex.done = done;
-    this.onCaptureVertex.fail = fail;
+    this.onCaptureVertex.done = this.valpanel.onCaptureVertex.done = done;
+    this.onCaptureVertex.fail = this.valpanel.onCaptureVertex.fail = fail;
 }
 
 /*
@@ -427,25 +427,15 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     $(this.btnCaptureVertexScenario).click((function(event){
         // Get the deferred object.
         var vertexId = $(this.captureVertexIdInput).val();
-        $.ajax({
-            url : this.debuggerServerRoot + '/test/vertex',
-            data : {
-                'jobId' : this.currentJobId,
-                'superstepId' : this.currentSuperstepNumber,
-                'vertexId' : vertexId
-            }
-        })
+        Utils.fetchVertexTest(this.debuggerServerRoot, this.currentJobId, 
+            this.currentSuperstepNumber, vertexId, 'reg')
         .done((function(response) {
-            retObj = { code : response, 
-                filename : "{0}_{1}_{2}.java".format(this.currentJobId, this.currentSuperstepNumber, vertexId)
-            }
-            this.onCaptureVertex.done(retObj);
+            this.onCaptureVertex.done(response);
         }).bind(this))
         .fail((function(response) {
             this.onCaptureVertex.fail(response.responseText);
         }).bind(this))
     }).bind(this));
-
     // Handle the master capture scenario button the superstep controls.
     $(this.btnCaptureMasterScenario).click((function(event){
         $.ajax({
@@ -593,9 +583,12 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
     // Disable the nodes that were not traced as part of this scenario.
     for (var i = 0; i < this.editor.nodes.length; i++) {
         var nodeId = this.editor.nodes[i].id;
-        if ((nodeId in scenario) && scenario[nodeId].debugged != false) {
+        if ((nodeId in marshalledScenario) && marshalledScenario[nodeId].debugged != false) {
             marshalledScenario[nodeId].enabled = true;
         } else {
+            // If marshalledScenario does not have this node,
+            // add it just to update the enabled property.
+            marshalledScenario[nodeId] = {};
             marshalledScenario[nodeId].enabled = false;
         }
     }
