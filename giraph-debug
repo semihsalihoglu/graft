@@ -163,7 +163,7 @@ case $1 in
         case $Mode in
             mktest*)
                 [ $# -gt 2 ] || usage "TEST_NAME prefix for output is missing"
-                TestName=$3; shift
+                TestName=$3
         esac
         exec_java_command_line $Mode "$@"
         ;;
