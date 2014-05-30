@@ -85,28 +85,31 @@ public class ServerUtils {
     return FileSystem.get(configuration);
   }
 
-  public static URL getCachedJobJarPath(String jobId) throws IOException {
+  public static URL[] getCachedJobJarPath(String jobId) {
     // read the jar signature file under the TRACE_ROOT/jobId/
     Path jarSignaturePath = new Path(DebuggerUtils.getTraceFileRoot(jobId) + "/" + "jar.signature");
-    FileSystem fs = getFileSystem();
-    List<String> lines = IOUtils.readLines(fs.open(jarSignaturePath));
-    if (lines.size() > 0) {
-      String jarSignature = lines.get(0);
-      // check if jar is already in JARCACHE_LOCAL
-      File localFile = new File(DebuggerUtils.JARCACHE_LOCAL + "/" + jarSignature + ".jar");
-      if (!localFile.exists()) {
-        // otherwise, download from HDFS
-        Path hdfsPath = new Path(fs.getUri().resolve(
-          DebuggerUtils.JARCACHE_HDFS + "/" + jarSignature + ".jar"));
-        Logger.getLogger(ServerUtils.class).info(
-          "Copying from HDFS: " + hdfsPath + " to " + localFile);
-        localFile.getParentFile().mkdirs();
-        fs.copyToLocalFile(hdfsPath, new Path(localFile.toURI()));
+    try {
+      FileSystem fs = getFileSystem();
+      List<String> lines = IOUtils.readLines(fs.open(jarSignaturePath));
+      if (lines.size() > 0) {
+        String jarSignature = lines.get(0);
+        // check if jar is already in JARCACHE_LOCAL
+        File localFile = new File(DebuggerUtils.JARCACHE_LOCAL + "/" + jarSignature + ".jar");
+        if (!localFile.exists()) {
+          // otherwise, download from HDFS
+          Path hdfsPath = new Path(fs.getUri().resolve(
+            DebuggerUtils.JARCACHE_HDFS + "/" + jarSignature + ".jar"));
+          Logger.getLogger(ServerUtils.class).info(
+            "Copying from HDFS: " + hdfsPath + " to " + localFile);
+          localFile.getParentFile().mkdirs();
+          fs.copyToLocalFile(hdfsPath, new Path(localFile.toURI()));
+        }
+        return new URL[] { localFile.toURI().toURL() };
       }
-      return localFile.toURI().toURL();
-    } else {
-      throw new FileNotFoundException("jar.signature for " + jobId + " has not been written yet");
+    } catch (IOException e) {
+      // gracefully ignore if we failed to read the jar.signature
     }
+    return new URL[0];
   }
   
   /**
