@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -52,7 +53,9 @@ public abstract class BaseWrapper {
 
   public void saveToHDFS(FileSystem fs, String fileName) throws IOException {
     Path pt = new Path(fileName);
-    buildProtoObject().writeTo(fs.create(pt, true).getWrappedStream());
+    OutputStream wrappedStream = fs.create(pt, true).getWrappedStream();
+    buildProtoObject().writeTo(wrappedStream);
+    wrappedStream.close();
   }
   
   public abstract GeneratedMessage buildProtoObject();

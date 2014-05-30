@@ -91,6 +91,11 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private static int numMessageViolationsLogged = -1;
 
   final protected void interceptInitializeEnd() {
+    System.out.println("interceptInitializeEnd is called!!!");
+    initializeAbstractInterceptingComputation();
+  }
+
+  private void initializeAbstractInterceptingComputation() {
     commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
       getContext().getJobID().toString());
 
@@ -122,6 +127,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
         if (!fs.exists(jarSignaturePath)) {
           OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
           IOUtils.write(jarSignature, f);
+          f.close();
         }
       } catch (IOException e) {
         // When multiple workers try to write the jar.signature, some of them may cause
@@ -141,6 +147,14 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   final protected boolean interceptComputeBegin(Vertex<I, V, E> vertex, Iterable<M1> messages)
     throws IOException {
     LOG.debug("compute " + vertex + " " + messages);
+    if (debugConfig == null) {
+      // TODO: Sometimes Giraph doesn't call initialize() and directly calls compute(). Here we
+      // guard against things not being initiliazed, which was causing null pointer exceptions.
+      // Find out when/why this happens.
+      LOG.warn("interceptComputeBegin is called but debugConfig is null."
+        + " Initializing AbstractInterceptingComputation again...");
+      initializeAbstractInterceptingComputation();
+    }
     vertexId = vertex.getId();
     hasViolatedMsgValueConstraint = false;
     if (shouldDebugVertex(vertex) || debugConfig.shouldCatchExceptions() ||
@@ -254,6 +268,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   }
 
   private void interceptMessageAndCheckIntegrityIfNecessary(I id, M2 message) {
+    if (debugConfig == null) {
+      System.out.println("debugConfig is null!!!!");
+    }
     if (debugConfig.shouldCheckMessageIntegrity()
       && !debugConfig.isMessageCorrect(vertexId, id, message)
       && numMessageViolationsLogged < NUM_VIOLATIONS_TO_LOG) {
