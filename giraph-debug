@@ -70,7 +70,7 @@
 set -eu
 
 # some defaults
-: ${TRACE_ROOT:=/giraph-debug-traces} # HDFS path to where the traces are stored
+: ${TRACE_ROOT:=/user/$USER/giraph-debug-traces} # HDFS path to where the traces are stored
 : ${CLASSNAME_SUFFIX:=Original}       # A suffix for user computation class used by instrumenter
 : ${JARCACHE_HDFS:=$TRACE_ROOT/jars}         # HDFS path to where the jars are cached
 : ${JARCACHE_LOCAL:=~/.giraph-debugger/jars} # local path to where the jars are cached
