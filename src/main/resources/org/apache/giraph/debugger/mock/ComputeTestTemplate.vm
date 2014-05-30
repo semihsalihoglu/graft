@@ -26,9 +26,7 @@ import $type.Name;
 
 public class $className {
 
-  private $classUnderTestName classUnderTest;
   private ImmutableClassesGiraphConfiguration<$vertexIdType, $vertexValueType, $edgeValueType> conf;
-  private WorkerClientRequestProcessor<$vertexIdType, $vertexValueType, $edgeValueType> processor;
   	
 #parse("ComputeSetUpFuncTemplate.vm")
   
