@@ -320,7 +320,7 @@ ValidationPanel.prototype.showExceptions = function() {
     var table = $("<table />")
         .attr('class', 'table')
         .attr('id', 'valpanel-V-table')
-        .html('<thead><tr><th>Vertex ID</th><th>Vertex Value</th><th></th></tr></thead>')
+        .html('<thead><tr><th>Vertex ID</th><th>Message</th><th>Stack Trace</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
 
     var btnCaptureScenario = 

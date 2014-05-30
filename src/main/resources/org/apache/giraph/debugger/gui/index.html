@@ -69,7 +69,7 @@
 					});
 			
 					$("#btn-adj-list-get").click(function() {
-						var adjList = editor.getAdjList();
+						var adjList = Utils.getAdjListStr(editor.getAdjList());
 						Utils.downloadFile(adjList, 'adjList.txt');
 					});
 
@@ -84,7 +84,7 @@
 					});
 					// Generate Test Graph - Fetch the test graph and display the code.
 					$('#btn-gen-test-graph').click(function() {
-						Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, giraphDebugger.editor.getAdjList())
+						Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, Utils.getAdjListStrForTestGraph(giraphDebugger.editor.getAdjList()))
 						.done(function(response) {
 								handleTestGraphSuccess({ code: response, 
 										filename : 'graph.java' 
