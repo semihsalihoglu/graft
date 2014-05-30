@@ -23,7 +23,7 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     VelocityContext context = buildContext(inputStrs);
     
     try (StringWriter sw = new StringWriter()) {
-      Template template = Velocity.getTemplate("TestGraph.vm");
+      Template template = Velocity.getTemplate("TestGraphTemplate.vm");
       template.merge(context, sw);
       return sw.toString();
     }

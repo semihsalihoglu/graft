@@ -52,6 +52,16 @@
 						highlightAll();
 					}
 
+					function handleTestGraphSuccess(response) {
+						setCode(response);
+						noty({text : 'Fetched the test graph successfully.', type : 'success', timeout: 1000});
+					}
+
+					function handleTestGraphFail(responseText) {
+						setCode();
+						noty({text : 'Failed to fetch the test graph. Message from server : ' + responseText, type : 'error'});
+					}
+
 					$("#node-attr-id").keyup(function(event){
 						if(event.keyCode===13){
 							$("#btn-node-attr-save").click();
@@ -71,6 +81,18 @@
 					$("#btn-node-list-get").click(function(){
 						var nodeList = editor.getNodeList();
 						Utils.downloadFile(nodeList, 'nodeList.txt');
+					});
+					// Generate Test Graph - Fetch the test graph and display the code.
+					$('#btn-gen-test-graph').click(function() {
+						Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, giraphDebugger.editor.getAdjList())
+						.done(function(response) {
+								handleTestGraphSuccess({ code: response, 
+										filename : 'graph.java' 
+								});
+						})
+						.fail(function(responseText) {
+							handleTestGraphFail(responseText);
+						});
 					});
 
 					giraphDebugger = new GiraphDebugger({
@@ -100,14 +122,7 @@
 					});
 
 					// Attach events to generate test graph.
-					giraphDebugger.onGenerateTestGraph(function(response) {
-						setCode(response);
-						noty({text : 'Fetched the test graph successfully.', type : 'success', timeout: 1000});
-					},
-					function(response) {
-						setCode();
-						noty({text : 'Failed to fetch the test graph. Message from server : ' + response, type : 'error'});
-					});
+					giraphDebugger.onGenerateTestGraph(handleTestGraphSuccess, handleTestGraphFail);
 			
 					var editor = giraphDebugger.editor;
 					// Undirected behaviour.
@@ -239,7 +254,7 @@
 										<input type="radio" name="options" id="options_undirected" class="graph-type form-control" value="undirected" /> Undirected
 									</label>
 								</div>
-								<button type="button" class="btn btn-primary btn-danger form-control btn-sm" id="btn-attr-view">Attribute view</button>
+								<!--<button type="button" class="btn btn-primary btn-danger form-control btn-sm" id="btn-attr-view">Attribute view</button>-->
 							</form> <!--Form ends-->
 						</div><!--Internal column ends-->
 					</div><!--Directed/Undirected Row ends-->
@@ -248,7 +263,7 @@
 					<!--Internal column begins-->
 						<div class="col-md-12">							
 							<button type="button" class="btn btn-primary" id="btn-adj-list-get">Download Adjacency List</button>
-							<button type="button" class="btn btn-primary" id="btn-edge-list-get">Download Edge List</button>
+							<button type="button" class="btn btn-danger" id="btn-gen-test-graph">Generate Test Graph</button>
 						</div><!--Internal column ends-->
 					</div>
 				</div>
