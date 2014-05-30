@@ -151,3 +151,41 @@ Utils.fetchTestGraph = function(debuggerServerRoot, adjList) {
         data : { adjList : adjList }
     });
 }
+
+/*
+ * Converts the adjList object returned by editor to a string representation 
+ *
+ */
+Utils.getAdjListStr = function(editorAdjList) {
+    adjList = '';
+    $.each(editorAdjList, function(vertexId, obj) {
+        adjList += vertexId + '\t';
+        $.each(obj.adj, function(i, neighborId) {
+            adjList += neighborId + '\t';
+        });
+        // Remove the last tab
+        adjList = adjList.slice(0, -1);
+        adjList += '\n';
+    });
+    // Remove the last newline
+    return adjList.slice(0, -1);
+}
+
+/*
+ * Converts the adjList object returned by editor to a string representation
+ * used by the Test Graph debugger server.
+ */
+Utils.getAdjListStrForTestGraph = function(editorAdjList) {
+    adjList = '';
+    $.each(editorAdjList, function(vertexId, obj) {
+        adjList += vertexId + '\t' + obj.vertexValue + '\t';
+        $.each(obj.adj, function(i, neighborId) {
+            adjList += neighborId + '\t';
+        });
+        // Remove the last tab
+        adjList = adjList.slice(0, -1);
+        adjList += '\n';
+    });
+    // Remove the last newline
+    return adjList.slice(0, -1);
+}

@@ -244,10 +244,9 @@ Editor.prototype.getEdgeList = function() {
  * each node.
  */
 Editor.prototype.getAdjList = function() {
-    adjList = '';
-
-    for (var i = 0; i < this.nodes.length; i++) {
-        var id = this.nodes[i].id;
+    adjList = {}
+    $.each(this.nodes, (function(i, node) {
+        var id = node.id;
         var nodes = [];
         for (var j = 0; j < this.links.length; j++) {
             var link = this.links[j];
@@ -258,15 +257,8 @@ Editor.prototype.getAdjList = function() {
                 nodes.push(link.target.id);
             }
         }
-        if (nodes.length > 0) {
-            adjList += id + '\t';
-            for (var j = 0; j < nodes.length; j++) {
-                adjList += nodes[j] + '\t';
-            }
-            adjList += i != this.nodes.length - 1 ? '\n' : '';
-        }
-    }
-
+        adjList[id] = { adj : nodes, vertexValue : node.attrs.length > 0 ? node.attrs[0] : 0.0 };
+    }).bind(this));
     return adjList;
 }
 
