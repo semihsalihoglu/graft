@@ -28,10 +28,26 @@ public class DebuggerUtils {
 
   // Enumeration of different trace files Graft saves in HDFS.
   public enum DebugTrace {
-    VERTEX_REGULAR, VERTEX_EXCEPTION, VERTEX_ALL, 
-    INTEGRITY_MESSAGE_ALL, INTEGRITY_MESSAGE_SINGLE_VERTEX, INTEGRITY_VERTEX, 
-    MASTER_REGULAR, MASTER_EXCEPTION, MASTER_ALL,
-    JAR_SIGNATURE
+    VERTEX_REGULAR("regular vertex"), //
+    VERTEX_EXCEPTION("exception from a vertex"), //
+    VERTEX_ALL, //
+    INTEGRITY_MESSAGE_ALL("invalid messages"), //
+    INTEGRITY_MESSAGE_SINGLE_VERTEX("vertex sending invalid messages"), //
+    INTEGRITY_VERTEX("vertex having invalid value"), //
+    MASTER_REGULAR("regular MasterCompute"), //
+    MASTER_EXCEPTION("exception from MasterCompute"), //
+    MASTER_ALL, //
+    JAR_SIGNATURE;
+    
+    public final String label;
+
+    private DebugTrace() {
+      this.label = null;
+    }
+    
+    private DebugTrace(String label) {
+      this.label = label;
+    }
   }
   // Prefixes of debug traces 
   public static final String PREFIX_TRACE_REGULAR = "reg";
