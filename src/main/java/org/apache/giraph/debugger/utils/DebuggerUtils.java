@@ -22,7 +22,7 @@ import org.apache.hadoop.io.Writable;
  */
 public class DebuggerUtils {
 
-  public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/giraph-debug-traces");
+  public static final String TRACE_ROOT = System.getProperty("giraph.debugger.traceRootAtHDFS", "/user" + System.getProperty("user.name") + "/giraph-debug-traces");
   public static final String JARCACHE_HDFS = System.getProperty("giraph.debugger.jobCacheAtHDFS", TRACE_ROOT + "/jars");
   public static final String JARCACHE_LOCAL = System.getProperty("giraph.debugger.jobCacheLocal", System.getenv("HOME") + "/.giraph-debug/jars");
 
