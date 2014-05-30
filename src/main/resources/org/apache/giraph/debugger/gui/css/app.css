@@ -14,6 +14,10 @@ body {
 	background-color:#F5F5F5;
 }
 
+h1 {
+	margin-top: 10px;
+}
+
 svg {
   background-color: #FFF;
   cursor: default;
@@ -185,7 +189,7 @@ text.tid {
 
 
 #debugger-container {
-	height: 480px;
+	height: 504px;
 	margin-bottom: 20px;
 }
 
