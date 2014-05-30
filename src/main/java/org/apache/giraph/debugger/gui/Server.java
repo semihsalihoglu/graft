@@ -28,7 +28,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-/*
+/**
  * Entry point to the HTTP Debugger Server. 
  */
 public class Server {
@@ -100,7 +100,7 @@ public static void main(String[] args) throws Exception {
     }
   }
 
-  /*
+  /**
    * Handles /job HTTP GET call. Returns the details of the given jobId.
    * @URLparams -{jobId}
    */
@@ -117,7 +117,7 @@ public static void main(String[] args) throws Exception {
       }
     }
 
-    /*
+    /**
      * Returns superstep data of the job in JSON format. TODO(vikesh):
      * Sample/Demo method for now. Will remove after modifying the front-end
      * with the new API.
@@ -127,7 +127,7 @@ public static void main(String[] args) throws Exception {
     }
   }
 
-  /*
+  /**
    * Returns the list of vertices debugged in a given Superstep for a given job.
    * @URLParams: {jobId, superstepId}
    */
@@ -159,7 +159,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the number of supersteps traced for the given job.
    */
   static class GetSupersteps extends ServerHttpHandler {
@@ -184,7 +184,7 @@ public static void main(String[] args) throws Exception {
     }
  }
 
-  /*
+  /**
    * Returns the scenario for a given superstep of a given job.
    * @URLParams - {jobId, superstepId, [vertexId], [raw]}
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
@@ -239,7 +239,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the JAVA code for vertex scenario.
    * @URLParams : {jobId, superstepId, vertexId, traceType}
    * @desc traceType : Can be one of reg, err, msg or vv
@@ -285,7 +285,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the JAVA code for master scenario.
    * @URLParams : {jobId, superstepId}
    */
@@ -323,13 +323,20 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the integrity violations based on the requested parameter.
    * The requested parameter (type) may be one of M, E or V.
    * @URLParams : jobId, superstepId, violiationType
    * It is an optional parameter and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
+    // The server returns only a limited number of msg or vertex value violations.
+    // For message violations, it may not put the limit at exactly this number because it
+    // reads each violation trace which may include multiple message violations and adds all the
+    // violations in the trace to the response. Once the total message violations is over this
+    // number it stops reading traces.
+    private static final int _NUM_VIOLATIONS_THRESHOLD = 50;
+
     @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
@@ -350,20 +357,30 @@ public static void main(String[] args) throws Exception {
           ArrayList<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
             jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE_ALL);
           
+          int numViolations = 0;
           for(String taskId : taskIds) {
             MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 
               ServerUtils.readMsgIntegrityViolationFromTrace(jobId, taskId, superstepNo);
             integrityObj.put(taskId, ServerUtils.msgIntegrityToJson(msgIntegrityViolationWrapper));
+            numViolations+= msgIntegrityViolationWrapper.numMsgWrappers();
+            if (numViolations >= _NUM_VIOLATIONS_THRESHOLD) {
+              break;
+            }
           }
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
           ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
             jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
+          int numViolations = 0;
           for(String vertexId : vertexIds) {
             GiraphVertexScenarioWrapper giraphVertexScenarioWrapper =
               ServerUtils.readVertexIntegrityViolationFromTrace(jobId, superstepNo, vertexId);
+            numViolations++;
             integrityObj.put(vertexId, ServerUtils.vertexIntegrityToJson(giraphVertexScenarioWrapper));
+            if (numViolations >= _NUM_VIOLATIONS_THRESHOLD) {
+              break;
+            }
           }
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
@@ -401,7 +418,7 @@ public static void main(String[] args) throws Exception {
     }
   }
   
-  /*
+  /**
    * Returns the TestGraph JAVA code. 
    * @URLParam adjList - Adjacency list of the graph
    */

@@ -48,7 +48,7 @@ public class ServerUtils {
  
   private static final Logger LOG = Logger.getLogger(ServerUtils.class);
   
-  /*
+  /**
    * Returns parameters of the URL in a hash map. For instance,
    * http://localhost:9000/?key1=val1&key2=val2&key3=val3
    */
@@ -68,7 +68,7 @@ public class ServerUtils {
     return paramMap;
   }
 
-  /*
+  /**
    * Returns the HDFS FileSystem reference. 
    * Note: We assume that the classpath contains the Hadoop's conf directory or the core-site.xml
    * and hdfs-site.xml configuration directories.
@@ -96,7 +96,7 @@ public class ServerUtils {
     return localFile.toURI().toURL();
   }
   
-  /*
+  /**
    * Returns the path of the vertex trace file on HDFS.
    * @param debugTrace - Must be one of VERTEX_* or
    * INTEGRITY_VERTEX types. 
@@ -110,7 +110,7 @@ public class ServerUtils {
         String.format(DebuggerUtils.getTraceFileFormat(debugTrace), superstepNo, vertexId));
   }
   
-  /*
+  /**
    * Returns the path of the vertex trace file on HDFS.
    * @param debugTrace - Must be INTEGRITY_MESSAGE. 
    */
@@ -122,7 +122,7 @@ public class ServerUtils {
         String.format(DebuggerUtils.getTraceFileFormat(debugTrace), taskId, superstepNo));
   }
   
-  /*
+  /**
    * Returns the path of the master compute trace file on HDFS.
    */
   public static String getMasterTraceFilePath(String jobId, long superstepNo, 
@@ -134,7 +134,7 @@ public class ServerUtils {
         String.format(DebuggerUtils.getTraceFileFormat(debugTrace), superstepNo));
   }
 
-  /*
+  /**
    * Reads the protocol buffer trace corresponding to the given jobId,
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
    * @param jobId : ID of the job debugged.
@@ -170,7 +170,7 @@ public class ServerUtils {
     throw new FileNotFoundException("Debug Trace not found.");
   }
   
-  /*
+  /**
    * Reads the master protocol buffer trace corresponding to the given jobId
    * and superstepNo and returns the GiraphMasterScenarioWrapper object.
    * @param jobId : ID of the job debugged.
@@ -219,7 +219,7 @@ public class ServerUtils {
     return giraphScenarioWrapper;
   }
   
-  /*
+  /**
    * Returns the MessageIntegrityViolationWrapper from trace file.
    */
   public static MsgIntegrityViolationWrapper readMsgIntegrityViolationFromTrace(String jobId,
@@ -233,7 +233,7 @@ public class ServerUtils {
     return msgIntegrityViolationWrapper;
   }
 
-  /*
+  /**
    * Returns the MessageIntegrityViolationWrapper from trace file.
    */
   public static GiraphVertexScenarioWrapper readVertexIntegrityViolationFromTrace(
@@ -247,7 +247,7 @@ public class ServerUtils {
     return giraphScenarioWrapper;
   }
 
-  /*
+  /**
    * Converts a Giraph Scenario (giraphScenarioWrapper object) to JSON
    * (JSONObject)
    * @param giraphScenarioWrapper : Giraph Scenario object.
@@ -300,7 +300,7 @@ public class ServerUtils {
     return scenarioObj;
   }
 
-  /*
+  /**
    * Converts the message integrity violation wrapper to JSON.
    */
   public static JSONObject msgIntegrityToJson(
@@ -320,7 +320,7 @@ public class ServerUtils {
     return scenarioObj;
   }
 
-  /*
+  /**
    * Converts the vertex integrity violation wrapper to JSON.
    */
   public static JSONObject vertexIntegrityToJson(
@@ -333,7 +333,7 @@ public class ServerUtils {
     return scenarioObj;
   }
 
-  /*
+  /**
    * Returns a list of vertex Ids that were debugged in the given superstep by
    * reading (the file names of) the debug traces on HDFS. File names follow the
    * <prefix>_stp_<superstepNo>_vid_<vertexId>.tr naming convention.
@@ -367,7 +367,7 @@ public class ServerUtils {
     return vertexIds;
   }
 
-  /*
+  /**
    * Returns the IDs of all the tasks that caused the given integrity violation.
    * @param debugTrace - Must be one of INTEGRITY_* types.
    */
@@ -400,7 +400,8 @@ public class ServerUtils {
     return taskIds;
     
   }
-  /*
+
+  /**
    * Returns the list of supersteps for which there is an exception or
    * regular trace.
    */

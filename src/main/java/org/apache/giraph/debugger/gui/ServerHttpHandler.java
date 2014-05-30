@@ -17,7 +17,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-/*
+/**
  * The Abstract class for HTTP handlers. 
  */
 public abstract class ServerHttpHandler implements HttpHandler {
@@ -33,7 +33,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
   // HttpExchange object received in the handle call.
   protected HttpExchange httpExchange;
 
-  /*
+  /**
    * Handles an HTTP call's lifecycle - read parameters, process and send
    * response.
    */
@@ -63,7 +63,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     this.writeResponse();
   }
 
-  /*
+  /**
    * Writes the text response.
    */
   private void writeResponse() throws IOException {
@@ -79,7 +79,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     os.close();
   }
 
-  /*
+  /**
    * Add mandatory headers to the HTTP response by the debugger server. MUST be
    * called before sendResponseHeaders.
    */
@@ -91,7 +91,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     headers.add("Content-Type", this.responseContentType);
   }
   
-  /*
+  /**
    * Sets the given headerKey to the given headerValue.
    * @param {String} headerKey - Header Key
    * @param {String} headerValue - Header Value.
@@ -103,7 +103,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     responseHeaders.add(headerKey, headerValue);
   }
   
-  /*
+  /**
    * Handle the common exceptions in processRequest. 
    * @params {String} [illegalArgumentMessage] - Message when illegal argument 
    * exception is thrown. Optional - May be null. 
@@ -131,7 +131,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     }
   }
   
-  /*
+  /**
    * Implement this method in inherited classes. This method MUST set statusCode
    * and response (or responseBytes) class members appropriately. In case the Content type
    * is not JSON, must specify the new Content type. Default type is application/json.

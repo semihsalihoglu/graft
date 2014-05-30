@@ -3,6 +3,7 @@ package org.apache.giraph.debugger.instrumenter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -254,7 +255,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
 
   private void interceptMessageAndCheckIntegrityIfNecessary(I id, M2 message) {
     if (debugConfig.shouldCheckMessageIntegrity()
-      && !debugConfig.isMessageCorrect(id, vertexId, message)
+      && !debugConfig.isMessageCorrect(vertexId, id, message)
       && numMessageViolationsLogged < NUM_VIOLATIONS_TO_LOG) {
       msgIntegrityViolationWrapper.addMsgWrapper(vertexId, id, message);
       hasViolatedMsgValueConstraint = true;
@@ -300,7 +301,7 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
       commonVertexMasterInterceptionUtil.saveScenarioWrapper(msgIntegrityViolationWrapper,
         DebuggerUtils.getMessageIntegrityAllTraceFullFileName(getSuperstep(),
           commonVertexMasterInterceptionUtil.getJobId(),
-          getContext().getTaskAttemptID().getTaskID().getId()));
+          UUID.randomUUID().toString()));
     }
   }
 

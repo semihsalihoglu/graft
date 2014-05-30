@@ -87,7 +87,7 @@ public class DebuggerUtils {
    * arguments will be used in the file name.
    */
   public static String getFullTraceFileName(DebugTrace debugTrace, String jobId, Long superstepNo,
-    String vertexId, Integer taskId) {
+    String vertexId, String taskId) {
     return getTraceFileRoot(jobId) + "/"
       + getTraceFileName(debugTrace, superstepNo, vertexId, taskId);
   }
@@ -97,7 +97,7 @@ public class DebuggerUtils {
    * {@link #getFullTraceFileName(DebugTrace, String, Long, String, Integer)}.
    */
   public static String getMessageIntegrityAllTraceFullFileName(long superstepNo, String jobId,
-    int taskId) {
+    String taskId) {
     return getFullTraceFileName(DebugTrace.INTEGRITY_MESSAGE_ALL, jobId, superstepNo,
       null /* no vertex Id */, taskId);
   }
@@ -123,7 +123,7 @@ public class DebuggerUtils {
   }
 
   private static String getTraceFileName(DebugTrace debugTrace, Long superstepNo, String vertexId,
-    Integer taskId) {
+    String taskId) {
     String format = getTraceFileFormat(debugTrace);
     switch (debugTrace) {
     case VERTEX_REGULAR:
@@ -144,7 +144,7 @@ public class DebuggerUtils {
       return null;
     }
   }
-  
+
   /**
    * Returns the file name of the trace file given the three parameters. Pass
    * arbitrary vertexId for traces which do not require a vertexId.

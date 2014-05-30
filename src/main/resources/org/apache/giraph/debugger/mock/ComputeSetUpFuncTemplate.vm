@@ -11,20 +11,4 @@
     config.set#evaluate($config.classStr)("$config.key", $helper.format($config.value));
 #end
     conf = new ImmutableClassesGiraphConfiguration<>(config);
-
-    classUnderTest = ($classUnderTestName) conf.createComputation();
-
-    GraphState graphState = mock(GraphState.class);
-    when(graphState.getSuperstep()).thenReturn($superstepNo#[[l]]#);
-    when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
-    when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
-
-    processor = mock(WorkerClientRequestProcessor.class);
-
-    WorkerAggregatorUsage aggr = mock(WorkerAggregatorUsage.class);
-#foreach ($aggr in $aggregators)
-    when(aggr.getAggregatedValue("$aggr.key")).thenReturn($helper.formatWritable($aggr.value));
-#end
-
-    classUnderTest.initialize(graphState, processor, null, aggr, null);
   }
