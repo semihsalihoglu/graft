@@ -11,23 +11,14 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 /**
  * The code generator to generate the end-to-end test case.
  * 
  * @author Brian Truong Ba Quan
  */
-public class TestGraphGenerator {
-  
-  public TestGraphGenerator() {
-    Velocity.setProperty(VelocityEngine.RESOURCE_LOADER, "class");
-    Velocity.setProperty("class." + VelocityEngine.RESOURCE_LOADER + ".class", 
-        ClasspathResourceLoader.class.getName());
-    Velocity.init();
-  }
-  
+public class TestGraphGenerator extends VelocityBasedGenerator {
+    
   public String generate(String[] inputStrs) throws IOException {
     VelocityContext context = buildContext(inputStrs);
     

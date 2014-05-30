@@ -7,7 +7,6 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.ws.rs.core.MediaType;
@@ -23,8 +22,7 @@ import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import sun.security.ssl.Debug;
+import org.python.google.common.collect.Lists;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -64,12 +62,12 @@ public static void main(String[] args) throws Exception {
       try {
         try {
           String path = uri.getPath();
-          LOG.info(path);
+          LOG.debug(path);
           if (path.endsWith("/"))
             path += "index.html";
           path = path.replaceFirst("^/", "");
-          LOG.info("resource path to look for = " + path);
-          LOG.info("resource URL = " + getClass().getResource(path));
+          LOG.debug("resource path to look for = " + path);
+          LOG.debug("resource URL = " + getClass().getResource(path));
           InputStream fs = getClass().getResourceAsStream(path);
           if (fs == null) {
             // Object does not exist or is not a file: reject
@@ -109,8 +107,6 @@ public static void main(String[] args) throws Exception {
   static class GetJob extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
-      LOG.info(httpExchange.getRequestURI().toString());
-      Debug.println("/job", paramMap.toString());
       if (jobId != null) {
         this.statusCode = HttpURLConnection.HTTP_OK;
         this.response = getSuperstepData(jobId);
@@ -196,10 +192,10 @@ public static void main(String[] args) throws Exception {
    * vertices. If 'raw' parameter is specified, returns the raw protocol buffer.
    */
   static class GetScenario extends ServerHttpHandler {
+    @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
-      Debug.println("/scenario", paramMap.toString());
       // Check both jobId and superstepId are present
       try {
         if (jobId == null || superstepId == null) {
@@ -222,7 +218,7 @@ public static void main(String[] args) throws Exception {
           vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo, DebugTrace.VERTEX_ALL);
         } else {
           // Split the vertices by comma.
-          vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
+          vertexIds = Lists.newArrayList(rawVertexIds.split(","));
         }
         // Send JSON by default.
         JSONObject scenarioObj = new JSONObject();
@@ -249,8 +245,8 @@ public static void main(String[] args) throws Exception {
    * @desc traceType : Can be one of reg, err, msg or vv
    */
   static class GetVertexTest extends ServerHttpHandler {
+    @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
-      Debug.println("/test/vertex", paramMap.toString());
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       String vertexId = paramMap.get(ServerUtils.VERTEX_ID_KEY);
@@ -295,7 +291,6 @@ public static void main(String[] args) throws Exception {
    */
   static class GetMasterTest extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
-      Debug.println("/test/master", paramMap.toString());
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       // Check both jobId, superstepId and vertexId are present
@@ -335,11 +330,11 @@ public static void main(String[] args) throws Exception {
    * It is an optional parameter and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
+    @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       String violationType = paramMap.get(ServerUtils.INTEGRITY_VIOLATION_TYPE_KEY);
-      Debug.println("/integrity", paramMap.toString());
       try {
         if (jobId == null || superstepId == null || violationType == null) {
           throw new IllegalArgumentException("Missing mandatory parameters");
@@ -383,7 +378,7 @@ public static void main(String[] args) throws Exception {
               DebugTrace.VERTEX_EXCEPTION);
           } else {
             // Split the vertices by comma.
-            vertexIds = new ArrayList(Arrays.asList(rawVertexIds.split(",")));
+            vertexIds = Lists.newArrayList(rawVertexIds.split(","));
           }
           // Send JSON by default.
           JSONObject scenarioObj = new JSONObject();
@@ -412,7 +407,6 @@ public static void main(String[] args) throws Exception {
    */
   static class GetTestGraph extends ServerHttpHandler {
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
-      Debug.println("/test/graph", paramMap.toString());
       String adjList = paramMap.get(ServerUtils.ADJLIST_KEY);
       // Check both jobId and superstepId are present
       try {

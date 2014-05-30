@@ -14,6 +14,7 @@ public class SimpleShortestPathsMaster extends DefaultMasterCompute {
 
   public static String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR = "nvWithDistanceLessThanThree";
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void compute() {
     System.out.println("Running SimpleShortestPathsMaster.compute. superstep " + getSuperstep());
