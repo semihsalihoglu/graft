@@ -33,29 +33,33 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     VelocityContext context = new VelocityContext();
     // Parse the string and check whether the inputs are integers or floating-point numbers
     String[][] tokens = new String[inputStrs.length][];
-    boolean isFloatingPoint = false;
+    boolean isIdFloatingPoint = false;
+    boolean isValueFloatingPoint = false;
     for (int i = 0; i < inputStrs.length; i++) {
       tokens[i] = inputStrs[i].trim().split("\\s+");
-      for (int j = 0; j < tokens[i].length; j++) {
-        try {
-          Long.valueOf(tokens[i][0]);
-        } catch (NumberFormatException ex) {
-          isFloatingPoint = true;
-        }
+      if (tokens[i].length >= 1)
+        isIdFloatingPoint |= isFloatingPoint(tokens[i][0]);
+      if (tokens[i].length >= 2)
+        isValueFloatingPoint |= isFloatingPoint(tokens[i][1]);
+      for (int j = 2; j < tokens[i].length; j++) {
+        isIdFloatingPoint |= isFloatingPoint(tokens[i][j]);
       }
     }
     
     Map<Object, TemplateVertex> vertexMap = new LinkedHashMap<>(inputStrs.length);
     for (int i = 0; i < inputStrs.length; i++) {
-      Object id = readId(tokens[i][0], isFloatingPoint);
+      Object id = convertToSuitableType(tokens[i][0], isIdFloatingPoint);
+      Object value = convertToSuitableType(tokens[i][1], isValueFloatingPoint);
       TemplateVertex vertex = vertexMap.get(id);
       if (vertex == null) {
         vertex = new TemplateVertex(id);
         vertexMap.put(id, vertex);
       }
-      if (tokens[i].length > 1) {
-        for (int j = 1; j < tokens[i].length; j++) {
-          Object nbrId = readId(tokens[i][j], isFloatingPoint);
+      vertex.setValue(value);
+
+      if (tokens[i].length > 2) {
+        for (int j = 2; j < tokens[i].length; j++) {
+          Object nbrId = convertToSuitableType(tokens[i][j], isIdFloatingPoint);
           if (!vertexMap.containsKey(nbrId)) {
             vertexMap.put(nbrId, new TemplateVertex(nbrId));
           }
@@ -63,31 +67,50 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
         }
       }
     }
-    context.put("vertexIdClass", (isFloatingPoint ? DoubleWritable.class.getSimpleName()
+    context.put("vertexIdClass", (isIdFloatingPoint ? DoubleWritable.class.getSimpleName()
+        : LongWritable.class.getSimpleName()));
+    context.put("vertexValueClass", (isValueFloatingPoint ? DoubleWritable.class.getSimpleName()
         : LongWritable.class.getSimpleName()));
     context.put("vertices", vertexMap);
     
     return context;
   }
   
-  private String readId(String token, boolean isFloatingPoint) {
+  private boolean isFloatingPoint(String str) {
+    try {
+      Long.valueOf(str);
+      return false;
+    } catch (NumberFormatException ex) {
+      return true;
+    }
+  }
+  
+  private String convertToSuitableType(String token, boolean isFloatingPoint) {
     return (isFloatingPoint ? Double.valueOf(token).toString() + "d" :
       Long.valueOf(token).toString() + "l");
   }
   
   public static class TemplateVertex {
     private Object id;
+    private Object value;
     private ArrayList<Object> neighbors;
     
     public TemplateVertex(Object id) {
       super();
       this.id = id;
       this.neighbors = new ArrayList<>();
-      
     }
     
     public Object getId() {
       return id;
+    }
+    
+    public Object getValue() {
+      return value;
+    }
+    
+    public void setValue(Object value) {
+      this.value = value;
     }
     
     public ArrayList<Object> getNeighbors() {
