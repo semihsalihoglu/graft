@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
@@ -43,7 +43,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
     // Set application/json as the default content type.
     this.responseContentType = MediaType.APPLICATION_JSON;
     String rawUrl = httpExchange.getRequestURI().getQuery();
-    HashMap<String, String> paramMap;
+    Map<String, String> paramMap;
     try {
       paramMap = ServerUtils.getUrlParams(rawUrl);
       // Call the method implemented by inherited classes.
@@ -137,5 +137,5 @@ public abstract class ServerHttpHandler implements HttpHandler {
    * is not JSON, must specify the new Content type. Default type is application/json.
    * Non-200 Status is automatically assigned text/plain. 
    */
-  public abstract void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap);
+  public abstract void processRequest(HttpExchange httpExchange, Map<String, String> paramMap);
 }

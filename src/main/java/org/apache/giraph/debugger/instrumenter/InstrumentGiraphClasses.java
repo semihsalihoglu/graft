@@ -17,8 +17,8 @@ import javassist.bytecode.Descriptor;
 import org.apache.giraph.graph.Computation;
 import org.apache.giraph.master.MasterCompute;
 import org.apache.log4j.Logger;
-import org.python.google.common.collect.Lists;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**

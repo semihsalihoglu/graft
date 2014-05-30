@@ -6,8 +6,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
@@ -22,8 +22,8 @@ import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.python.google.common.collect.Lists;
 
+import com.google.common.collect.Lists;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -105,7 +105,7 @@ public static void main(String[] args) throws Exception {
    * @URLparams -{jobId}
    */
   static class GetJob extends ServerHttpHandler {
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       if (jobId != null) {
         this.statusCode = HttpURLConnection.HTTP_OK;
@@ -132,7 +132,7 @@ public static void main(String[] args) throws Exception {
    * @URLParams: {jobId, superstepId}
    */
   static class GetVertices extends ServerHttpHandler {
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       try {
@@ -140,7 +140,7 @@ public static void main(String[] args) throws Exception {
         if (jobId == null || superstepId == null) {
           throw new IllegalArgumentException("Missing mandatory params.");
         }
-        ArrayList<String> vertexIds = null;
+        List<String> vertexIds = null;
         // May throw NumberFormatException. Handled below.
         long superstepNo = Long.parseLong(superstepId);
         if (superstepNo < -1) {
@@ -163,14 +163,14 @@ public static void main(String[] args) throws Exception {
    * Returns the number of supersteps traced for the given job.
    */
   static class GetSupersteps extends ServerHttpHandler {
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       try {
         // jobId and superstepId are mandatory. Validate.
         if (jobId == null) {
           throw new IllegalArgumentException("Missing mandatory params.");
         }
-        ArrayList<Long> superstepIds = null;
+        List<Long> superstepIds = null;
         // May throw IOException. Handled below.
         superstepIds = ServerUtils.getSuperstepsDebugged(jobId);
         this.statusCode = HttpURLConnection.HTTP_OK;
@@ -193,7 +193,7 @@ public static void main(String[] args) throws Exception {
    */
   static class GetScenario extends ServerHttpHandler {
     @SuppressWarnings("rawtypes")
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       // Check both jobId and superstepId are present
@@ -208,7 +208,7 @@ public static void main(String[] args) throws Exception {
             ServerUtils.SUPERSTEP_ID_KEY);
           return;
         }
-        ArrayList<String> vertexIds = null;
+        List<String> vertexIds = null;
         // Get the single vertexId or the list of vertexIds (comma-separated).
         String rawVertexIds = paramMap.get(ServerUtils.VERTEX_ID_KEY);
         // No vertex Id supplied. Return scenario for all vertices.
@@ -246,7 +246,7 @@ public static void main(String[] args) throws Exception {
    */
   static class GetVertexTest extends ServerHttpHandler {
     @SuppressWarnings("rawtypes")
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       String vertexId = paramMap.get(ServerUtils.VERTEX_ID_KEY);
@@ -290,7 +290,7 @@ public static void main(String[] args) throws Exception {
    * @URLParams : {jobId, superstepId}
    */
   static class GetMasterTest extends ServerHttpHandler {
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       // Check both jobId, superstepId and vertexId are present
@@ -338,7 +338,7 @@ public static void main(String[] args) throws Exception {
     private static final int _NUM_VIOLATIONS_THRESHOLD = 50;
 
     @SuppressWarnings("rawtypes")
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       String violationType = paramMap.get(ServerUtils.INTEGRITY_VIOLATION_TYPE_KEY);
@@ -354,7 +354,7 @@ public static void main(String[] args) throws Exception {
         JSONObject integrityObj = new JSONObject();
         // Message violation
         if(violationType.equals("M")) {
-          ArrayList<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
+          List<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
             jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE_ALL);
           
           int numViolations = 0;
@@ -385,7 +385,7 @@ public static void main(String[] args) throws Exception {
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("E")) {
-          ArrayList<String> vertexIds = null;
+          List<String> vertexIds = null;
           // Get the single vertexId or the list of vertexIds (comma-separated).
           String rawVertexIds = paramMap.get(ServerUtils.VERTEX_ID_KEY);
           // No vertex Id supplied. Return exceptions for all vertices.
@@ -423,7 +423,7 @@ public static void main(String[] args) throws Exception {
    * @URLParam adjList - Adjacency list of the graph
    */
   static class GetTestGraph extends ServerHttpHandler {
-    public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
+    public void processRequest(HttpExchange httpExchange, Map<String, String> paramMap) {
       String adjList = paramMap.get(ServerUtils.ADJLIST_KEY);
       // Check both jobId and superstepId are present
       try {

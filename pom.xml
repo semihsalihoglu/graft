@@ -51,7 +51,6 @@ under the License.
     <dep.guava.version>14.0.1</dep.guava.version>
     <dep.json.version>20090211</dep.json.version>
     <dep.junit.version>4.11</dep.junit.version>
-    <dep.jython.version>2.5.3</dep.jython.version>
     <dep.log4j.version>1.2.17</dep.log4j.version>
     -->
   </properties>
@@ -203,11 +202,6 @@ under the License.
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity</artifactId>
       <version>${dep.velocity.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.python</groupId>
-      <artifactId>jython</artifactId>
-      <version>${dep.jython.version}</version>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>

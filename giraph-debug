@@ -108,7 +108,7 @@ exec_java_command_line() {
         jarFileCachedLocal="$JARCACHE_LOCAL"/"$jarFileSig".jar
         [ -e "$jarFileCachedLocal" ] ||
             hadoop fs -get "$JARCACHE_HDFS"/"$jarFileSig".jar "$jarFileCachedLocal"
-        CLASSPATH="$jarFileCachedLocal:$CLASSPATH"
+        CLASSPATH="$CLASSPATH:$jarFileCachedLocal"
     fi
     exec_java org.apache.giraph.debugger.CommandLine "$@"
 }
@@ -138,42 +138,34 @@ case $1 in
         fi
         ;;
 
-    dump)
-        shift
+    dump|mktest)
+        Mode=$1; shift
         [ $# -gt 0 ] || usage "JOB_ID is missing"
-        JobId=$1; shift
-        [ $# -gt 0 ] || usage "SUPERSTEP to dump is missing"
-        Superstep=$1; shift
-        [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
-        VertexId=$1; shift
-        exec_java_command_line dump \
-            "$JobId" "$Superstep" "$VertexId" "$@"
+        JobId=$1
+        [ $# -gt 1 ] || usage "SUPERSTEP is missing"
+        Superstep=$2
+        [ $# -gt 2 ] || usage "VERTEX_ID is missing"
+        VertexId=$3
+        case $Mode in
+            mktest*)
+                [ $# -gt 3 ] || usage "TEST_NAME prefix for output is missing"
+                TestName=$4
+        esac
+        exec_java_command_line $Mode "$@"
         ;;
 
-    mktest)
-        shift
+    dump-master|mktest-master)
+        Mode=$1; shift
         [ $# -gt 0 ] || usage "JOB_ID is missing"
-        JobId=$1; shift
-        [ $# -gt 0 ] || usage "SUPERSTEP to dump is missing"
-        Superstep=$1; shift
-        [ $# -gt 0 ] || usage "VERTEX_ID to dump is missing"
-        VertexId=$1; shift
-        [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
-        TestName=$1; shift
-        exec_java_command_line mktest \
-            "$JobId" "$Superstep" "$VertexId" "$TestName" "$@"
-        ;;
-
-    mktest-master)
-        shift
-        [ $# -gt 0 ] || usage "JOB_ID is missing"
-        JobId=$1; shift
-        [ $# -gt 0 ] || usage "SUPERSTEP to dump is missing"
-        Superstep=$1; shift
-        [ $# -gt 0 ] || usage "TEST_NAME prefix for output is missing"
-        TestName=$1; shift
-        exec_java_command_line mktest-master \
-            "$JobId" "$Superstep" "$TestName" "$@"
+        JobId=$1
+        [ $# -gt 1 ] || usage "SUPERSTEP is missing"
+        Superstep=$2
+        case $Mode in
+            mktest*)
+                [ $# -gt 2 ] || usage "TEST_NAME prefix for output is missing"
+                TestName=$3; shift
+        esac
+        exec_java_command_line $Mode "$@"
         ;;
 
 

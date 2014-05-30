@@ -149,28 +149,29 @@ public class DebuggerUtils {
    * Returns the file name of the trace file given the three parameters. Pass
    * arbitrary vertexId for traces which do not require a vertexId.
    */
+  // XXX is this function giving the String format? or regex?  Seems like latter.
   public static String getTraceFileFormat(DebugTrace debugTrace) {
     switch (debugTrace) {
     case VERTEX_REGULAR:
-      return PREFIX_TRACE_REGULAR + "_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_REGULAR + "_stp_%s_vid_%s.tr";
     case VERTEX_EXCEPTION:
-      return PREFIX_TRACE_EXCEPTION + "_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_EXCEPTION + "_stp_%s_vid_%s.tr";
     case VERTEX_ALL:
       return String.format("(%s|%s)%s", PREFIX_TRACE_REGULAR,
-      		PREFIX_TRACE_EXCEPTION, "_stp_%d_vid_%s.tr"); 
+      		PREFIX_TRACE_EXCEPTION, "_stp_%s_vid_%s.tr"); 
     case INTEGRITY_MESSAGE_ALL:
-      return "task_%s_msg_intgrty_stp_%d.tr";
+      return "task_%s_msg_intgrty_stp_%s.tr";
     case INTEGRITY_MESSAGE_SINGLE_VERTEX:
-      return PREFIX_TRACE_MESSAGE + "_intgrty_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_MESSAGE + "_intgrty_stp_%s_vid_%s.tr";
     case INTEGRITY_VERTEX:
-      return PREFIX_TRACE_VERTEX +"_intgrty_stp_%d_vid_%s.tr";
+      return PREFIX_TRACE_VERTEX +"_intgrty_stp_%s_vid_%s.tr";
      case MASTER_REGULAR:
-      return "master_" + PREFIX_TRACE_REGULAR + "_stp_%d.tr";
+      return "master_" + PREFIX_TRACE_REGULAR + "_stp_%s.tr";
     case MASTER_EXCEPTION:
-      return "master_" + PREFIX_TRACE_EXCEPTION + "_stp_%d.tr";
+      return "master_" + PREFIX_TRACE_EXCEPTION + "_stp_%s.tr";
     case MASTER_ALL:
       return String.format("master_(%s|%s)_%s", PREFIX_TRACE_REGULAR,
-        PREFIX_TRACE_EXCEPTION, "_stp_%d.tr");
+        PREFIX_TRACE_EXCEPTION, "_stp_%s.tr");
     default:
       throw new IllegalArgumentException("DebugTrace not supported.");
     }

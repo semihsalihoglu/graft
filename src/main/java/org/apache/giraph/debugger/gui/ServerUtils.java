@@ -9,6 +9,9 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +36,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 /*
  * Utility methods for Debugger Server.
  */
@@ -52,9 +59,9 @@ public class ServerUtils {
    * Returns parameters of the URL in a hash map. For instance,
    * http://localhost:9000/?key1=val1&key2=val2&key3=val3
    */
-  public static HashMap<String, String> getUrlParams(String rawUrl)
+  public static Map<String, String> getUrlParams(String rawUrl)
     throws UnsupportedEncodingException {
-    HashMap<String, String> paramMap = new HashMap<String, String>();
+    HashMap<String, String> paramMap = Maps.newHashMap();
 
     if (rawUrl != null) {
       String[] params = rawUrl.split("&");
@@ -338,7 +345,7 @@ public class ServerUtils {
    * reading (the file names of) the debug traces on HDFS. File names follow the
    * <prefix>_stp_<superstepNo>_vid_<vertexId>.tr naming convention.
    */
-  public static ArrayList<String> getVerticesDebugged(String jobId, long superstepNo, 
+  public static List<String> getVerticesDebugged(String jobId, long superstepNo, 
     DebugTrace debugTrace) throws IOException {
     ArrayList<String> vertexIds = new ArrayList<String>();
     FileSystem fs = ServerUtils.getFileSystem();
@@ -361,6 +368,9 @@ public class ServerUtils {
       // Add this vertex id if there is a match.
       if (m.find()) {
         // VERTEX_ALL debug trace has one group to match the prefix -reg|err.
+        // FIXME XXX this is terrible: we pretend to know nothing about the
+        // patterns defined in DebuggerUtils#getTraceFileFormat(), but all of a
+        // sudden we're using inside knowledge to extract the vertex id part. :S  
         vertexIds.add(m.group(debugTrace == DebugTrace.VERTEX_ALL ? 2 : 1));
       }
     }
@@ -371,7 +381,7 @@ public class ServerUtils {
    * Returns the IDs of all the tasks that caused the given integrity violation.
    * @param debugTrace - Must be one of INTEGRITY_* types.
    */
-  public static ArrayList<String> getTasksWithIntegrityViolations(String jobId, 
+  public static List<String> getTasksWithIntegrityViolations(String jobId, 
     long superstepNo, DebugTrace debugTrace) throws IOException {
     assert EnumSet.of(DebugTrace.INTEGRITY_MESSAGE_ALL, 
       DebugTrace.INTEGRITY_VERTEX).contains(debugTrace);
@@ -398,15 +408,14 @@ public class ServerUtils {
       }
     }
     return taskIds;
-    
   }
 
   /**
    * Returns the list of supersteps for which there is an exception or
    * regular trace.
    */
-  public static ArrayList<Long> getSuperstepsDebugged(String jobId) throws IOException {
-      ArrayList<Long> superstepIds = new ArrayList<Long>();
+  public static List<Long> getSuperstepsDebugged(String jobId) throws IOException {
+      Set<Long> superstepIds = Sets.newHashSet();
       FileSystem fs = ServerUtils.getFileSystem();
       String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
       // Use this regex to match the file name and capture the vertex id.
@@ -422,6 +431,32 @@ public class ServerUtils {
           superstepIds.add(Long.parseLong(m.group(2)));
         }
       }
-      return superstepIds;
+      return Lists.newArrayList(superstepIds);
   }
+  
+  /*
+   * Returns the list of supersteps for which there is an exception or
+   * regular trace.
+   */
+  public static List<Long> getSuperstepsMasterDebugged(String jobId)
+    throws IOException {
+    Set<Long> superstepIds = Sets.newHashSet();
+    FileSystem fs = ServerUtils.getFileSystem();
+    String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
+    // Use this regex to match the file name and capture the vertex id.
+    String regex = String.format("master_.*_stp_(\\d+?).tr$");
+    Pattern p = Pattern.compile(regex);
+    Path pt = new Path(traceFileRoot);
+    // Iterate through each file in this directory and match the regex.
+    for (FileStatus fileStatus : fs.listStatus(pt)) {
+      String fileName = new File(fileStatus.getPath().toString()).toString();
+      Matcher m = p.matcher(fileName);
+      // Add this vertex id if there is a match.
+      if (m.find()) {
+        superstepIds.add(Long.parseLong(m.group(1)));
+      }
+    }
+    return Lists.newArrayList(superstepIds);
+  }
+
 }

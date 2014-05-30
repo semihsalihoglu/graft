@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.giraph.debugger.gui.ServerUtils;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator;
@@ -12,6 +15,9 @@ import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
 import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * This main class is the command line interface for the debugger. The command
@@ -28,7 +34,8 @@ public class CommandLine {
     String mode = args[0];
     if (args.length == 0
       || (!mode.equalsIgnoreCase("list") && !mode.equalsIgnoreCase("dump")
-        && !mode.equalsIgnoreCase("mktest") && !mode.equalsIgnoreCase("mktest-master")))
+        && !mode.equalsIgnoreCase("mktest") && !mode.equalsIgnoreCase("dump-master") && !mode
+          .equalsIgnoreCase("mktest-master")))
       printHelp();
 
     if (args.length <= 1)
@@ -38,37 +45,45 @@ public class CommandLine {
 
     if (mode.equalsIgnoreCase("list")) {
       try {
-        ArrayList<Long> superstepsDebugged = ServerUtils.getSuperstepsDebugged(jobId);
-        for (Long superstepNo : superstepsDebugged) {
-          System.out.println(String.format("%-15s  %s  %4d  TestMaster_%s_S%d", "mktest-master",
-            jobId, superstepNo, jobId, superstepNo));
-        }
-        for (Long superstepNo : superstepsDebugged) {
-          ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo,
-            DebugTrace.VERTEX_ALL);
-          for (String vertexId : vertexIds) {
-            System.out.println(String.format("%-15s  %s  %4d %8s", "dump", jobId, superstepNo,
-              vertexId));
+        List<Long> superstepsDebuggedMaster = ServerUtils.getSuperstepsMasterDebugged(jobId);
+        Set<Long> superstepsDebugged = Sets.newHashSet(ServerUtils.getSuperstepsDebugged(jobId));
+        superstepsDebugged.addAll(superstepsDebuggedMaster);
+        List<Long> allSupersteps = Lists.newArrayList(superstepsDebugged);
+        Collections.sort(allSupersteps);
+        for (Long superstepNo : allSupersteps) {
+          if (superstepsDebuggedMaster.contains(superstepNo)) {
+            System.out.println(String.format("%-15s  %s  %4d           ", "dump-master", jobId,
+              superstepNo));
+            System.out.println(String.format("%-15s  %s  %4d           TestMaster_%s_S%d",
+              "mktest-master", jobId, superstepNo, jobId, superstepNo));
           }
-        }
-        for (Long superstepNo : superstepsDebugged) {
-          ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(jobId, superstepNo,
-            DebugTrace.VERTEX_ALL);
-          for (String vertexId : vertexIds) {
-            System.out.println(String.format("%-15s  %s  %4d %8s  Test_%s_S%d_V%s", "mktest",
-              jobId, superstepNo, vertexId, jobId, superstepNo, vertexId));
+          List<DebugTrace> debugTraces = Arrays.asList( //
+            DebugTrace.INTEGRITY_MESSAGE_SINGLE_VERTEX //
+            , DebugTrace.INTEGRITY_VERTEX //
+            , DebugTrace.VERTEX_EXCEPTION //
+            , DebugTrace.VERTEX_REGULAR //
+            );
+          for (DebugTrace debugTrace : debugTraces) {
+            for (String vertexId : ServerUtils.getVerticesDebugged(jobId, superstepNo, debugTrace)) {
+              System.out.println(String.format("%-15s  %s  %4d %8s  # %s", "dump", jobId,
+                superstepNo, vertexId, debugTrace));
+              System.out.println(String.format("%-15s  %s  %4d %8s  Test_%s_S%d_V%s", "mktest",
+                jobId, superstepNo, vertexId, jobId, superstepNo, vertexId));
+            }
           }
         }
       } catch (IOException e) {
         e.printStackTrace();
       }
     } else {
-      if (args.length <= 3)
+      if (args.length <= 2)
         printHelp();
 
       Long superstepNo = Long.parseLong(args[2]);
       try {
         if (mode.equalsIgnoreCase("dump") || mode.equalsIgnoreCase("mktest")) {
+          if (args.length <= 3)
+            printHelp();
           String vertexId = args[3];
           // Read scenario.
           // TODO: rename ServerUtils to Utils
@@ -93,14 +108,27 @@ public class CommandLine {
               scenarioWrapper, null, testClassName);
             outputTestCase(outputPrefix, generatedTestCase);
           }
-        } else if (mode.equalsIgnoreCase("mktest-master")) {
-          String outputPrefix = args[3].trim();
-          String testClassName = new File(outputPrefix).getName();
-          GiraphMasterScenarioWrapper scenario = ServerUtils.readMasterScenarioFromTrace(jobId,
-            superstepNo, DebugTrace.MASTER_REGULAR);
-          String generatedTestCase = new MasterComputeTestGenerator().generateTest(scenario, null,
-            testClassName);
-          outputTestCase(outputPrefix, generatedTestCase);
+        } else if (mode.equalsIgnoreCase("dump-master") || mode.equalsIgnoreCase("mktest-master")) {
+          GiraphMasterScenarioWrapper scenarioWrapper = ServerUtils.readMasterScenarioFromTrace(
+            jobId, superstepNo, DebugTrace.MASTER_ALL);
+          if (scenarioWrapper == null) {
+            System.err.println("The trace file does not exist.");
+            System.exit(2);
+          }
+
+          if (mode.equalsIgnoreCase("dump-master")) {
+            System.out.println(scenarioWrapper);
+          } else if (mode.equalsIgnoreCase("mktest-master")) {
+            if (args.length <= 3)
+              printHelp();
+            String outputPrefix = args[3].trim();
+            String testClassName = new File(outputPrefix).getName();
+            String generatedTestCase = new MasterComputeTestGenerator().generateTest(
+              scenarioWrapper, null, testClassName);
+            outputTestCase(outputPrefix, generatedTestCase);
+          }
+        } else {
+          printHelp();
         }
       } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
         | IOException e) {
