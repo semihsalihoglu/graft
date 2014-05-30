@@ -330,6 +330,13 @@ public static void main(String[] args) throws Exception {
    * It is an optional parameter and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
+    // The server returns only a limited number of msg or vertex value violations.
+    // For message violations, it may not put the limit at exactly this number because it
+    // reads each violation trace which may include multiple message violations and adds all the
+    // violations in the trace to the response. Once the total message violations is over this
+    // number it stops reading traces.
+    private static final int _NUM_VIOLATIONS_THRESHOLD = 50;
+
     @SuppressWarnings("rawtypes")
     public void processRequest(HttpExchange httpExchange, HashMap<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
@@ -350,20 +357,30 @@ public static void main(String[] args) throws Exception {
           ArrayList<String> taskIds  = ServerUtils.getTasksWithIntegrityViolations(
             jobId, superstepNo, DebugTrace.INTEGRITY_MESSAGE_ALL);
           
+          int numViolations = 0;
           for(String taskId : taskIds) {
             MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = 
               ServerUtils.readMsgIntegrityViolationFromTrace(jobId, taskId, superstepNo);
             integrityObj.put(taskId, ServerUtils.msgIntegrityToJson(msgIntegrityViolationWrapper));
+            numViolations+= msgIntegrityViolationWrapper.numMsgWrappers();
+            if (numViolations >= _NUM_VIOLATIONS_THRESHOLD) {
+              break;
+            }
           }
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
         } else if(violationType.equals("V")) {
           ArrayList<String> vertexIds = ServerUtils.getVerticesDebugged(
             jobId, superstepNo, DebugTrace.INTEGRITY_VERTEX);
+          int numViolations = 0;
           for(String vertexId : vertexIds) {
             GiraphVertexScenarioWrapper giraphVertexScenarioWrapper =
               ServerUtils.readVertexIntegrityViolationFromTrace(jobId, superstepNo, vertexId);
+            numViolations++;
             integrityObj.put(vertexId, ServerUtils.vertexIntegrityToJson(giraphVertexScenarioWrapper));
+            if (numViolations >= _NUM_VIOLATIONS_THRESHOLD) {
+              break;
+            }
           }
           this.response = integrityObj.toString();
           this.statusCode = HttpURLConnection.HTTP_OK;
