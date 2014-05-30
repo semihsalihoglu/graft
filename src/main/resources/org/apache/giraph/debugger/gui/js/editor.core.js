@@ -19,6 +19,8 @@ function Editor(options) {
     this.defaultColor = '#FFFDDB'
     // Useful options. Not required by the editor class itself.
     this.errorColor = '#FF9494';
+    // Maximum number of nodes for which the graph view would be constructed and maintained.
+    this.graphViewNodeLimit = 200;
     // Graph members
     this.nodes = [];
     this.links = [];
@@ -52,6 +54,10 @@ function Editor(options) {
 Editor.ViewEnum = {
     TABLET : 'tablet',
     GRAPH : 'graph'
+}
+
+Editor.prototype.onToggleView = function(toggleViewHandler) {
+    this.onToggleView.done = toggleViewHandler;
 }
 
 /*
@@ -108,12 +114,16 @@ Editor.prototype.init = function() {
  * view if the number of nodes is too large.
  */
 Editor.prototype.restart = function() {
+    // If numNodes > graphViewLimit, empty the graph and switch
+    // to table view.
+    if (this.numNodes > this.graphViewNodeLimit) {
+        this.empty();
+        if (this.view != Editor.ViewEnum.TABLET) {
+            this.toggleView();
+        }
+    }
     this.restartGraph();
     this.restartTable();
-
-    if (this.numNodes > 50 && this.view != Editor.ViewEnum.TABLET ) {
-        this.toggleView();
-    }
 }
 
 /*
@@ -423,6 +433,7 @@ Editor.prototype.keyup = function() {
  */
 Editor.prototype.buildGraphFromAdjList = function(adjList) {
     this.empty();
+
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in adjList) {
         var node = this.getNodeWithId(nodeId);
@@ -588,6 +599,8 @@ Editor.prototype.toggleView = function() {
         this.view = Editor.ViewEnum.GRAPH;
         $(this.tablet[0]).slideUp('slow');
     }
+    // Call the handlers registered for toggleView
+    this.onToggleView.done(this.view);
 }
 
 /*

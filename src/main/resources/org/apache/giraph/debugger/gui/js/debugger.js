@@ -52,6 +52,14 @@ GiraphDebugger.prototype.init = function(options) {
         'container' : '#' + this.editorContainerId,
         'dblnode' : this.openNodeAttrs.bind(this)
     });
+    // Add toggle view event handler.
+    this.editor.onToggleView((function(editorView) {
+        if (editorView === Editor.ViewEnum.TABLET) {
+            this.btnToggleViewSpan.html(' Table View');
+        } else {
+            this.btnToggleViewSpan.html(' Graph View');
+        }
+    }).bind(this));
 
     // Instantiate the valpanel object.
     this.valpanel = new ValidationPanel({
@@ -352,15 +360,16 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         )
         .appendTo(formControls);
 
+   // Change the text value of this span when toggling views.
+   this.btnToggleViewSpan = $('<span />')
+                .attr('class', 'glyphicon glyphicon-cog')
+                .html(' Graph View');
+
    // Toggle the editor between the table and graph view.
    this.btnToggleView = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
         .attr('id', this.ids._btnToggleView)
-        .append(
-            $('<span />')
-                .attr('class', 'glyphicon glyphicon-cog')
-                .html(' Toggle View')
-        )
+        .append(this.btnToggleViewSpan)
         .appendTo(formControls);
 
     // Capture Scenario group
@@ -584,12 +593,9 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
     for (var i = 0; i < this.editor.nodes.length; i++) {
         var nodeId = this.editor.nodes[i].id;
         if ((nodeId in marshalledScenario) && marshalledScenario[nodeId].debugged != false) {
-            marshalledScenario[nodeId].enabled = true;
+            this.editor.nodes[i].enabled = true;
         } else {
-            // If marshalledScenario does not have this node,
-            // add it just to update the enabled property.
-            marshalledScenario[nodeId] = {};
-            marshalledScenario[nodeId].enabled = false;
+            this.editor.nodes[i].enabled = false;
         }
     }
     // Update graph data with this scenario.
