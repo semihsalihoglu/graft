@@ -18,11 +18,13 @@ import com.google.protobuf.GeneratedMessage;
  * 
  * @author semihsalihoglu
  */
+@SuppressWarnings("rawtypes")
 public class AggregatorWrapper extends BaseWrapper {
 
   private String key;
   private Aggregator<Writable> aggregator;
 
+  @SuppressWarnings("unchecked")
   public AggregatorWrapper(String key, Aggregator aggregator) {
     this.key = key;
     this.aggregator = aggregator;
@@ -42,6 +44,7 @@ public class AggregatorWrapper extends BaseWrapper {
     return org.apache.giraph.debugger.GiraphAggregator.Aggregator.parseFrom(inputStream);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
     IOException, InstantiationException, IllegalAccessException {

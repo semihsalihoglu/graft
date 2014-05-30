@@ -7,10 +7,6 @@ import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.BaseWrapper;
 import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
-import org.apache.giraph.debugger.utils.DebuggerUtils;
-import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
-import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
-import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
 import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.master.MasterCompute;
 import org.apache.hadoop.conf.Configuration;
@@ -35,8 +31,9 @@ import org.apache.log4j.Logger;
  * not intercept aggregators that were never called.
  * @author semihsalihoglu
  */
+@SuppressWarnings("rawtypes")
 public class CommonVertexMasterInterceptionUtil {
-  private static final Logger LOG = Logger.getLogger(AbstractInterceptingMasterCompute.class);
+  private static final Logger LOG = Logger.getLogger(CommonVertexMasterInterceptionUtil.class);
   private static FileSystem fileSystem = null;
   private String jobId;
   private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;

@@ -496,6 +496,7 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       return VertexScenarioClasses.parseFrom(inputStream);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
       IOException, InstantiationException, IllegalAccessException {
@@ -527,7 +528,6 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
   }
 
-  @SuppressWarnings("unchecked")
   public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
     IOException, InstantiationException, IllegalAccessException {
     GiraphVertexScenario giraphScenario = (GiraphVertexScenario) generatedMessage;

@@ -143,6 +143,7 @@ public class BuggySimpleTriangleClosingComputation extends BasicComputation<
 
   /** Utility class for delivering the array of vertices THIS vertex
     * should connect with to close triangles with neighbors */
+  @SuppressWarnings("serial")
   public static class IntArrayListWritable
     extends ArrayListWritable<IntWritable> {
     /** Default constructor for reflection */
@@ -151,7 +152,6 @@ public class BuggySimpleTriangleClosingComputation extends BasicComputation<
     }
     /** Set storage type for this ArrayListWritable */
     @Override
-    @SuppressWarnings("unchecked")
     public void setClass() {
       setClass(IntWritable.class);
     }

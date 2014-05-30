@@ -48,14 +48,4 @@ public class MasterComputeTestGenerator extends TestGenerator {
     return builder.getContext();
   }
   
-  public static void main(String[] args) {
-    try {
-      GiraphMasterScenarioWrapper scenario = new GiraphMasterScenarioWrapper();
-      scenario.load("C:\\Users\\truongbaquan\\Documents\\DownloadedProjects\\traces_may_23_2014_6pm\\master_debugging\\master_reg_stp_0.tr");
-      MasterComputeTestGenerator generator = new MasterComputeTestGenerator();
-      System.out.println(generator.generateTest(scenario, "org.apache.giraph.debugger.mock"));
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IOException e) {
-      e.printStackTrace();
-    }
-  }
 }

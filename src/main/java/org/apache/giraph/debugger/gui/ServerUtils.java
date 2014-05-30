@@ -33,11 +33,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import sun.security.ssl.Debug;
-
 /*
  * Utility methods for Debugger Server.
  */
+@SuppressWarnings("rawtypes")
 public class ServerUtils {
   public static final String JOB_ID_KEY = "jobId";
   public static final String VERTEX_ID_KEY = "vertexId";
@@ -47,6 +46,8 @@ public class ServerUtils {
   public static final String VERTEX_TEST_TRACE_TYPE_KEY = "traceType";
   public static final String ADJLIST_KEY = "adjList";
  
+  private static final Logger LOG = Logger.getLogger(ServerUtils.class);
+  
   /*
    * Returns parameters of the URL in a hash map. For instance,
    * http://localhost:9000/?key1=val1&key2=val2&key3=val3
@@ -162,7 +163,7 @@ public class ServerUtils {
         return giraphScenarioWrapper;
       } catch (FileNotFoundException e) {
         // Ignore the exception since we will try reading another traceType again.
-        Debug.println("readScenarioFromTrace", "File not found. Ignoring.");
+        LOG.info("readScenarioFromTrace: File not found. Ignoring.");
       } 
     }
     // None of the debugTrace types were found. Throw exception.
@@ -204,7 +205,7 @@ public class ServerUtils {
         // If debugTrace was null, ignore this exception since 
         // we will try reading exception trace later.
         if ( debugTrace == DebugTrace.MASTER_ALL) {
-          Debug.println("readMasterScenarioFromTrace", "Regular file not found. Ignoring.");
+          LOG.info("readMasterScenarioFromTrace: Regular file not found. Ignoring.");
         } else {
           throw e;
         }
@@ -408,7 +409,7 @@ public class ServerUtils {
       FileSystem fs = ServerUtils.getFileSystem();
       String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
       // Use this regex to match the file name and capture the vertex id.
-      String regex = String.format("(reg|err)_stp_(.*?)_vid_(.*?).tr$");
+      String regex = String.format("(reg|err|msg_intgrty|vv_intgrty)_stp_(.*?)_vid_(.*?).tr$");
       Pattern p = Pattern.compile(regex);
       Path pt = new Path(traceFileRoot);
       // Iterate through each file in this directory and match the regex.

@@ -126,3 +126,18 @@ Utils.downloadFile = function(contents, fileName) {
     pom.setAttribute('download', fileName);
     pom.click();
 }
+
+/* 
+ * Utility method to fetch vertex sceario from server
+ */
+Utils.fetchVertexTest = function(debuggerServerRoot, jobId, superstepId, vertexId, traceType) {
+    return $.ajax({
+            url : debuggerServerRoot + '/test/vertex',
+            data : {
+                jobId : jobId,
+                superstepId : superstepId,
+                vertexId : vertexId,
+                traceType : traceType
+            }
+    });
+}

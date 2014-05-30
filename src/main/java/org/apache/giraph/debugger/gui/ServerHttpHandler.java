@@ -44,10 +44,10 @@ public abstract class ServerHttpHandler implements HttpHandler {
     this.responseContentType = MediaType.APPLICATION_JSON;
     String rawUrl = httpExchange.getRequestURI().getQuery();
     HashMap<String, String> paramMap;
-    int statusCode;
     try {
       paramMap = ServerUtils.getUrlParams(rawUrl);
       // Call the method implemented by inherited classes.
+      LOG.info(httpExchange.getRequestURI().getPath() + paramMap.toString());
       processRequest(httpExchange, paramMap);
     } catch (UnsupportedEncodingException ex) {
       this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
@@ -109,6 +109,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
    * exception is thrown. Optional - May be null. 
    */
   protected void handleException(Exception e, String illegalArgumentMessage) {
+    e.printStackTrace();
     LOG.error(e);
     if (e instanceof IllegalArgumentException) {
       this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
