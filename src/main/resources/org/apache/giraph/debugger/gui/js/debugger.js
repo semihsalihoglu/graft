@@ -476,13 +476,10 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         var graphTypeKey = $(this.selectSampleGraphs).val();
         this.editor.buildGraphFromSimpleAdjList(Utils.sampleGraphs[graphTypeKey](numVertices));
 
-        $.ajax({
-            url : this.debuggerServerRoot + '/test/graph',
-            data : { 'adjList' : this.editor.getAdjList() }
-        })
+        Utils.fetchTestGraph(this.debuggerServerRoot, this.editor.getAdjList())
         .done((function(response) {
             this.onGenerateTestGraph.done({ code : response, 
-                    filename : "{0}_{1}.graph".format(graphTypeKey, numVertices)
+                    filename : "{0}_{1}.java".format(graphTypeKey, numVertices)
             });
         }).bind(this))
         .fail((function(response) {

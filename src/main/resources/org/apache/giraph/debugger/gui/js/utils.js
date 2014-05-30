@@ -128,7 +128,7 @@ Utils.downloadFile = function(contents, fileName) {
 }
 
 /* 
- * Utility method to fetch vertex sceario from server
+ * Utility method to fetch vertex sceario from server.
  */
 Utils.fetchVertexTest = function(debuggerServerRoot, jobId, superstepId, vertexId, traceType) {
     return $.ajax({
@@ -139,5 +139,15 @@ Utils.fetchVertexTest = function(debuggerServerRoot, jobId, superstepId, vertexI
                 vertexId : vertexId,
                 traceType : traceType
             }
+    });
+}
+
+/*
+ * Utility method to fetch the test graph for an adjacency list.
+ */
+Utils.fetchTestGraph = function(debuggerServerRoot, adjList) {
+    return $.ajax({
+        url : debuggerServerRoot + '/test/graph',
+        data : { adjList : adjList }
     });
 }
