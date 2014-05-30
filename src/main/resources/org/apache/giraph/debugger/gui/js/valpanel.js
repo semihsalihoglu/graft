@@ -209,7 +209,7 @@ ValidationPanel.prototype.showMessageViolations = function() {
         .html('<thead><tr><th>Source ID</th><th>Destination ID</th><th>Message</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
 
-    var captureScenarioButton = 
+    var btnCaptureScenario = 
         $('<button type="button" class="btn btn-sm btn-primary btn-vp-M-capture">Capture Scenario</button>');
 
     var dataTable = $(table).DataTable({
@@ -220,7 +220,7 @@ ValidationPanel.prototype.showMessageViolations = function() {
             {
                 'orderable' : false,
                 'data' : null,
-                'defaultContent' : $(captureScenarioButton).prop('outerHTML')
+                'defaultContent' : $(btnCaptureScenario).prop('outerHTML')
             },
         ]
     });
@@ -238,8 +238,15 @@ ValidationPanel.prototype.showMessageViolations = function() {
     $('button.btn-vp-M-capture').click((function(event) {
         var tr = $(event.target).parents('tr');
         var row = dataTable.row(tr);
-        var data = row.data(); 
-        console.log(data);
+        var data = row.data();
+        Utils.fetchVertexTest(this.debuggerServerRoot, this.jobId, 
+            this.superstepId, data.srcId, 'msg')
+        .done((function(response) {
+            this.onCaptureVertex.done(response);
+        }).bind(this))
+        .fail((function(response) {
+            this.onCaptureVertex.fail(response.responseText);
+        }).bind(this))
     }).bind(this));
 }
 
@@ -259,7 +266,7 @@ ValidationPanel.prototype.showVertexViolations = function() {
         .html('<thead><tr><th>Vertex ID</th><th>Vertex Value</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
 
-    var captureScenarioButton = 
+    var btnCaptureScenario = 
         $('<button type="button" class="btn btn-sm btn-primary btn-vp-V-capture">Capture Scenario</button>');
 
     var dataTable = $(table).DataTable({
@@ -269,7 +276,7 @@ ValidationPanel.prototype.showVertexViolations = function() {
             {
                 'orderable' : false,
                 'data' : null,
-                'defaultContent' : $(captureScenarioButton).prop('outerHTML')
+                'defaultContent' : $(btnCaptureScenario).prop('outerHTML')
             },
         ]
     });
@@ -287,7 +294,14 @@ ValidationPanel.prototype.showVertexViolations = function() {
         var tr = $(event.target).parents('tr');
         var row = dataTable.row(tr);
         var data = row.data(); 
-        console.log(data);
+        Utils.fetchVertexTest(this.debuggerServerRoot, this.jobId, 
+            this.superstepId, data.vertexId, 'vv')
+        .done((function(response) {
+            this.onCaptureVertex.done(response);
+        }).bind(this))
+        .fail((function(response) {
+            this.onCaptureVertex.fail(response.responseText);
+        }).bind(this))
     }).bind(this));
     // Color the vertices with violations
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
@@ -309,7 +323,7 @@ ValidationPanel.prototype.showExceptions = function() {
         .html('<thead><tr><th>Vertex ID</th><th>Vertex Value</th><th></th></tr></thead>')
         .appendTo(this.contentContainer);
 
-    var captureScenarioButton = 
+    var btnCaptureScenario = 
         $('<button type="button" class="btn btn-sm btn-primary btn-vp-E-capture">Capture Scenario</button>');
 
     var dataTable = $(table).DataTable({
@@ -320,7 +334,7 @@ ValidationPanel.prototype.showExceptions = function() {
             {
                 'orderable' : false,
                 'data' : null,
-                'defaultContent' : $(captureScenarioButton).prop('outerHTML')
+                'defaultContent' : $(btnCaptureScenario).prop('outerHTML')
             }
         ]
     });
@@ -338,7 +352,14 @@ ValidationPanel.prototype.showExceptions = function() {
         var tr = $(event.target).parents('tr');
         var row = dataTable.row(tr);
         var data = row.data(); 
-        console.log(data);
+        Utils.fetchVertexTest(this.debuggerServerRoot, this.jobId, 
+            this.superstepId, data.vertexId, 'err')
+        .done((function(response) {
+            this.onCaptureVertex.done(response);
+        }).bind(this))
+        .fail((function(response) {
+            this.onCaptureVertex.fail(response.responseText);
+        }).bind(this))
     }).bind(this));
     // Color the nodes with exception.
     this.editor.colorNodes(violationIds, this.editor.errorColor, true);
