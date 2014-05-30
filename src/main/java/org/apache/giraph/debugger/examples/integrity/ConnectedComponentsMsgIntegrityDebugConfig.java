@@ -21,12 +21,6 @@ public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<IntW
   
   @Override
   public boolean isMessageCorrect(IntWritable srcId, IntWritable dstId, IntWritable message) {
-    boolean retVal = message.get() <= srcId.get();
-    if (retVal) {
-      System.out.println("message is less than or equal to the id of the vertex."); 
-    } else {
-      System.out.println("INTEGRITY VIOLATION: message is large than the id of the vertex."); 
-    }
-    return retVal;
+    return message.get() <= srcId.get();
   }
 }
