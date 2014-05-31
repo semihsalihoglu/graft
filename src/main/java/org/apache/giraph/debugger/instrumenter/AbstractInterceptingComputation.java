@@ -66,10 +66,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private static Type outgoingMessageClazz;
   private MsgIntegrityViolationWrapper<I, M2> msgIntegrityViolationWrapper;
   
-  // Stores the value of a vertex before the compute method is called. If a vertex is
-  // configured to be debugged, throws an exception, or violates a vertex or message value
-  // constraint, then we use this value as the previous vertex value when we save a vertexScenario
-  // trace for it.
+  // Stores the value of a vertex before the compute method is called. If a vertex throws an
+  // exception, or violates a vertex or message value constraint, then we use this value as the
+  // previous vertex value when we save a vertexScenario trace for it.
   private V previousVertexValue;
   // If a vertex has violated a message value constraint when it was sending a message
   // we set this to true so that at the inside interceptComputeEnd() method we make
@@ -77,6 +76,12 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private boolean hasViolatedMsgValueConstraint;
   // We store the vertexId here in case some functions need it.
   private I vertexId;
+  // Whether or not this vertex was configured to be debugged. If so we will intercept
+  // its outgoing messages.
+  private boolean shouldDebugVertex;
+  // For vertices that are configured to be debugged, we construct a GiraphVertexScenarioWrapper
+  // in the beginning and use it to intercept outgoing messages
+  private GiraphVertexScenarioWrapper<I, V, E, M1, M2> giraphVertexScenarioWrapperForRegularTraces;
   // Contains previous aggregators that are available in the beginning of the
   // superstep.In Giraph, these aggregators are immutable.
   // NOTE: We currently only capture aggregators that are read by at least one
@@ -91,7 +96,6 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private static int numMessageViolationsLogged = -1;
 
   final protected void interceptInitializeEnd() {
-    System.out.println("interceptInitializeEnd is called!!!");
     initializeAbstractInterceptingComputation();
   }
 
@@ -157,7 +161,18 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     }
     vertexId = vertex.getId();
     hasViolatedMsgValueConstraint = false;
-    if (shouldDebugVertex(vertex) || debugConfig.shouldCatchExceptions() ||
+    // A vertex should be debugged if:
+    //   1) the user configures the superstep to be debugged;
+    //   2) the user configues the vertex to be debugged; and
+    //   3) we have already debugged less than a threshold of vertices in this superstep.
+    shouldDebugVertex = debugConfig.shouldDebugSuperstep(getSuperstep())
+      && debugConfig.shouldDebugVertex(vertex) && (numVerticesLogged < NUM_VERTICES_TO_LOG);
+    if (shouldDebugVertex) {
+      giraphVertexScenarioWrapperForRegularTraces =
+        getGiraphVertexScenario(vertex, vertex.getValue(), messages);
+    }
+
+    if (debugConfig.shouldCatchExceptions() ||
     (debugConfig.shouldCheckVertexValueIntegrity() &&
       numVertexViolationsLogged < NUM_VIOLATIONS_TO_LOG) ||
       (debugConfig.shouldCheckMessageIntegrity() &&
@@ -168,21 +183,12 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
     return debugConfig.shouldCatchExceptions();
   }
 
-  // A vertex should be debugged if:
-  //   1) the user configures the superstep to be debugged;
-  //   2) the user configues the vertex to be debugged; and
-  //   3) we have already debugged less than a threshold of vertices in this superstep.
-  private boolean shouldDebugVertex(Vertex<I, V, E> vertex) {
-    return debugConfig.shouldDebugSuperstep(getSuperstep())
-      && debugConfig.shouldDebugVertex(vertex) && (numVerticesLogged < NUM_VERTICES_TO_LOG);
-  }
-
   final protected void interceptComputeException(Vertex<I, V, E> vertex, Iterable<M1> messages,
     Exception e) throws IOException {
     LOG.info("Caught an exception. message: " + e.getMessage()
       + ". Saving a trace in HDFS.");
     GiraphVertexScenarioWrapper<I, V, E, M1, M2> giraphVertexScenarioWrapperForExceptionTrace =
-      getGiraphVertexScenarioToSave(vertex, messages);
+      getGiraphVertexScenario(vertex, previousVertexValue, messages);
     ExceptionWrapper exceptionWrapper = new ExceptionWrapper(e.getMessage(),
       ExceptionUtils.getStackTrace(e));
     giraphVertexScenarioWrapperForExceptionTrace.setExceptionWrapper(exceptionWrapper);
@@ -194,8 +200,11 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
 
   final protected void interceptComputeEnd(Vertex<I, V, E> vertex, Iterable<M1> messages)
     throws IOException {
-    if (shouldDebugVertex(vertex)) {
-      initAndSaveGiraphVertexScenarioWrapper(vertex, messages, DebugTrace.VERTEX_REGULAR);
+    if (shouldDebugVertex) {
+      commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+        giraphVertexScenarioWrapperForRegularTraces,
+        DebuggerUtils.getFullTraceFileName( DebugTrace.VERTEX_REGULAR,
+          commonVertexMasterInterceptionUtil.getJobId(), getSuperstep(), vertexId.toString()));
       numVerticesLogged++;
     }
     if (debugConfig.shouldCheckVertexValueIntegrity()
@@ -214,26 +223,30 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   private void initAndSaveGiraphVertexScenarioWrapper(Vertex<I, V, E> vertex,
     Iterable<M1> messages, DebugTrace debugTrace) throws IOException {
     GiraphVertexScenarioWrapper<I, V, E, M1, M2> giraphVertexScenarioWrapper =
-      getGiraphVertexScenarioToSave(vertex, messages);
+      getGiraphVertexScenario(vertex, previousVertexValue, messages);
     commonVertexMasterInterceptionUtil.saveScenarioWrapper(giraphVertexScenarioWrapper,
       DebuggerUtils.getFullTraceFileName(debugTrace, commonVertexMasterInterceptionUtil.getJobId(),
         getSuperstep(), vertexId.toString()));
   }
 
-  private GiraphVertexScenarioWrapper<I, V, E, M1, M2> getGiraphVertexScenarioToSave(
-    Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
+  // We pass the previous vertex value to assign as an argument because for some traces we capture
+  // the context lazily and store the previous value temporarily in an object. In those cases
+  // the previous value is not equal to the current value of the vertex. And sometimes it is
+  // equal to the current value.
+  private GiraphVertexScenarioWrapper<I, V, E, M1, M2> getGiraphVertexScenario(
+    Vertex<I, V, E> vertex, V previousVertexValueToAssign, Iterable<M1> messages) throws IOException {
     GiraphVertexScenarioWrapper<I, V, E, M1, M2> giraphVertexScenarioWrapper =
       new GiraphVertexScenarioWrapper(getActualTestedClass(),
         (Class<I>) vertexIdClazz, (Class<V>) vertexValueClazz, (Class<E>) edgeValueClazz,
         (Class<M1>) incomingMessageClazz, (Class<M2>) outgoingMessageClazz);
     VertexContextWrapper contextWrapper = giraphVertexScenarioWrapper.new VertexContextWrapper();
     giraphVertexScenarioWrapper.setContextWrapper(contextWrapper);
+    giraphVertexScenarioWrapper.getContextWrapper().setVertexValueBeforeWrapper(previousVertexValueToAssign);
     commonVertexMasterInterceptionUtil.initCommonVertexMasterContextWrapper(getConf(),
       getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
     contextWrapper.setCommonVertexMasterContextWrapper(
       commonVertexMasterInterceptionUtil.getCommonVertexMasterContextWrapper());
     giraphVertexScenarioWrapper.getContextWrapper().setVertexIdWrapper(vertex.getId());
-    giraphVertexScenarioWrapper.getContextWrapper().setVertexValueBeforeWrapper(previousVertexValue);
     Iterable<Edge<I, E>> returnVal = vertex.getEdges();
     for (Edge<I, E> edge : returnVal) {
       if (edge.getTargetVertexId() == null) {
@@ -268,8 +281,9 @@ public abstract class AbstractInterceptingComputation<I extends WritableComparab
   }
 
   private void interceptMessageAndCheckIntegrityIfNecessary(I id, M2 message) {
-    if (debugConfig == null) {
-      System.out.println("debugConfig is null!!!!");
+    if (shouldDebugVertex) {
+      giraphVertexScenarioWrapperForRegularTraces.getContextWrapper().addOutgoingMessageWrapper(
+        id, message);
     }
     if (debugConfig.shouldCheckMessageIntegrity()
       && !debugConfig.isMessageCorrect(vertexId, id, message)
