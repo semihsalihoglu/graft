@@ -20,11 +20,12 @@ function Editor(options) {
     // Useful options. Not required by the editor class itself.
     this.errorColor = '#FF9494';
     // Maximum number of nodes for which the graph view would be constructed and maintained.
-    this.graphViewNodeLimit = 200;
+    this.graphViewNodeLimit = 2000;
     // Graph members
     this.nodes = [];
     this.links = [];
     this.messages = [];
+    this.currentZoom = { translate : [0,0], scale : 1 };
     // Table members
     // Current scenario (adjList) object as received from the server.
     this.currentScenario = {};
@@ -138,7 +139,11 @@ Editor.prototype.restartGraph = function() {
     this.restartAggregators();
 
     // Set the background to light gray if editor is readonly.
-    this.svg.style('background-color', this.readonly ? '#f9f9f9' : '#ffffff');
+    d3.select('.editor').style('background-color', this.readonly ? '#f9f9f9' : 'white');
+    this.svgRect.attr('fill', this.readonly ? '#f9f9f9' : 'white')
+                    .attr('width', this.width)
+                    .attr('height', this.height);
+
     // Set the graph in motion
     this.force.start();
 }
@@ -517,6 +522,7 @@ Editor.prototype.addToGraph = function(scenario) {
  * Shows the preloader and hides all other elements.
  */
 Editor.prototype.showPreloader = function() {
+    this.zoomSvg([0,0], 1);
     this.svg.selectAll('g').transition().style('opacity', 0);
     this.preloader.transition().style('opacity', 1);
 }

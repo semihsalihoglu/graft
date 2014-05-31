@@ -779,7 +779,7 @@ GiraphDebugger.prototype.toggleMode = function() {
             this.editor.toggleView();
         }
         // Start with a sample graph as usual.
-        this.editor.readonly = false;
+        this.editor.setReadonly(false);
         this.editor.buildSample();
         // Show Fetch Job and hide controls
         $(this.debugModeGroup).hide();
@@ -789,7 +789,7 @@ GiraphDebugger.prototype.toggleMode = function() {
     } else {
         this.mode = GiraphDebugger.ModeEnum.DEBUG;
         // Set the editor in readonly mode.
-        this.editor.readonly = true;
+        this.editor.setReadonly(true);
         // Show Form controls and hide fetch job.
         $(this.debugModeGroup).show();
         $(this.editModeGroup).hide();
