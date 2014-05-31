@@ -260,7 +260,6 @@ function getPadding(node) {
     // Offset is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    return [19, 12];
     var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
     return [19 + nodeOffset, 12  + nodeOffset];
 }

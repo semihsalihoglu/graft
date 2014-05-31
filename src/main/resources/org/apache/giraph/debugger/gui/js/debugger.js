@@ -55,9 +55,9 @@ GiraphDebugger.prototype.init = function(options) {
     // Add toggle view event handler.
     this.editor.onToggleView((function(editorView) {
         if (editorView === Editor.ViewEnum.TABLET) {
-            this.btnToggleViewSpan.html(' Table View');
-        } else {
             this.btnToggleViewSpan.html(' Graph View');
+        } else {
+            this.btnToggleViewSpan.html(' Table View');
         }
     }).bind(this));
 
@@ -363,7 +363,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
    // Change the text value of this span when toggling views.
    this.btnToggleViewSpan = $('<span />')
                 .attr('class', 'glyphicon glyphicon-cog')
-                .html(' Graph View');
+                .html(' Table View');
 
    // Toggle the editor between the table and graph view.
    this.btnToggleView = $('<button />')
