@@ -67,8 +67,8 @@ Editor.prototype.initTable = function() {
 
 /*
  * Zooms the svg element with the given translate and scale factors.
-e Use translate = [0,0] and scale = 1 for original zoom level (unzoomed).
-*/
+ * Use translate = [0,0] and scale = 1 for original zoom level (unzoomed).
+ */
 Editor.prototype.zoomSvg = function(translate, scale) {
     this.currentZoom.translate = translate;
     this.currentZoom.scale = scale;
