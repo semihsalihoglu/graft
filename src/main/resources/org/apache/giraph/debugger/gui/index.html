@@ -36,7 +36,7 @@
 			var currentSuperstep = -1;
 
 			$(document).ready(function(){
-					var currentCode = '';
+					var currentCodeUrl = null;
 					// Initialize highlighting.
 					hljs.initHighlightingOnLoad();
 
@@ -45,10 +45,18 @@
 						$('pre code').each(function(i, e) {hljs.highlightBlock(e)});
 					}
 
-					// Sets the currentCode string and the code-container div.
+					/*
+					 * Sets the currentCode string and the code-container div. 
+					 * @param {object} data - data.code is the code content and data.url is the
+					 * downloadable link of the code (text/plain with content-disposition). 
+					 * NOTE: All code setting should be performed through this method to ensure that 
+					 * currentCodeUrl is set properly.
+					 */ 
 					function setCode(data) {
-						currentCode = data ? data :  { code : '' };
-						$('#code-container').html(currentCode.code);
+						currentCodeUrl = data ? data.url : null;
+						var code = data ? data.code : null;
+						$('#code-container').html(code);
+						$('#btn-code-download').prop('disabled', code === null);
 						highlightAll();
 					}
 
@@ -73,22 +81,11 @@
 						Utils.downloadFile(adjList, 'adjList.txt');
 					});
 
-					$("#btn-edge-list-get").click(function() {
-						var edgeList = editor.getEdgeList();
-						Utils.downloadFile(edgeList, 'edgeList.txt');
-					});
-
-					$("#btn-node-list-get").click(function(){
-						var nodeList = editor.getNodeList();
-						Utils.downloadFile(nodeList, 'nodeList.txt');
-					});
 					// Generate Test Graph - Fetch the test graph and display the code.
 					$('#btn-gen-test-graph').click(function() {
-						Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, Utils.getAdjListStrForTestGraph(giraphDebugger.editor.getAdjList()))
-						.done(function(response) {
-								handleTestGraphSuccess({ code: response, 
-										filename : 'graph.java' 
-								});
+						var ajaxRequest = Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, Utils.getAdjListStrForTestGraph(giraphDebugger.editor.getAdjList()))
+						ajaxRequest.ajax.done(function(response) {
+							handleTestGraphSuccess({ code: response, url : ajaxRequest.url });
 						})
 						.fail(function(responseText) {
 							handleTestGraphFail(responseText);
@@ -201,7 +198,7 @@
 
 					// Code download handler.
 					$('#btn-code-download').click(function(event) {
-						Utils.downloadFile(currentCode.code, currentCode.filename);
+						location.href = currentCodeUrl;
 					});
 				});
 		</script>
@@ -288,7 +285,7 @@
 				<div id="code-controls">
 					<h3>Test Code</h3>
 					<button type="button" class="btn btn-primary btn-sm" id="btn-code-select">Select All</button>
-					<button type="button" class="btn btn-danger btn-sm" id="btn-code-download">Download</button>
+					<button type="button" class="btn btn-danger btn-sm" id="btn-code-download" disabled>Download</button>
 				</div>
 				<pre>
 					<code id="code-container"></code>

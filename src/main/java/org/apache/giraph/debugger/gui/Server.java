@@ -268,15 +268,16 @@ public static void main(String[] args) throws Exception {
             vertexId.trim(), debugTrace);
         ComputationComputeTestGenerator testGenerator = 
           new ComputationComputeTestGenerator();
-        // Set status as OK and convert JSONObject to string.
-        JSONObject responseObject = new JSONObject();
-        responseObject.put("code", testGenerator.generateTest(giraphScenarioWrapper, 
-          null /* testPackage is optional */));
-        responseObject.put("filename", String.format("%sTest.java", 
-          giraphScenarioWrapper.getVertexScenarioClassesWrapper().
-          getClassUnderTest().getSimpleName()));
+         // Set status as OK and convert JSONObject to string.
+         String filename = String.format("%sTest.java", 
+            giraphScenarioWrapper.getVertexScenarioClassesWrapper().
+            getClassUnderTest().getSimpleName());
+        this.setResponseHeader("Content-Disposition", 
+          String.format("attachment; filename=\"%s\"", filename));
         this.statusCode = HttpURLConnection.HTTP_OK;
-        this.response = responseObject.toString();
+        this.responseContentType = MediaType.TEXT_PLAIN;
+        this.response =   testGenerator.generateTest(giraphScenarioWrapper, 
+          null /* testPackage is optional */);
       } catch (Exception e) {
         this.handleException(e, 
           String.format("Invalid parameters. %s, %s and %s are mandatory parameter.",
@@ -310,11 +311,15 @@ public static void main(String[] args) throws Exception {
           ServerUtils.readMasterScenarioFromTrace(jobId, superstepNo, DebugTrace.MASTER_ALL);
         MasterComputeTestGenerator masterTestGenerator = 
           new MasterComputeTestGenerator();
-        // Set status as OK and convert JSONObject to string.
-        this.statusCode = HttpURLConnection.HTTP_OK;
-        this.response = masterTestGenerator.generateTest(giraphScenarioWrapper, 
-          null /* testPackage is optional */);
-        this.responseContentType = MediaType.TEXT_PLAIN;
+       // Set status as OK and convert JSONObject to string.
+       String filename = String.format("%sTest.java", 
+           giraphScenarioWrapper.getMasterClassUnderTest());
+       this.setResponseHeader("Content-Disposition", 
+         String.format("attachment; filename=\"%s\"", filename));
+       this.statusCode = HttpURLConnection.HTTP_OK;
+       this.responseContentType = MediaType.TEXT_PLAIN;
+       this.response =   masterTestGenerator.generateTest(giraphScenarioWrapper, 
+         null /* testPackage is optional */);
       } catch (Exception e) {
         this.handleException(e, 
           String.format("Invalid parameters. %s and %s are mandatory parameter.",
@@ -432,9 +437,10 @@ public static void main(String[] args) throws Exception {
         }
         TestGraphGenerator testGraphGenerator = new TestGraphGenerator();
         String testGraph = testGraphGenerator.generate(adjList.split("\n"));
+        this.setResponseHeader("Content-Disposition", "attachment; filename=graph.java");
         this.statusCode = HttpURLConnection.HTTP_OK;
-        this.response = testGraph;
         this.responseContentType = MediaType.TEXT_PLAIN;
+        this.response = testGraph;
       } catch(Exception e) {
         this.handleException(e, 
           String.format("Invalid parameters. %s is mandatory parameter.",

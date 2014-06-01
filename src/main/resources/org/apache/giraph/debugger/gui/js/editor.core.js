@@ -20,7 +20,7 @@ function Editor(options) {
     // Useful options. Not required by the editor class itself.
     this.errorColor = '#FF9494';
     // Maximum number of nodes for which the graph view would be constructed and maintained.
-    this.graphViewNodeLimit = 500;
+    this.graphViewNodeLimit = 2000;
     // Graph members
     this.nodes = [];
     this.links = [];
