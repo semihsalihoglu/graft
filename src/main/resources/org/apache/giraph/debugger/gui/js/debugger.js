@@ -55,9 +55,9 @@ GiraphDebugger.prototype.init = function(options) {
     // Add toggle view event handler.
     this.editor.onToggleView((function(editorView) {
         if (editorView === Editor.ViewEnum.TABLET) {
-            this.btnToggleViewSpan.html(' Table View');
-        } else {
             this.btnToggleViewSpan.html(' Graph View');
+        } else {
+            this.btnToggleViewSpan.html(' Table View');
         }
     }).bind(this));
 
@@ -363,7 +363,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
    // Change the text value of this span when toggling views.
    this.btnToggleViewSpan = $('<span />')
                 .attr('class', 'glyphicon glyphicon-cog')
-                .html(' Graph View');
+                .html(' Table View');
 
    // Toggle the editor between the table and graph view.
    this.btnToggleView = $('<button />')
@@ -436,10 +436,10 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     $(this.btnCaptureVertexScenario).click((function(event){
         // Get the deferred object.
         var vertexId = $(this.captureVertexIdInput).val();
-        Utils.fetchVertexTest(this.debuggerServerRoot, this.currentJobId, 
-            this.currentSuperstepNumber, vertexId, 'reg')
-        .done((function(response) {
-            this.onCaptureVertex.done(response);
+        var ajaxRequest = Utils.fetchVertexTest(this.debuggerServerRoot, this.currentJobId, 
+            this.currentSuperstepNumber, vertexId, 'reg');
+        ajaxRequest.ajax.done((function(response) {
+            this.onCaptureVertex.done({ code: response, url : ajaxRequest.url });
         }).bind(this))
         .fail((function(response) {
             this.onCaptureVertex.fail(response.responseText);
@@ -447,18 +447,9 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     }).bind(this));
     // Handle the master capture scenario button the superstep controls.
     $(this.btnCaptureMasterScenario).click((function(event){
-        $.ajax({
-            url : this.debuggerServerRoot + '/test/master',
-            data : {
-                'jobId' : this.currentJobId,
-                'superstepId' : this.currentSuperstepNumber,
-            }
-        })
-        .done((function(response) {
-            retObj = { code : response,
-                filename : "{0}_{1}.java".format(this.currentJobId, this.currentSuperstepNumber)
-            }
-            this.onCaptureMaster.done(retObj);
+        var ajaxRequest = Utils.fetchMasterTest(this.debuggerServerRoot, this.currentJobId, this.currentSuperstepNumber);
+        ajaxRequest.ajax.done((function(response) {
+            this.onCaptureMaster.done({ code: response, url : ajaxRequest.url });
         }).bind(this))
         .fail((function(response) {
             this.onCaptureMaster.fail(response.responseText);
@@ -476,11 +467,9 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         var graphTypeKey = $(this.selectSampleGraphs).val();
         this.editor.buildGraphFromSimpleAdjList(Utils.sampleGraphs[graphTypeKey](numVertices));
 
-        Utils.fetchTestGraph(this.debuggerServerRoot, Utils.getAdjListStrForTestGraph(this.editor.getAdjList()))
-        .done((function(response) {
-            this.onGenerateTestGraph.done({ code : response, 
-                    filename : "{0}_{1}.java".format(graphTypeKey, numVertices)
-            });
+        var ajaxRequest = Utils.fetchTestGraph(this.debuggerServerRoot, Utils.getAdjListStrForTestGraph(this.editor.getAdjList()))
+        ajaxRequest.ajax.done((function(response) {
+            this.onGenerateTestGraph.done({ code : response, url : ajaxRequest.url });
         }).bind(this))
         .fail((function(response) {
             this.onGenerateTestGraph.fail(response.responseText);
@@ -779,7 +768,7 @@ GiraphDebugger.prototype.toggleMode = function() {
             this.editor.toggleView();
         }
         // Start with a sample graph as usual.
-        this.editor.readonly = false;
+        this.editor.setReadonly(false);
         this.editor.buildSample();
         // Show Fetch Job and hide controls
         $(this.debugModeGroup).hide();
@@ -789,7 +778,7 @@ GiraphDebugger.prototype.toggleMode = function() {
     } else {
         this.mode = GiraphDebugger.ModeEnum.DEBUG;
         // Set the editor in readonly mode.
-        this.editor.readonly = true;
+        this.editor.setReadonly(true);
         // Show Form controls and hide fetch job.
         $(this.debugModeGroup).show();
         $(this.editModeGroup).hide();

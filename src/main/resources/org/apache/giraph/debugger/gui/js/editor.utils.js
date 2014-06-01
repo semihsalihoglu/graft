@@ -66,6 +66,22 @@ Editor.prototype.initTable = function() {
 }
 
 /*
+ * Zooms the svg element with the given translate and scale factors.
+ * Use translate = [0,0] and scale = 1 for original zoom level (unzoomed).
+ */
+Editor.prototype.zoomSvg = function(translate, scale) {
+    this.currentZoom.translate = translate;
+    this.currentZoom.scale = scale;
+    this.svg.attr("transform", "translate(" + translate + ")"
+        + " scale(" + scale + ")");
+}
+
+Editor.prototype.redraw = function() {
+    console.log("here", d3.event.translate, d3.event.scale);
+    this.zoomSvg(d3.event.translate, d3.event.scale);
+}
+
+/*
  * Initializes the SVG element, along with marker and defs.
  */
 Editor.prototype.initElements = function() {
@@ -78,11 +94,16 @@ Editor.prototype.initElements = function() {
     this.initTable();
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
-    this.svg = d3.select(this.container)
+    this.zoomHolder = d3.select(this.container)
                      .insert('svg')
                          .attr('class','editor')
+                         .attr('pointer-events', 'all')
+                         .append('svg:g');
 
-   // Defines end arrow marker for graph links.
+    this.svg = this.zoomHolder.append('svg:g');
+    this.svgRect = this.svg.append('svg:rect')
+
+    // Defines end arrow marker for graph links.
     this.svg.append('svg:defs')
                  .append('svg:marker')
                      .attr('id', 'end-arrow')
@@ -706,4 +727,21 @@ Editor.prototype.spliceLinksForNode = function(node) {
     toSplice.map((function(l) {
         this.links.splice(this.links.indexOf(l), 1);
     }).bind(this));
+}
+
+/*
+ * Puts the graph in readonly state. 
+ */
+Editor.prototype.setReadonly = function(_readonly) {
+    this.readonly = _readonly;
+    if (this.readonly) {
+        // Support zooming in readonly mode.
+        this.zoomHolder.call(d3.behavior.zoom().on('zoom', this.redraw.bind(this)))
+        // Remove double click zoom since we display node attrs on double click.
+        this.zoomHolder.on('dblclick.zoom', null);
+    } else {
+        // Remove zooming in edit mode.
+        this.zoomHolder.on('.zoom', null);
+        this.zoomSvg([0,0], 1);
+    }
 }
