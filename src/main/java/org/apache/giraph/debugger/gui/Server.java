@@ -268,7 +268,8 @@ public static void main(String[] args) throws Exception {
             vertexId.trim(), debugTrace);
         ComputationComputeTestGenerator testGenerator = 
           new ComputationComputeTestGenerator();
-         // Set status as OK and convert JSONObject to string.
+         // Set the content-disposition header to force a download with the 
+         // given filename.
          String filename = String.format("%sTest.java", 
             giraphScenarioWrapper.getVertexScenarioClassesWrapper().
             getClassUnderTest().getSimpleName());
@@ -311,10 +312,11 @@ public static void main(String[] args) throws Exception {
           ServerUtils.readMasterScenarioFromTrace(jobId, superstepNo, DebugTrace.MASTER_ALL);
         MasterComputeTestGenerator masterTestGenerator = 
           new MasterComputeTestGenerator();
-       // Set status as OK and convert JSONObject to string.
-       String filename = String.format("%sTest.java", 
+        // Set the content-disposition header to force a download with the 
+        // given filename.
+        String filename = String.format("%sTest.java", 
            giraphScenarioWrapper.getMasterClassUnderTest());
-       this.setResponseHeader("Content-Disposition", 
+        this.setResponseHeader("Content-Disposition", 
          String.format("attachment; filename=\"%s\"", filename));
        this.statusCode = HttpURLConnection.HTTP_OK;
        this.responseContentType = MediaType.TEXT_PLAIN;
