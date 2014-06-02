@@ -436,10 +436,10 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     $(this.btnCaptureVertexScenario).click((function(event){
         // Get the deferred object.
         var vertexId = $(this.captureVertexIdInput).val();
-        var ajaxRequest = Utils.fetchVertexTest(this.debuggerServerRoot, this.currentJobId, 
-            this.currentSuperstepNumber, vertexId, 'reg');
-        ajaxRequest.ajax.done((function(response) {
-            this.onCaptureVertex.done({ code: response, url : ajaxRequest.url });
+        Utils.fetchVertexTest(this.debuggerServerRoot, this.currentJobId, 
+            this.currentSuperstepNumber, vertexId, 'reg')
+        .done((function(response) {
+            this.onCaptureVertex.done(response);
         }).bind(this))
         .fail((function(response) {
             this.onCaptureVertex.fail(response.responseText);
@@ -447,9 +447,9 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     }).bind(this));
     // Handle the master capture scenario button the superstep controls.
     $(this.btnCaptureMasterScenario).click((function(event){
-        var ajaxRequest = Utils.fetchMasterTest(this.debuggerServerRoot, this.currentJobId, this.currentSuperstepNumber);
-        ajaxRequest.ajax.done((function(response) {
-            this.onCaptureMaster.done({ code: response, url : ajaxRequest.url });
+        Utils.fetchMasterTest(this.debuggerServerRoot, this.currentJobId, this.currentSuperstepNumber)
+        .done((function(response) {
+            this.onCaptureMaster.done(response);
         }).bind(this))
         .fail((function(response) {
             this.onCaptureMaster.fail(response.responseText);
@@ -467,9 +467,9 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
         var graphTypeKey = $(this.selectSampleGraphs).val();
         this.editor.buildGraphFromSimpleAdjList(Utils.sampleGraphs[graphTypeKey](numVertices));
 
-        var ajaxRequest = Utils.fetchTestGraph(this.debuggerServerRoot, Utils.getAdjListStrForTestGraph(this.editor.getAdjList()))
-        ajaxRequest.ajax.done((function(response) {
-            this.onGenerateTestGraph.done({ code : response, url : ajaxRequest.url });
+        Utils.fetchTestGraph(this.debuggerServerRoot, Utils.getAdjListStrForTestGraph(this.editor.getAdjList()))
+        .done((function(response) {
+            this.onGenerateTestGraph.done(response);
         }).bind(this))
         .fail((function(response) {
             this.onGenerateTestGraph.fail(response.responseText);

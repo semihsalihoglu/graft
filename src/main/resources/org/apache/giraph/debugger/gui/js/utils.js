@@ -131,14 +131,43 @@ Utils.downloadFile = function(contents, fileName) {
  * Utility method to fetch vertex sceario from server.
  */
 Utils.fetchVertexTest = function(debuggerServerRoot, jobId, superstepId, vertexId, traceType) {
+    var url = debuggerServerRoot + '/test/vertex';
+    var params = { 
+        jobId : jobId,
+        superstepId : superstepId,
+        vertexId : vertexId,
+        traceType : traceType
+    };
     return $.ajax({
-            url : debuggerServerRoot + '/test/vertex',
-            data : {
-                jobId : jobId,
-                superstepId : superstepId,
-                vertexId : vertexId,
-                traceType : traceType
-            }
+        url : url, 
+        data : params,
+        dataFilter : function(data) {
+            return {
+                code: data,
+                url : "{0}?{1}".format(url, $.param(params))
+            };
+        }
+    });
+}
+
+/* 
+ * Utility method to fetch master sceario from server.
+ */
+Utils.fetchMasterTest = function(debuggerServerRoot, jobId, superstepId) {
+    var url = debuggerServerRoot + '/test/master';
+    var params = {
+            jobId: jobId,
+            superstepId : superstepId
+    };
+    return $.ajax({
+        url : url,
+        data : params,
+        dataFilter : function(data) {
+            return {
+                code: data,
+                url : "{0}?{1}".format(url, $.param(params))
+            };
+        }
     });
 }
 
@@ -146,9 +175,17 @@ Utils.fetchVertexTest = function(debuggerServerRoot, jobId, superstepId, vertexI
  * Utility method to fetch the test graph for an adjacency list.
  */
 Utils.fetchTestGraph = function(debuggerServerRoot, adjList) {
+    var url = debuggerServerRoot + '/test/graph';
+    var params = { adjList : adjList };
     return $.ajax({
         url : debuggerServerRoot + '/test/graph',
-        data : { adjList : adjList }
+        data : params, 
+        dataFilter : function(data) {
+            return {
+                code: data,
+                url : "{0}?{1}".format(url, $.param(params))
+            };
+        }
     });
 }
 

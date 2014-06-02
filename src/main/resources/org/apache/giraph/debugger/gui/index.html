@@ -83,9 +83,9 @@
 
 					// Generate Test Graph - Fetch the test graph and display the code.
 					$('#btn-gen-test-graph').click(function() {
-						var ajaxRequest = Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, Utils.getAdjListStrForTestGraph(giraphDebugger.editor.getAdjList()))
-						ajaxRequest.ajax.done(function(response) {
-							handleTestGraphSuccess({ code: response, url : ajaxRequest.url });
+						Utils.fetchTestGraph(giraphDebugger.debuggerServerRoot, Utils.getAdjListStrForTestGraph(giraphDebugger.editor.getAdjList()))
+						.done(function(response) {
+							handleTestGraphSuccess(response);
 						})
 						.fail(function(responseText) {
 							handleTestGraphFail(responseText);
