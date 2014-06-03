@@ -478,23 +478,6 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
 }
 
 /*
- * Marshalls the scenario JSON for the editor. There are minor differences
- * in the schema of the editor and that returned by the debugger server. */
-GiraphDebugger.prototype.marshallScenarioForEditor = function (data) {
-    // Editor supports multiple attributes on each node, but
-    // debugger server only returns a single vertexValue.
-    var newData = $.extend({}, data);
-    for (vertexId in data) {
-        // Iterating over every vertex returned and creating a 
-        // single element vertexValues array.
-        var vertexValue = data[vertexId].vertexValue;
-        // If vertexValue is present, send that, otherwise, empty array.
-        newData[vertexId].vertexValues = vertexValue ? [vertexValue] : [];
-    }
-    return newData;
-}
-
-/*
  * Fetches the data for this superstep, updates the superstep label, graph editor
  * and disables/enables the prev/next buttons.
  * @param {int} superstepNumber : Superstep to fetch the data for.
@@ -546,7 +529,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
             // start from scratch - build from adjList.
             if (Utils.count(this.stateCache) === 1) {
                 this.stateCache[superstepNumber] = $.extend({}, data);
-                this.editor.buildGraphFromAdjList(this.marshallScenarioForEditor(data));
+                this.editor.buildGraphFromAdjList(data);
             } else {
                 // Merge this data onto superstepNumber - 1's data 
                 this.stateCache[superstepNumber] = this.mergeStates(this.stateCache[superstepNumber - 1], data);
@@ -574,18 +557,17 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
     console.log(scenario); 
     // Add new nodes/links received in this scenario to graph.
     this.editor.addToGraph(scenario);
-    var marshalledScenario = this.marshallScenarioForEditor(scenario);
     // Disable the nodes that were not traced as part of this scenario.
     for (var i = 0; i < this.editor.nodes.length; i++) {
         var nodeId = this.editor.nodes[i].id;
-        if ((nodeId in marshalledScenario) && marshalledScenario[nodeId].debugged != false) {
+        if ((nodeId in scenario) && scenario[nodeId].debugged != false) {
             this.editor.nodes[i].enabled = true;
         } else {
             this.editor.nodes[i].enabled = false;
         }
     }
     // Update graph data with this scenario.
-    this.editor.updateGraphData(marshalledScenario);
+    this.editor.updateGraphData(scenario);
 }
 
 /*
@@ -677,8 +659,7 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
     $(this.btnNodeAttrSubmit).unbind('click');
     $(this.btnNodeAttrSubmit).click((function() {
         var new_id = $(this.nodeAttrIdInput).val();
-        var new_attrs_val = $(this.nodeAttrAttrsInput).val();
-        var new_attrs = new_attrs_val.trim().length > 0 ? new_attrs_val.split(',') : [];
+        var new_attrs = $(this.nodeAttrAttrsInput).val();
         // Check if this id is already taken.
         if (data.editor.getNodeIndex(new_id) >= 0 && new_id != data.node.id) {
             $(this.nodeAttrGroupError).show();

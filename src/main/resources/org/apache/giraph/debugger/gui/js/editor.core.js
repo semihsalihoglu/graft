@@ -253,16 +253,17 @@ Editor.prototype.getAdjList = function() {
     $.each(this.nodes, (function(i, node) {
         var id = node.id;
         var nodes = [];
-        for (var j = 0; j < this.links.length; j++) {
+        $.each(this.links, (function(j, link) {
             var link = this.links[j];
             if ((link.left === true || this.undirected === true) && link.target.id === id) {
-                nodes.push(link.source.id);
+                nodes.push(link.source);
             }
             if ((link.right === true || this.undirected === true) && link.source.id === id) {
-                nodes.push(link.target.id);
+                nodes.push(link.target);
             }
-        }
-        adjList[id] = { adj : nodes, vertexValue : node.attrs.length > 0 ? node.attrs[0] : 0.0 };
+        }).bind(this));
+        var edgeValues = this.getEdgeValuesForNode(node.id);
+        adjList[id] = {adj : nodes, vertexValue : node.attrs, edgeValues : edgeValues};
     }).bind(this));
     return adjList;
 }
@@ -273,7 +274,7 @@ Editor.prototype.getAdjList = function() {
 Editor.prototype.getNodeList  = function() {
     nodeList = '';
     for (var i = 0; i < this.nodes.length; i++){
-        nodeList += this.nodes[i].id + '\t' + this.nodes[i].attrs.join(',');
+        nodeList += this.nodes[i].id + '\t' + this.nodes[i].attrs;
         nodeList += (i != this.nodes.length - 1 ? '\n' : '');
     }
     return nodeList;
@@ -417,7 +418,7 @@ Editor.prototype.keyup = function() {
  *                      neighborId: "neighborId2",
  *                      edgeValue: "edgeValue2"
  *                  }],
- *            vertexValues : [attr1, attr2...],
+ *            vertexValue : attrs,
  *            outgoingMessages : {
  *                    receiverId1: "message1",
  *                    receiverId2: "message2",
@@ -466,8 +467,8 @@ Editor.prototype.updateGraphData = function(scenario) {
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in scenario) {
         var node = this.getNodeWithId(nodeId);
-        if (scenario[nodeId]['vertexValues']) {
-            node.attrs = scenario[nodeId]['vertexValues'];
+        if (scenario[nodeId]['vertexValue']) {
+            node.attrs = scenario[nodeId]['vertexValue'];
         }
         if (scenario[nodeId].enabled != undefined) {
             node.enabled = scenario[nodeId].enabled;

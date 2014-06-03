@@ -197,8 +197,8 @@ Utils.getAdjListStr = function(editorAdjList) {
     adjList = '';
     $.each(editorAdjList, function(vertexId, obj) {
         adjList += vertexId + '\t';
-        $.each(obj.adj, function(i, neighborId) {
-            adjList += neighborId + '\t';
+        $.each(obj.adj, function(i, neighbor) {
+            adjList += neighbor.id + '\t';
         });
         // Remove the last tab
         adjList = adjList.slice(0, -1);
@@ -215,11 +215,12 @@ Utils.getAdjListStr = function(editorAdjList) {
 Utils.getAdjListStrForTestGraph = function(editorAdjList) {
     adjList = '';
     $.each(editorAdjList, function(vertexId, obj) {
-        adjList += vertexId + '\t' + obj.vertexValue + '\t';
-        $.each(obj.adj, function(i, neighborId) {
-            adjList += neighborId + '\t';
+        adjList += "{0}{1} ".format(vertexId, obj.vertexValue ? ":" + obj.vertexValue : "");
+        $.each(obj.adj, function(i, neighbor) {
+            var edgeValue = obj.edgeValues[neighbor.id];
+            adjList += "{0}{1} ".format(neighbor.id, edgeValue ? ":" + edgeValue : "");
         });
-        // Remove the last tab
+        // Remove the last whitespace
         adjList = adjList.slice(0, -1);
         adjList += '\n';
     });

@@ -235,7 +235,7 @@ function getRadius(node) {
     // Radius is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    return 14 + Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
+    return 14 + Math.max(node.id.length, getAttrForDisplay(node.attrs).length) * 3;
 }
 
 /*
@@ -243,10 +243,10 @@ function getRadius(node) {
  * without exploding the circle.
  */
 function getAttrForDisplay(attr) {
-    if (attr.length > 11) {
+    if (attr && attr.length > 11) {
         return attr.slice(0, 4) + "..." + attr.slice(attr.length - 4);    
     }
-    return attr;
+    return attr ? attr : '';
 }
 
 /*
@@ -259,7 +259,7 @@ function getPadding(node) {
     // Offset is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
+    var nodeOffset = Math.max(node.id.length, getAttrForDisplay(node.attrs).length) * 3;
     return [19 + nodeOffset, 12  + nodeOffset];
 }
 
@@ -268,7 +268,7 @@ function getPadding(node) {
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
-    return {id : id, reflexive : false, attrs : [], x: Math.random(), y: Math.random(), enabled: true, color: this.defaultColor};
+    return {id : id, reflexive : false, attrs : null, x: Math.random(), y: Math.random(), enabled: true, color: this.defaultColor};
 }
 
 /*
@@ -565,17 +565,17 @@ Editor.prototype.restartNodes = function() {
           })
           .attr('x', 0)
           .attr('dy', function(d) {
-              return d.attrs.length > 0 ? '-8' : '0 ';
+              return d.attrs != null && d.attrs.trim() != '' ? '-8' : '0 ';
           })
           .attr('class', 'id');
     // Node value (if present) is added/updated here
     el.append('tspan')
           .text(function(d) {
-              return d.attrs.length > 0 ? getAttrForDisplay(d.attrs[0]) : "";
+              return getAttrForDisplay(d.attrs);
           })
           .attr('x', 0)
           .attr('dy', function(d) {
-              return d.attrs.length > 0 ? '18' : '0';
+              return d.attrs != null && d.attrs.trim() != '' ? '18' : '0';
           })
           .attr('class', 'vval');
     // remove old nodes
@@ -613,7 +613,7 @@ Editor.prototype.restartTable = function() {
         var dataRow = {};
         var scenario = this.currentScenario[nodeId];
         dataRow.vertexId = nodeId;
-        dataRow.vertexValue = scenario.vertexValues && scenario.vertexValues.length > 0 ? scenario.vertexValues[0] : '-',
+        dataRow.vertexValue = scenario.vertexValue ? scenario.vertexValue : '-',
         dataRow.outgoingMessages = { 
             numOutgoingMessages : Utils.count(scenario.outgoingMessages), 
             data : scenario.outgoingMessages
