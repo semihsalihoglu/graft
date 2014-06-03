@@ -186,21 +186,21 @@ Editor.prototype.getMessagesSentByNode = function(id) {
 
 /*
  * Returns all the edge values for this node's neighbor in a JSON object.
+ * Note that if an edge value is not present, still returns that neighborId with null/undefined value.
  * Output format: {neighborId: edgeValue}
  * @param {string} id
  */
 Editor.prototype.getEdgeValuesForNode = function(id) {
     var edgeValues = {};
-    for (var i = 0; i < this.links.length; i++) {
-        var link = this.links[i];
-        console.log(link);
-        // Make sure the logical edge is from this node to some other node.
-        if (link.source.id === id && link.right && link.rightValue) {
+    var outgoingLinks = this.getLinksWithSourceId(id);
+
+    $.each(outgoingLinks, (function(i, link) {
+        if (link.source.id === id && (this.undirected || link.right)) {
             edgeValues[link.target.id] = link.rightValue; 
-        } else if (link.target.id === id && link.left && link.leftValue) {
+        } else if (link.target.id === id && (this.undirected || link.left)) {
             edgeValues[link.source.id] = link.leftValue; 
         }
-    }
+    }).bind(this));
     return edgeValues;
 }
 
@@ -322,7 +322,7 @@ Editor.prototype.mouseup = function() {
  * If Key is Ctrl, drags the graph using the force layout.
  * If Key is 'L' or 'R' and link is selected, orients the link likewise.
  * If Key is 'R' and node is selected, marks the node as reflexive.
- * If Key is 'Backspace' or 'Delete', deletes the selected node or edge.
+ * If Key is 'Delete', deletes the selected node or edge.
  */
 Editor.prototype.keydown = function() {
     if (this.lastKeyDown !== -1) {
@@ -341,7 +341,6 @@ Editor.prototype.keydown = function() {
     }
 
     switch (d3.event.keyCode) {
-        case 8: // backspace
         case 46: // delete
             if (this.selected_node) {
                 this.nodes.splice(this.nodes.indexOf(this.selected_node), 1);

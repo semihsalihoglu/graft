@@ -77,7 +77,6 @@ Editor.prototype.zoomSvg = function(translate, scale) {
 }
 
 Editor.prototype.redraw = function() {
-    console.log("here", d3.event.translate, d3.event.scale);
     this.zoomSvg(d3.event.translate, d3.event.scale);
 }
 
@@ -325,9 +324,9 @@ Editor.prototype.addEdge = function(sourceNodeId, targetNodeId, edgeValue) {
     if (existingLink) {
         // Set the existingLink directions to true if either
         // newLink or existingLink denote the edge.
-        existingLink.left |= newLink.left;
-        existingLink.right |= newLink.right;
-        if (edgeValue) {
+        existingLink.left = existingLink.left || newLink.left;
+        existingLink.right = existingLink.right || newLink.right;
+        if (edgeValue != undefined) {
             if (sourceNodeId < targetNodeId) {
                 existingLink.rightValue = edgeValue;
             } else {
@@ -494,9 +493,7 @@ Editor.prototype.addNodes = function() {
              } else {
                  this.selected_node = this.mousedown_node;
              }
-
              this.selected_link = null;
-
              // Reposition drag line.
              this.drag_line
                     .style('marker-end', 'url(#end-arrow)')
@@ -530,7 +527,7 @@ Editor.prototype.addNodes = function() {
          }).bind(this))
          .on('dblclick', (function(d) {
              if (this.dblnode) {
-                 this.dblnode({'event' : d3.event, 'node': d, editor : this });
+                 this.dblnode({event : d3.event, node: d, editor : this });
                  this.restartGraph();
              }
          }).bind(this));
@@ -556,6 +553,7 @@ Editor.prototype.restartNodes = function() {
     this.circle.selectAll('circle')
         .style('fill', function(d) { return d.color; })
         .classed('reflexive', function(d) { return d.reflexive; })
+        .classed('selected', (function(d) { return d === this.selected_node }).bind(this))
         .attr('r', function(d) { return getRadius(d);  });
     // If node is not enabled, set its opacity to 0.2    
     this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.2; });
@@ -705,6 +703,18 @@ Editor.prototype.getNodeIndex = function(id) {
 Editor.prototype.getNodeWithId = function(id) {
     var index = this.getNodeIndex(id);
     return index >= 0 ? this.nodes[index] : null;
+}
+
+/*
+ * Returns the link objeccts with the given id as the source.
+ * Note that source here implies that all these links are outgoing from this node.
+ * @param {string} sourceId - The identifier of the source node.
+ */
+Editor.prototype.getLinksWithSourceId = function(sourceId) {
+   return this.links.filter((function(l) {
+       return ((l.source.id === sourceId && (this.undirected || l.right)) || 
+       (l.target.id === sourceId && (this.undirected || l.left)));
+   }).bind(this));
 }
 
 /*

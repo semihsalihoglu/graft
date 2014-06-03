@@ -65,6 +65,11 @@ circle.node.reflexive {
   stroke-width: 2.5px;
 }
 
+circle.node.selected {
+  stroke: #000 !important;
+  stroke-width: 3.5px;
+}
+
 text {
   font: 12px sans-serif;
   pointer-events: none;
@@ -191,6 +196,10 @@ text.tid {
 #debugger-container {
 	height: 504px;
 	margin-bottom: 20px;
+}
+
+#node-attr-flow td {
+	vertical-align: middle;
 }
 
 .editor-aggregators-heading {

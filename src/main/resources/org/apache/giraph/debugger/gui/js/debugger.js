@@ -250,7 +250,7 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
         .addClass('highlight')
         .appendTo(messageContainer);
 
-    var messageTable = $('<table />')
+    this.flowTable = $('<table />')
         .addClass('table')
         .attr('id', 'node-attr-flow')
         .appendTo(messageContainer);
@@ -620,8 +620,7 @@ GiraphDebugger.prototype.initElements = function() {
             var messageData = this.editor.getMessagesReceivedByNode(this.selectedNodeId);
             this.showMessages(messageData);
         } else {
-            var edgeValues = this.editor.getEdgeValuesForNode(this.selectedNodeId);
-            this.showEdgeValues(edgeValues);
+            this.showEdgeValues(this.selectedNodeId, this.selectedEdgeValues);
         }
         
     }).bind(this));
@@ -648,9 +647,12 @@ GiraphDebugger.prototype.initElements = function() {
 GiraphDebugger.prototype.openNodeAttrs = function(data) {
     // Set the currently double clicked node
     this.selectedNodeId = data.node.id;
+    // Store the current edge values for this node in a temporary map.
+    // This is used by the Edge Values tab.
+    this.selectedEdgeValues = this.editor.getEdgeValuesForNode(this.selectedNodeId);
+
     $(this.nodeAttrIdInput).attr('value', data.node.id)
         .attr('placeholder', data.node.id);
-
     $(this.nodeAttrAttrsInput).attr('value', data.node.attrs);
     $(this.nodeAttrGroupError).hide();
 
@@ -677,17 +679,19 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
         var new_id = $(this.nodeAttrIdInput).val();
         var new_attrs_val = $(this.nodeAttrAttrsInput).val();
         var new_attrs = new_attrs_val.trim().length > 0 ? new_attrs_val.split(',') : [];
-
+        // Check if this id is already taken.
         if (data.editor.getNodeIndex(new_id) >= 0 && new_id != data.node.id) {
             $(this.nodeAttrGroupError).show();
             return;
         }
-
-        var index = data.editor.getNodeIndex(data.node.id);
-        data.editor.nodes[index].id = new_id;
-
-        data.editor.nodes[index].attrs = new_attrs;
-        data.editor.restartGraph();
+        data.node.id = new_id;
+        data.node.attrs = new_attrs;
+        // Save the stored edge values. If not edited by the user, overwritten by the original values).
+        $.each(this.selectedEdgeValues, (function(targetId, edgeValue) {
+            // This method is safe - If an edge exists, only overwrites the edge value.
+            data.editor.addEdge(this.selectedNodeId, targetId, edgeValue);
+        }).bind(this));
+        data.editor.restart();
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
 
@@ -714,27 +718,41 @@ GiraphDebugger.prototype.toggleMessageTabs = function(clickedId) {
  * @param messageData - The data of the sent/received messages from/to this node.
  */
 GiraphDebugger.prototype.showMessages = function(messageData) {
-    $('#node-attr-flow').html('');
+    this.flowTable.html('');
     for (var nodeId in messageData) {
         var tr = document.createElement('tr');
         $(tr).html('<td>' + nodeId + '</td><td>' +
             messageData[nodeId] + '</td>');
-        $('#node-attr-flow').append(tr);
+        this.flowTable.append(tr);
     }
 }
 
 /*
  * Populates the edge value table on the node attr modal with the edge vaue data.
- * @param edgeValues - The edge values for this node. 
+ * Uses this.selectedEdgeValues and this.selectedNodeId - must be populated before calling this method.
+ * Format this.selectedEdgeValues : { targetNodeId : edgeValue }
  */
-GiraphDebugger.prototype.showEdgeValues = function(edgeValues) {
-    $('#node-attr-flow').html('');
-    for (var nodeId in edgeValues) {
+GiraphDebugger.prototype.showEdgeValues = function() {
+    this.flowTable.html('');
+    $.each(this.selectedEdgeValues, (function(nodeId, edgeValue) {
         var tr = document.createElement('tr');
-        $(tr).html('<td>' + nodeId + '</td><td>' +
-            edgeValues[nodeId] + '</td>');
-        $('#node-attr-flow').append(tr);
-    }
+        var edgeElement = edgeValue;
+        if (!this.editor.readonly) {
+            edgeElement = $('<input type="text" />')
+                .attr('value', edgeValue)
+                .attr('placeholder', edgeValue)
+                .attr('data-sourceId', this.selectedNodeId)
+                .attr('data-targetId', nodeId)
+                .change((function(event) {
+                    // Save the temporarily edited values to show them as such
+                    // when this tab is opened again.
+                    this.selectedEdgeValues[nodeId] = event.target.value;
+                }).bind(this));
+        }
+        $(tr).append($('<td />').html(nodeId));
+        $(tr).append($('<td />').append(edgeElement));
+        this.flowTable.append(tr);
+    }).bind(this));
 }
 
 /*
