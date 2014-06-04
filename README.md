@@ -1,8 +1,7 @@
 # Giraph Debugger
 
 ## Overview
-TODO(semih): Write
-
+Graft is a debugging and testing tool for programs written for [Apache Giraph](https://giraph.apache.org/). In particular Graft helps users find bugs in their [_Computation.compute()_](http://giraph.apache.org/apidocs/org/apache/giraph/graph/Computation.html) and [_Master.compute()_](https://giraph.apache.org/giraph-core/apidocs/org/apache/giraph/master/MasterCompute.html) methods that result in an incorrect computation being made on the graph, such as incorrect messages being sent between vertices, vertices being assigned incorrect vertex values, or aggregators being updating in an incorrect way. Graft is NOT designed for identifying performance bottlenecks in Giraph programs or Giraph itself.  For more information, visit [Graft's wiki](https://github.com/semihsalihoglu/graft/wiki).
 
 
 
