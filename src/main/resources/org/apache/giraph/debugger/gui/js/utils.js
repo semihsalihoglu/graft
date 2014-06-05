@@ -227,3 +227,30 @@ Utils.getAdjListStrForTestGraph = function(editorAdjList) {
     // Remove the last newline
     return adjList.slice(0, -1);
 }
+
+/*
+ * Creates and returns a submit button with an OK icon.
+ */
+Utils.getBtnSubmitSm = function() {
+    return $('<button />')
+        .attr('type', 'button')
+        .addClass('btn btn-primary btn-sm editable-submit')
+        .html('<i class="glyphicon glyphicon-ok"></i>')
+}
+
+/*
+ * Creates and returns a cancel button with REMOVE icon.
+ */
+Utils.getBtnCancelSm = function() {
+    return $('<button />')
+        .attr('type', 'button')
+        .addClass('btn btn-default btn-sm editable-cancel')
+        .html('<i class="glyphicon glyphicon-remove"></i>')
+}
+
+/*
+ * Returns the jQuery selector for element ID.
+ */
+Utils.getSelectorForId = function(id) {
+    return '#' + id;
+}

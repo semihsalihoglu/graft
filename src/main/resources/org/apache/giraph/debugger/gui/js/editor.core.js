@@ -38,8 +38,11 @@ function Editor(options) {
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
         this.undirected = options['undirected'] === true;
-        if (options['dblnode']) {
-            this.dblnode = options['dblnode'];
+        if (options.onOpenNode) {
+            this.onOpenNode = options.onOpenNode;
+        }
+        if (options.onOpenEdge) {
+            this.onOpenEdge = options.onOpenEdge;
         }
     }
     this.setSize();
@@ -192,15 +195,10 @@ Editor.prototype.getMessagesSentByNode = function(id) {
  */
 Editor.prototype.getEdgeValuesForNode = function(id) {
     var edgeValues = {};
-    var outgoingLinks = this.getLinksWithSourceId(id);
-
-    $.each(outgoingLinks, (function(i, link) {
-        if (link.source.id === id && (this.undirected || link.right)) {
-            edgeValues[link.target.id] = link.rightValue; 
-        } else if (link.target.id === id && (this.undirected || link.left)) {
-            edgeValues[link.source.id] = link.leftValue; 
-        }
-    }).bind(this));
+    var outgoingEdges = this.getEdgesWithSourceId(id);
+    $.each(outgoingEdges, function(i, edge) {
+        edgeValues[edge.target.id] = edge;
+    });
     return edgeValues;
 }
 
@@ -311,9 +309,7 @@ Editor.prototype.mouseup = function() {
             .classed('hidden', true)
             .style('marker-end', '');
     }
-
     this.svg.classed('active', false);
-
     // Clear mouse event vars
     this.resetMouseVars();
 }
@@ -349,7 +345,6 @@ Editor.prototype.keydown = function() {
             } else if (this.selected_link) {
                 this.links.splice(this.links.indexOf(this.selected_link), 1);
             }
-
             this.selected_link = null;
             this.selected_node = null;
             this.restartGraph();

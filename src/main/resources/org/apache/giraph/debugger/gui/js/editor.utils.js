@@ -271,6 +271,16 @@ Editor.prototype.getNewNode = function(id) {
     return {id : id, reflexive : false, attrs : null, x: Math.random(), y: Math.random(), enabled: true, color: this.defaultColor};
 }
 
+/* 
+ * Returns a new edge object. 
+ * @param {object} source - Object for the source node.
+ * @param {object) target - Object for the target node.
+ * @param {object} edgeVal - Any edge value object.
+ */
+Editor.prototype.getNewEdge = function(source, target, edgeValue) {
+    return {source: source, target: target, edgeValue: edgeValue};
+}
+
 /*
  * Returns a new link (edge) object from the node IDs of the logical edge.
  * @param {string} sourceNodeId - The ID of the source node in the logical edge.
@@ -303,6 +313,23 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId, edgeValue) {
         id : this.maxLinkId++, leftValue : leftValue, rightValue : rightValue,  left : false, right : false};
     link[direction] = true;
     return link;
+}
+
+/*
+ * Returns the logical edge(s) from a link object.
+ * @param {object} link - Link object.
+ * This method is required because a single link object may encode
+ * two edges using the left/right attributes.
+ */
+Editor.prototype.getEdges = function(link) {
+    var edges = [];
+    if (link.left || this.undirected) {
+        edges.push(this.getNewEdge(link.target, link.source, link.leftValue));
+    }
+    if (link.right || this.undirected) {
+        edges.push(this.getNewEdge(link.source, link.target, link.rightValue));
+    }
+    return edges;
 }
 
 /*
@@ -407,11 +434,13 @@ Editor.prototype.restartLinks = function() {
                          return '';
                      }).bind(this))
                      .on('mousedown', (function(d) {
-                         if (d3.event.ctrlKey) {
-                             return;
-                         }
                          // Select link
                          this.mousedown_link = d;
+                         // If edge was selected with ctrl key, call the openEdge handler and return.
+                         if (d3.event.ctrlKey) {
+                            this.onOpenEdge({ event: d3.event, link: d, editor: this });
+                            return; 
+                         }
                          if (this.mousedown_link === this.selected_link) {
                              this.selected_link = null;
                          } else {
@@ -526,8 +555,8 @@ Editor.prototype.addNodes = function() {
              this.restartGraph();
          }).bind(this))
          .on('dblclick', (function(d) {
-             if (this.dblnode) {
-                 this.dblnode({event : d3.event, node: d, editor : this });
+             if (this.onOpenNode) {
+                 this.onOpenNode({ event: d3.event, node: d , editor: this });
                  this.restartGraph();
              }
          }).bind(this));
@@ -710,11 +739,16 @@ Editor.prototype.getNodeWithId = function(id) {
  * Note that source here implies that all these links are outgoing from this node.
  * @param {string} sourceId - The identifier of the source node.
  */
-Editor.prototype.getLinksWithSourceId = function(sourceId) {
-   return this.links.filter((function(l) {
-       return ((l.source.id === sourceId && (this.undirected || l.right)) || 
-       (l.target.id === sourceId && (this.undirected || l.left)));
+Editor.prototype.getEdgesWithSourceId = function(sourceId) {
+   var edges = [];
+   $.each(this.links, (function(i, link) {
+       $.each(this.getEdges(link), function(index, edge) {
+           if (edge.source.id === sourceId) {
+               edges.push(edge);
+           }
+       });
    }).bind(this));
+   return edges;
 }
 
 /*
