@@ -376,7 +376,6 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
     
     // Input text box to input the vertexId
     this.captureVertexIdInput = $('<input>')
-        .attr('autofocus', true)
         .attr('type', 'text')
         .attr('class', 'form-control ')
         .attr('placeholder', 'Vertex ID')
@@ -678,8 +677,8 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
         var edgeElement = edge.edgeValue ? edge.edgeValue : 'undefined';
         if (!this.editor.readonly) {
             edgeElement = $('<input type="text" />')
-                .attr('autofocus', true)
                 .attr('value', edge.edgeValue)
+                .css('width', '100%')
                 .attr('placeholder', edge.edgeValue)
                 .change(function(event) {
                     // Save the temporarily edited values to show them as such
@@ -687,7 +686,7 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
                     edgeValuesCache[sourceId].edgeValue = event.target.value;
                 });
         }
-        $(tr).append($('<td />').html("{0} -> {1}".format(edge.source.id, edge.target.id)));
+        $(tr).append($('<td />').html("{0}->{1}".format(edge.source.id, edge.target.id)));
         $(tr).append($('<td />').append(edgeElement));
         table.append(tr);
     }).bind(this));
@@ -710,8 +709,10 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
         .click((function() {
             $(this.edgeValModal).dialog('close');
         }).bind(this));
-    $('.ui-widget-overlay').click(function() { $(Utils.getSelectorForId(this._edgeValModal)).dialog('close'); });
-    $(this.edgeValModal).dialog('open'); 
+    $(this.edgeValModal).find('form input:text').first().focus();
+    // setTimeout is required because of a Chrome bug - jquery.focus doesn't work expectedly.
+    setTimeout((function() { $(this.edgeValModal).dialog('open'); }).bind(this), 1);
+    $('.ui-widget-overlay').click((function() { $(Utils.getSelectorForId(this.ids._edgeValModal)).dialog('close'); }).bind(this));
 }
 
 /*
@@ -733,8 +734,10 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
     $(this.nodeAttrModal).dialog('option', 'position', [data.event.clientX, data.event.clientY]);
     $(this.nodeAttrModal).dialog('option', 'title', 'Node (ID: ' + data.node.id + ')');
     $(this.nodeAttrModal).dialog('open');
+    // Set the focus on the Attributes input field by default.
+    $(this.nodeAttrModal).find('form input').eq(1).focus();
+    $('.ui-widget-overlay').click((function() { $(Utils.getSelectorForId(this.ids._nodeAttrModal)).dialog('close'); }).bind(this));
 
-    $('.ui-widget-overlay').click(function() { $(Utils.getSelectorForId(this._nodeAttrModal)).dialog('close'); });
     $(this.btnNodeAttrCancel).click((function() {
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
