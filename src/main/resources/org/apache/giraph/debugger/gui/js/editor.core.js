@@ -250,18 +250,8 @@ Editor.prototype.getAdjList = function() {
     adjList = {}
     $.each(this.nodes, (function(i, node) {
         var id = node.id;
-        var nodes = [];
-        $.each(this.links, (function(j, link) {
-            var link = this.links[j];
-            if ((link.left === true || this.undirected === true) && link.target.id === id) {
-                nodes.push(link.source);
-            }
-            if ((link.right === true || this.undirected === true) && link.source.id === id) {
-                nodes.push(link.target);
-            }
-        }).bind(this));
-        var edgeValues = this.getEdgeValuesForNode(node.id);
-        adjList[id] = {adj : nodes, vertexValue : node.attrs, edgeValues : edgeValues};
+        var edges = this.getEdgesWithSourceId(id);
+        adjList[id] = {adj : edges, vertexValue : node.attrs}
     }).bind(this));
     return adjList;
 }
