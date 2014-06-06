@@ -709,9 +709,9 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
         .click((function() {
             $(this.edgeValModal).dialog('close');
         }).bind(this));
-    $(this.edgeValModal).find('form input:text').first().focus();
+    $(this.edgeValModal).dialog('open');
     // setTimeout is required because of a Chrome bug - jquery.focus doesn't work expectedly.
-    setTimeout((function() { $(this.edgeValModal).dialog('open'); }).bind(this), 1);
+    setTimeout((function() { $(this.edgeValModal).find('form input:text').first().focus(); }).bind(this), 1);
     $('.ui-widget-overlay').click((function() { $(Utils.getSelectorForId(this.ids._edgeValModal)).dialog('close'); }).bind(this));
 }
 
