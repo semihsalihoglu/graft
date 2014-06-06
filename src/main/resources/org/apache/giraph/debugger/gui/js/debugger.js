@@ -574,11 +574,13 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
 GiraphDebugger.prototype.initElements = function() {
     // Div for the node attribute modal.
     this.nodeAttrModal = $('<div />')
+        .attr('class', 'modal')
         .attr('id', this.ids._nodeAttrModal)
         .hide()
 
    // Div for edge values modal.
    this.edgeValModal = $('<div />')
+       .attr('class', 'modal')
        .attr('id', this.ids._edgeValModal)
        .hide()
 
@@ -693,7 +695,8 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
     Utils.getBtnSubmitSm()
         .attr('type', 'submit')
         .appendTo(this.edgeValForm)
-        .click((function() {
+        .click((function(event) {
+            event.preventDefault();
             // Save the temporary cache back to the editor object.
             $.each(edgeValuesCache, (function(sourceId, edge) {
                 this.editor.addEdge(sourceId, edge.target.id, edge.edgeValue);
@@ -737,7 +740,8 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
     }).bind(this));
 
     $(this.btnNodeAttrSubmit).unbind('click');
-    $(this.btnNodeAttrSubmit).click((function() {
+    $(this.btnNodeAttrSubmit).click((function(event) {
+        event.preventDefault();
         var new_id = $(this.nodeAttrIdInput).val();
         var new_attrs = $(this.nodeAttrAttrsInput).val();
         // Check if this id is already taken.
