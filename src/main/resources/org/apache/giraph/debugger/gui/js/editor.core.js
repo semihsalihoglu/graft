@@ -153,14 +153,14 @@ Editor.prototype.restartGraph = function() {
 
 /*
  * Handles mousedown event.
- * Insert a new node if CTRL key is not pressed. Otherwise, drag the graph.
+ * Insert a new node if Shift key is not pressed. Otherwise, drag the graph.
  */
 Editor.prototype.mousedown = function() {
     if (this.readonly === true) {
         return;
     }
     this.svg.classed('active', true);
-    if (d3.event.ctrlKey || this.mousedown_node || this.mousedown_link) {
+    if (d3.event.shiftKey || this.mousedown_node || this.mousedown_link) {
         return;
     }
     // Insert new node at point.
@@ -316,7 +316,7 @@ Editor.prototype.mouseup = function() {
 
 /*
  * Handles keydown event.
- * If Key is Ctrl, drags the graph using the force layout.
+ * If Key is Shift, drags the graph using the force layout.
  * If Key is 'L' or 'R' and link is selected, orients the link likewise.
  * If Key is 'R' and node is selected, marks the node as reflexive.
  * If Key is 'Delete', deletes the selected node or edge.
@@ -327,8 +327,8 @@ Editor.prototype.keydown = function() {
     }
     this.lastKeyDown = d3.event.keyCode;
 
-    // Ctrl key was pressed
-    if (d3.event.keyCode === 17) {
+    // Shift key was pressed
+    if (d3.event.shiftKey) {
         this.circle.call(this.force.drag);
         this.svg.classed('ctrl', true);
     }
@@ -385,13 +385,13 @@ Editor.prototype.keydown = function() {
 /*
  * Handles the keyup event.
  * Resets lastKeyDown to -1.
- * Also resets the drag event binding to null if the key released was Ctrl.
+ * Also resets the drag event binding to null if the key released was Shift.
  */
 Editor.prototype.keyup = function() {
     this.lastKeyDown = -1;
 
-    // Ctrl
-    if (d3.event.keyCode === 17) {
+    // Shift
+    if (d3.event.keyCode === 16) {
         this.circle
             .on('mousedown.drag', null)
             .on('touchstart.drag', null);

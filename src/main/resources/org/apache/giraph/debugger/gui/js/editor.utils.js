@@ -436,8 +436,8 @@ Editor.prototype.restartLinks = function() {
                      .on('mousedown', (function(d) {
                          // Select link
                          this.mousedown_link = d;
-                         // If edge was selected with ctrl key, call the openEdge handler and return.
-                         if (d3.event.ctrlKey) {
+                         // If edge was selected with shift key, call the openEdge handler and return.
+                         if (d3.event.shiftKey) {
                             this.onOpenEdge({ event: d3.event, link: d, editor: this });
                             return; 
                          }
@@ -512,7 +512,7 @@ Editor.prototype.addNodes = function() {
              d3.select(d3.event.target).attr('transform', '');
          }).bind(this))
          .on('mousedown', (function(d) {
-             if (d3.event.ctrlKey || this.readonly) {
+             if (d3.event.shiftKey || this.readonly) {
                  return;
              }
              // Select node.
@@ -534,7 +534,6 @@ Editor.prototype.addNodes = function() {
              if (!this.mousedown_node) {
                  return;
              }
-
              this.drag_line
                     .classed('hidden', true)
                     .style('marker-end', '');
