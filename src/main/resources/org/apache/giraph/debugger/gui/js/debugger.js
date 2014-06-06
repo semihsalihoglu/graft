@@ -206,6 +206,7 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
         .appendTo(formGroupButtons);
 
     this.btnNodeAttrSubmit = Utils.getBtnSubmitSm()
+        .attr('type', 'submit')
         .attr('id', this.ids._btnNodeAttrSave)
         .appendTo(buttonsContainer);
 
@@ -375,6 +376,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
     
     // Input text box to input the vertexId
     this.captureVertexIdInput = $('<input>')
+        .attr('autofocus', true)
         .attr('type', 'text')
         .attr('class', 'form-control ')
         .attr('placeholder', 'Vertex ID')
@@ -580,12 +582,12 @@ GiraphDebugger.prototype.initElements = function() {
        .attr('id', this.ids._edgeValModal)
        .hide()
 
-   this.edgeValForm = $('<div />')
+   this.edgeValForm = $('<form />')
        .addClass('form-horizontal')
        .appendTo(this.edgeValModal);
        
     // Create a form and append to nodeAttr
-    var nodeAttrForm = $('<div />')
+    var nodeAttrForm = $('<form />')
         .addClass('form-horizontal')
         .appendTo(this.nodeAttrModal);
 
@@ -674,6 +676,7 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
         var edgeElement = edge.edgeValue ? edge.edgeValue : 'undefined';
         if (!this.editor.readonly) {
             edgeElement = $('<input type="text" />')
+                .attr('autofocus', true)
                 .attr('value', edge.edgeValue)
                 .attr('placeholder', edge.edgeValue)
                 .change(function(event) {
@@ -688,6 +691,7 @@ GiraphDebugger.prototype.openEdgeVals = function(data) {
     }).bind(this));
 
     Utils.getBtnSubmitSm()
+        .attr('type', 'submit')
         .appendTo(this.edgeValForm)
         .click((function() {
             // Save the temporary cache back to the editor object.
