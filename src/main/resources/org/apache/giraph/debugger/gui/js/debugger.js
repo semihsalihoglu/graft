@@ -4,9 +4,8 @@
 
 /*
  * Debugger is a class that encapsulates the graph editor and debugging controls.
- * @param {debuggerContainer, nodeAttrContainer} options - Initialize debugger with these options.
+ * @param {debuggerContainer} options - Initialize debugger with these options.
  * @param options.debuggerContainer - Selector for the container of the main debugger area. (Editor & Valpanel)
- * @param options.nodeAttrContainer - Selector for the container of the node attr modal.
  * @param options.superstepControlsContainer - Selector for the container of the superstep controls.
  * @constructor
  */
@@ -50,8 +49,11 @@ GiraphDebugger.prototype.init = function(options) {
     // Instantiate the editor object.
     this.editor = new Editor({
         'container' : '#' + this.editorContainerId,
-        'dblnode' : this.openNodeAttrs.bind(this)
+        onOpenNode : this.openNodeAttrs.bind(this),
+        onOpenEdge : this.openEdgeVals.bind(this)
     });
+    
+
     // Add toggle view event handler.
     this.editor.onToggleView((function(editorView) {
         if (editorView === Editor.ViewEnum.TABLET) {
@@ -73,7 +75,6 @@ GiraphDebugger.prototype.init = function(options) {
 
     this.initIds();
     // Must initialize these members as they are used by subsequent methods.
-    this.nodeAttrContainer = options.nodeAttrContainer;
     this.superstepControlsContainer = options.superstepControlsContainer;
     this.initElements(options);
 }
@@ -93,7 +94,6 @@ GiraphDebugger.prototype.onGenerateTestGraph = function(done, fail) {
     this.onGenerateTestGraph.done = done;
     this.onGenerateTestGraph.fail = fail;
 }
-
 
 /*
  * Deferred callbacks for capture scenario
@@ -137,6 +137,8 @@ GiraphDebugger.prototype.initIds = function() {
         _nodeAttrError : 'node-attr-error',
         _btnNodeAttrSave : 'btn-node-attr-save',
         _btnNodeAttrCancel : 'btn-node-attr-cancel',
+        // IDs of elements in edge values modal
+        _edgeValModal : 'edge-vals',
         // IDs of elements in Edit Mode controls.
         _selectSampleGraphs : 'sel-sample-graphs',
         // IDs of elements in Superstep controls.
@@ -203,18 +205,13 @@ GiraphDebugger.prototype.initInputElements = function(nodeAttrForm) {
         .addClass('col-sm-12')
         .appendTo(formGroupButtons);
 
-    this.btnNodeAttrSubmit = $('<button />')
-        .attr('type', 'button')
-        .addClass('btn btn-primary btn-sm editable-submit')
+    this.btnNodeAttrSubmit = Utils.getBtnSubmitSm()
+        .attr('type', 'submit')
         .attr('id', this.ids._btnNodeAttrSave)
-        .html('<i class="glyphicon glyphicon-ok"></i>')
         .appendTo(buttonsContainer);
 
-    this.btnNodeAttrCancel = $('<button />')
-        .attr('type', 'button')
-        .addClass('btn btn-default btn-sm editable-cancel')
+    this.btnNodeAttrCancel = Utils.getBtnCancelSm()
         .attr('id', this.ids._btnNodeAttrCancel)
-        .html('<i class="glyphicon glyphicon-remove"></i>')
         .appendTo(buttonsContainer);
 
     this.nodeAttrGroupError = $('<div />')
@@ -243,14 +240,14 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
         .addClass('nav nav-tabs')
         .html('<li class="active"><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>' +
             '<li><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>' + 
-            '<li><a id="node-attr-edgevals" class="nav-msg" href="#!">Edge Value</a></li>')
+            '<li><a id="node-attr-edgevals" class="nav-msg" href="#!">Edge Values</a></li>')
         .appendTo(messageContainer);
 
     var tableContainer = $('<div />')
         .addClass('highlight')
         .appendTo(messageContainer);
 
-    var messageTable = $('<table />')
+    this.flowTable = $('<table />')
         .addClass('table')
         .attr('id', 'node-attr-flow')
         .appendTo(messageContainer);
@@ -478,23 +475,6 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
 }
 
 /*
- * Marshalls the scenario JSON for the editor. There are minor differences
- * in the schema of the editor and that returned by the debugger server. */
-GiraphDebugger.prototype.marshallScenarioForEditor = function (data) {
-    // Editor supports multiple attributes on each node, but
-    // debugger server only returns a single vertexValue.
-    var newData = $.extend({}, data);
-    for (vertexId in data) {
-        // Iterating over every vertex returned and creating a 
-        // single element vertexValues array.
-        var vertexValue = data[vertexId].vertexValue;
-        // If vertexValue is present, send that, otherwise, empty array.
-        newData[vertexId].vertexValues = vertexValue ? [vertexValue] : [];
-    }
-    return newData;
-}
-
-/*
  * Fetches the data for this superstep, updates the superstep label, graph editor
  * and disables/enables the prev/next buttons.
  * @param {int} superstepNumber : Superstep to fetch the data for.
@@ -546,7 +526,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
             // start from scratch - build from adjList.
             if (Utils.count(this.stateCache) === 1) {
                 this.stateCache[superstepNumber] = $.extend({}, data);
-                this.editor.buildGraphFromAdjList(this.marshallScenarioForEditor(data));
+                this.editor.buildGraphFromAdjList(data);
             } else {
                 // Merge this data onto superstepNumber - 1's data 
                 this.stateCache[superstepNumber] = this.mergeStates(this.stateCache[superstepNumber - 1], data);
@@ -574,18 +554,17 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
     console.log(scenario); 
     // Add new nodes/links received in this scenario to graph.
     this.editor.addToGraph(scenario);
-    var marshalledScenario = this.marshallScenarioForEditor(scenario);
     // Disable the nodes that were not traced as part of this scenario.
     for (var i = 0; i < this.editor.nodes.length; i++) {
         var nodeId = this.editor.nodes[i].id;
-        if ((nodeId in marshalledScenario) && marshalledScenario[nodeId].debugged != false) {
+        if ((nodeId in scenario) && scenario[nodeId].debugged != false) {
             this.editor.nodes[i].enabled = true;
         } else {
             this.editor.nodes[i].enabled = false;
         }
     }
     // Update graph data with this scenario.
-    this.editor.updateGraphData(marshalledScenario);
+    this.editor.updateGraphData(scenario);
 }
 
 /*
@@ -594,18 +573,55 @@ GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
 GiraphDebugger.prototype.initElements = function() {
     // Div for the node attribute modal.
     this.nodeAttrModal = $('<div />')
+        .attr('class', 'modal')
         .attr('id', this.ids._nodeAttrModal)
         .hide()
-        .appendTo(this.nodeAttrContainer);
 
+   // Div for edge values modal.
+   this.edgeValModal = $('<div />')
+       .attr('class', 'modal')
+       .attr('id', this.ids._edgeValModal)
+       .hide()
+
+   this.edgeValForm = $('<form />')
+       .addClass('form-horizontal')
+       .appendTo(this.edgeValModal);
+       
     // Create a form and append to nodeAttr
-    var nodeAttrForm = $('<div />')
+    var nodeAttrForm = $('<form />')
         .addClass('form-horizontal')
         .appendTo(this.nodeAttrModal);
 
     this.initInputElements(nodeAttrForm);
     this.initMessageElements(nodeAttrForm);
     this.initSuperstepControls(this.superstepControlsContainer);
+
+    // Initialize the node attr modal dialong.
+    $(this.nodeAttrModal).dialog({
+        modal : true,
+        autoOpen : false,
+        width : 300,
+        resizable : false,
+        closeOnEscape : true,
+        hide : {effect : 'fade', duration : 100},
+        close : (function() {
+            this.selectedNodeId = null;
+        }).bind(this)
+    });
+
+    // Initialize the edge values modal dialog.
+    $(this.edgeValModal).dialog({
+        modal : true,
+        autoOpen : false,
+        width : 250,
+        resizable : false,
+        title : 'Edge',
+        closeOnEscape : true,
+        hide : {effect : 'fade', duration : 100},
+        close : (function() {
+            this.selectedLink = null;
+        }).bind(this)
+    });
 
     // Attach events.
     // Click event of the Sent/Received tab buttons
@@ -620,10 +636,8 @@ GiraphDebugger.prototype.initElements = function() {
             var messageData = this.editor.getMessagesReceivedByNode(this.selectedNodeId);
             this.showMessages(messageData);
         } else {
-            var edgeValues = this.editor.getEdgeValuesForNode(this.selectedNodeId);
-            this.showEdgeValues(edgeValues);
+            this.showEdgeValues(this.selectedNodeId, this.selectedEdgeValues);
         }
-        
     }).bind(this));
     // Attach mouseenter event for valpanel - Preview (Expand to the right)
     $(this.valpanel.container).mouseenter((function(event) {
@@ -640,54 +654,112 @@ GiraphDebugger.prototype.initElements = function() {
     }).bind(this));
 }
 
+/* 
+ * Handler for opening edge values. 
+ * Opens the edge value modal to allow editing/viewing edge values.
+ */
+GiraphDebugger.prototype.openEdgeVals = function(data) {
+    // Set the currently opened link.
+    this.selectedLink = data.link;
+    $(this.edgeValModal).dialog('option', 'position', [data.event.clientX, data.event.clientY]);
+    $(this.edgeValForm).empty();
+    // Data for the form.
+    var table = $('<table />').addClass('table').appendTo(this.edgeValForm);
+    var edges = this.editor.getEdges(data.link);
+    // Convert edges array to a map to be able to cache onChange results.
+    edgeValuesCache = {};
+    $.each(edges, function(i, edge) {
+        edgeValuesCache[edge.source.id] = edge;
+    });
+
+    $.each(edgeValuesCache, (function(sourceId, edge) {
+        var tr = document.createElement('tr');
+        var edgeElement = edge.edgeValue ? edge.edgeValue : 'undefined';
+        if (!this.editor.readonly) {
+            edgeElement = $('<input type="text" />')
+                .attr('value', edge.edgeValue)
+                .css('width', '100%')
+                .attr('placeholder', edge.edgeValue)
+                .change(function(event) {
+                    // Save the temporarily edited values to show them as such
+                    // when this tab is opened again.
+                    edgeValuesCache[sourceId].edgeValue = event.target.value;
+                });
+        }
+        $(tr).append($('<td />').html("{0}->{1}".format(edge.source.id, edge.target.id)));
+        $(tr).append($('<td />').append(edgeElement));
+        table.append(tr);
+    }).bind(this));
+
+    Utils.getBtnSubmitSm()
+        .attr('type', 'submit')
+        .appendTo(this.edgeValForm)
+        .click((function(event) {
+            event.preventDefault();
+            // Save the temporary cache back to the editor object.
+            $.each(edgeValuesCache, (function(sourceId, edge) {
+                this.editor.addEdge(sourceId, edge.target.id, edge.edgeValue);
+            }).bind(this));
+            $(this.edgeValModal).dialog('close');
+            this.editor.restart();
+        }).bind(this));
+
+    Utils.getBtnCancelSm()
+        .appendTo(this.edgeValForm)
+        .click((function() {
+            $(this.edgeValModal).dialog('close');
+        }).bind(this));
+    $(this.edgeValModal).dialog('open');
+    // setTimeout is required because of a Chrome bug - jquery.focus doesn't work expectedly.
+    setTimeout((function() { $(this.edgeValModal).find('form input:text').first().focus(); }).bind(this), 1);
+    $('.ui-widget-overlay').click((function() { $(Utils.getSelectorForId(this.ids._edgeValModal)).dialog('close'); }).bind(this));
+}
+
 /*
  * This is a double-click handler.
  * Called from the editor when a node is double clicked.
- * Opens the node attribute modal with NodeId, Attributes and Messages.
+ * Opens the node attribute modal with NodeId, Attributes, Messages and Edge Values.
  */
 GiraphDebugger.prototype.openNodeAttrs = function(data) {
     // Set the currently double clicked node
     this.selectedNodeId = data.node.id;
+    // Store the current edge values for this node in a temporary map.
+    // This is used by the Edge Values tab.
+    this.selectedEdgeValues = this.editor.getEdgeValuesForNode(this.selectedNodeId);
+
     $(this.nodeAttrIdInput).attr('value', data.node.id)
         .attr('placeholder', data.node.id);
-
     $(this.nodeAttrAttrsInput).attr('value', data.node.attrs);
     $(this.nodeAttrGroupError).hide();
+    $(this.nodeAttrModal).dialog('option', 'position', [data.event.clientX, data.event.clientY]);
+    $(this.nodeAttrModal).dialog('option', 'title', 'Node (ID: ' + data.node.id + ')');
+    $(this.nodeAttrModal).dialog('open');
+    // Set the focus on the Attributes input field by default.
+    $(this.nodeAttrModal).find('form input').eq(1).focus();
+    $('.ui-widget-overlay').click((function() { $(Utils.getSelectorForId(this.ids._nodeAttrModal)).dialog('close'); }).bind(this));
 
-    $(this.nodeAttrModal).dialog({
-        modal : true,
-        width : 300,
-        resizable : false,
-        title : 'Node (ID: ' + data.node.id + ')',
-        position : [data.event.clientX, data.event.clientY],
-        closeOnEscape : true,
-        hide : {effect : 'fade', duration : 100},
-        close : (function() {
-            this.selectedNodeId = null;
-        }).bind(this)
-    });
-
-    $('.ui-widget-overlay').click(function() { $('#node-attr').dialog('close'); });
     $(this.btnNodeAttrCancel).click((function() {
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
 
     $(this.btnNodeAttrSubmit).unbind('click');
-    $(this.btnNodeAttrSubmit).click((function() {
+    $(this.btnNodeAttrSubmit).click((function(event) {
+        event.preventDefault();
         var new_id = $(this.nodeAttrIdInput).val();
-        var new_attrs_val = $(this.nodeAttrAttrsInput).val();
-        var new_attrs = new_attrs_val.trim().length > 0 ? new_attrs_val.split(',') : [];
-
+        var new_attrs = $(this.nodeAttrAttrsInput).val();
+        // Check if this id is already taken.
         if (data.editor.getNodeIndex(new_id) >= 0 && new_id != data.node.id) {
             $(this.nodeAttrGroupError).show();
             return;
         }
-
-        var index = data.editor.getNodeIndex(data.node.id);
-        data.editor.nodes[index].id = new_id;
-
-        data.editor.nodes[index].attrs = new_attrs;
-        data.editor.restartGraph();
+        data.node.id = new_id;
+        data.node.attrs = new_attrs;
+        // Save the stored edge values. If not edited by the user, overwritten by the original values).
+        $.each(this.selectedEdgeValues, (function(targetId, edge) {
+            // This method is safe - If an edge exists, only overwrites the edge value.
+            data.editor.addEdge(this.selectedNodeId, targetId, edge.edgeValue);
+        }).bind(this));
+        data.editor.restart();
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
 
@@ -714,27 +786,39 @@ GiraphDebugger.prototype.toggleMessageTabs = function(clickedId) {
  * @param messageData - The data of the sent/received messages from/to this node.
  */
 GiraphDebugger.prototype.showMessages = function(messageData) {
-    $('#node-attr-flow').html('');
+    this.flowTable.html('');
     for (var nodeId in messageData) {
         var tr = document.createElement('tr');
         $(tr).html('<td>' + nodeId + '</td><td>' +
             messageData[nodeId] + '</td>');
-        $('#node-attr-flow').append(tr);
+        this.flowTable.append(tr);
     }
 }
 
 /*
  * Populates the edge value table on the node attr modal with the edge vaue data.
- * @param edgeValues - The edge values for this node. 
+ * Uses this.selectedEdgeValues and this.selectedNodeId - must be populated before calling this method.
+ * Format this.selectedEdgeValues : { targetNodeId : edgeValue }
  */
-GiraphDebugger.prototype.showEdgeValues = function(edgeValues) {
-    $('#node-attr-flow').html('');
-    for (var nodeId in edgeValues) {
+GiraphDebugger.prototype.showEdgeValues = function() {
+    this.flowTable.html('');
+    $.each(this.selectedEdgeValues, (function(nodeId, edge) {
         var tr = document.createElement('tr');
-        $(tr).html('<td>' + nodeId + '</td><td>' +
-            edgeValues[nodeId] + '</td>');
-        $('#node-attr-flow').append(tr);
-    }
+        var edgeElement = edge.edgeValue;
+        if (!this.editor.readonly) {
+            edgeElement = $('<input type="text" />')
+                .attr('value', edge.edgeValue)
+                .attr('placeholder', edge.edgeValue)
+                .change((function(event) {
+                    // Save the temporarily edited values to show them as such
+                    // when this tab is opened again.
+                    this.selectedEdgeValues[nodeId].edgeValue = event.target.value;
+                }).bind(this));
+        }
+        $(tr).append($('<td />').html(nodeId));
+        $(tr).append($('<td />').append(edgeElement));
+        this.flowTable.append(tr);
+    }).bind(this));
 }
 
 /*

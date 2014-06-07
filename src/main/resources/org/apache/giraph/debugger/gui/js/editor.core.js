@@ -38,8 +38,11 @@ function Editor(options) {
     if (options) {
         this.container = options['container'] ? options['container'] : this.container;
         this.undirected = options['undirected'] === true;
-        if (options['dblnode']) {
-            this.dblnode = options['dblnode'];
+        if (options.onOpenNode) {
+            this.onOpenNode = options.onOpenNode;
+        }
+        if (options.onOpenEdge) {
+            this.onOpenEdge = options.onOpenEdge;
         }
     }
     this.setSize();
@@ -150,14 +153,14 @@ Editor.prototype.restartGraph = function() {
 
 /*
  * Handles mousedown event.
- * Insert a new node if CTRL key is not pressed. Otherwise, drag the graph.
+ * Insert a new node if Shift key is not pressed. Otherwise, drag the graph.
  */
 Editor.prototype.mousedown = function() {
     if (this.readonly === true) {
         return;
     }
     this.svg.classed('active', true);
-    if (d3.event.ctrlKey || this.mousedown_node || this.mousedown_link) {
+    if (d3.event.shiftKey || this.mousedown_node || this.mousedown_link) {
         return;
     }
     // Insert new node at point.
@@ -186,21 +189,16 @@ Editor.prototype.getMessagesSentByNode = function(id) {
 
 /*
  * Returns all the edge values for this node's neighbor in a JSON object.
+ * Note that if an edge value is not present, still returns that neighborId with null/undefined value.
  * Output format: {neighborId: edgeValue}
  * @param {string} id
  */
 Editor.prototype.getEdgeValuesForNode = function(id) {
     var edgeValues = {};
-    for (var i = 0; i < this.links.length; i++) {
-        var link = this.links[i];
-        console.log(link);
-        // Make sure the logical edge is from this node to some other node.
-        if (link.source.id === id && link.right && link.rightValue) {
-            edgeValues[link.target.id] = link.rightValue; 
-        } else if (link.target.id === id && link.left && link.leftValue) {
-            edgeValues[link.source.id] = link.leftValue; 
-        }
-    }
+    var outgoingEdges = this.getEdgesWithSourceId(id);
+    $.each(outgoingEdges, function(i, edge) {
+        edgeValues[edge.target.id] = edge;
+    });
     return edgeValues;
 }
 
@@ -252,17 +250,8 @@ Editor.prototype.getAdjList = function() {
     adjList = {}
     $.each(this.nodes, (function(i, node) {
         var id = node.id;
-        var nodes = [];
-        for (var j = 0; j < this.links.length; j++) {
-            var link = this.links[j];
-            if ((link.left === true || this.undirected === true) && link.target.id === id) {
-                nodes.push(link.source.id);
-            }
-            if ((link.right === true || this.undirected === true) && link.source.id === id) {
-                nodes.push(link.target.id);
-            }
-        }
-        adjList[id] = { adj : nodes, vertexValue : node.attrs.length > 0 ? node.attrs[0] : 0.0 };
+        var edges = this.getEdgesWithSourceId(id);
+        adjList[id] = {adj : edges, vertexValue : node.attrs}
     }).bind(this));
     return adjList;
 }
@@ -273,7 +262,7 @@ Editor.prototype.getAdjList = function() {
 Editor.prototype.getNodeList  = function() {
     nodeList = '';
     for (var i = 0; i < this.nodes.length; i++){
-        nodeList += this.nodes[i].id + '\t' + this.nodes[i].attrs.join(',');
+        nodeList += this.nodes[i].id + '\t' + this.nodes[i].attrs;
         nodeList += (i != this.nodes.length - 1 ? '\n' : '');
     }
     return nodeList;
@@ -310,19 +299,17 @@ Editor.prototype.mouseup = function() {
             .classed('hidden', true)
             .style('marker-end', '');
     }
-
     this.svg.classed('active', false);
-
     // Clear mouse event vars
     this.resetMouseVars();
 }
 
 /*
  * Handles keydown event.
- * If Key is Ctrl, drags the graph using the force layout.
+ * If Key is Shift, drags the graph using the force layout.
  * If Key is 'L' or 'R' and link is selected, orients the link likewise.
  * If Key is 'R' and node is selected, marks the node as reflexive.
- * If Key is 'Backspace' or 'Delete', deletes the selected node or edge.
+ * If Key is 'Delete', deletes the selected node or edge.
  */
 Editor.prototype.keydown = function() {
     if (this.lastKeyDown !== -1) {
@@ -330,8 +317,8 @@ Editor.prototype.keydown = function() {
     }
     this.lastKeyDown = d3.event.keyCode;
 
-    // Ctrl key was pressed
-    if (d3.event.keyCode === 17) {
+    // Shift key was pressed
+    if (d3.event.shiftKey) {
         this.circle.call(this.force.drag);
         this.svg.classed('ctrl', true);
     }
@@ -341,7 +328,6 @@ Editor.prototype.keydown = function() {
     }
 
     switch (d3.event.keyCode) {
-        case 8: // backspace
         case 46: // delete
             if (this.selected_node) {
                 this.nodes.splice(this.nodes.indexOf(this.selected_node), 1);
@@ -349,7 +335,6 @@ Editor.prototype.keydown = function() {
             } else if (this.selected_link) {
                 this.links.splice(this.links.indexOf(this.selected_link), 1);
             }
-
             this.selected_link = null;
             this.selected_node = null;
             this.restartGraph();
@@ -390,13 +375,13 @@ Editor.prototype.keydown = function() {
 /*
  * Handles the keyup event.
  * Resets lastKeyDown to -1.
- * Also resets the drag event binding to null if the key released was Ctrl.
+ * Also resets the drag event binding to null if the key released was Shift.
  */
 Editor.prototype.keyup = function() {
     this.lastKeyDown = -1;
 
-    // Ctrl
-    if (d3.event.keyCode === 17) {
+    // Shift
+    if (d3.event.keyCode === 16) {
         this.circle
             .on('mousedown.drag', null)
             .on('touchstart.drag', null);
@@ -418,7 +403,7 @@ Editor.prototype.keyup = function() {
  *                      neighborId: "neighborId2",
  *                      edgeValue: "edgeValue2"
  *                  }],
- *            vertexValues : [attr1, attr2...],
+ *            vertexValue : attrs,
  *            outgoingMessages : {
  *                    receiverId1: "message1",
  *                    receiverId2: "message2",
@@ -467,8 +452,8 @@ Editor.prototype.updateGraphData = function(scenario) {
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in scenario) {
         var node = this.getNodeWithId(nodeId);
-        if (scenario[nodeId]['vertexValues']) {
-            node.attrs = scenario[nodeId]['vertexValues'];
+        if (scenario[nodeId]['vertexValue']) {
+            node.attrs = scenario[nodeId]['vertexValue'];
         }
         if (scenario[nodeId].enabled != undefined) {
             node.enabled = scenario[nodeId].enabled;
