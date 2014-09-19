@@ -1,7 +1,5 @@
 package org.apache.giraph.debugger.mock;
 
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -13,16 +11,6 @@ import java.util.Set;
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator.Config;
 import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexScenarioClassesWrapper;
-import org.apache.giraph.utils.WritableUtils;
-import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.apache.velocity.VelocityContext;
 
 public abstract class TestGenerator extends VelocityBasedGenerator {
