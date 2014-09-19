@@ -26,8 +26,8 @@ import java.lang.annotation.Target;
  * Annotation normally for the {@link BottomInterceptingComputation} class to
  * communicate which methods are to be intercepted and checked by the
  * instrumenter.
- * 
- * @author netj
+ *
+ * author netj
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

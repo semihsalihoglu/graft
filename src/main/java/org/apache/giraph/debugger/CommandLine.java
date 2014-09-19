@@ -102,8 +102,8 @@ public final class CommandLine {
             for (String vertexId : ServerUtils.getVerticesDebugged(jobId,
               superstepNo, debugTrace)) {
               LOG.info(String.format("%-15s  %s  %4d %8s  # %s", "dump",
-                  jobId, superstepNo, vertexId, debugTrace.label == null ? "" :
-                    "captured " + debugTrace.label));
+                  jobId, superstepNo, vertexId, debugTrace.getLabel() == null ?
+                    "" : "captured " + debugTrace.getLabel()));
               LOG.info(String.format(
                 "%-15s  %s  %4d %8s  Test_%s_S%d_V%s", "mktest", jobId,
                 superstepNo, vertexId, jobId, superstepNo, vertexId));

@@ -27,16 +27,34 @@ import com.google.protobuf.GeneratedMessage;
 /**
  * Wrapper class around {@link org.apache.giraph.debugger.Scenario.Exception}
  * protocol buffer.
- * 
- * @author semihsalihoglu
+ *
+ * author semihsalihoglu
  */
 public class ExceptionWrapper extends BaseWrapper {
+  /**
+   * The error message of the exception.
+   */
   private String errorMessage = "";
+  /**
+   * The stack trace string of the exception.
+   */
   private String stackTrace = "";
 
+  /**
+   * Default constructor.
+   */
   public ExceptionWrapper() {
   }
 
+  /**
+   * Constructor with an error message and stack trace.
+   *
+   * @param errorMessage
+   *          The error message of the exception.
+   * @param stackTrace
+   *          The stack trace string obtained from
+   *          {@link java.lang.Exception#getStackTrace()}.
+   */
   public ExceptionWrapper(String errorMessage, String stackTrace) {
     this.errorMessage = errorMessage;
     this.stackTrace = stackTrace;
@@ -70,13 +88,13 @@ public class ExceptionWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return Exception.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage generatedMessage)
-    throws ClassNotFoundException, IOException, InstantiationException,
+      throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     Exception exceptionProto = (Exception) generatedMessage;
     this.errorMessage = exceptionProto.getMessage();

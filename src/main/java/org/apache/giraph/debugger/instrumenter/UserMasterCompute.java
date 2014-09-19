@@ -23,8 +23,8 @@ import org.apache.commons.lang.NotImplementedException;
  * A dummy MasterCompute class that will sit between the
  * {@link AbstractInterceptingMasterCompute} class at the top and the
  * {@link BottomInterceptingMasterCompute} at the bottom.
- * 
- * @author netj
+ *
+ * author netj
  */
 public abstract class UserMasterCompute extends
   AbstractInterceptingMasterCompute {

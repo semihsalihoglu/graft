@@ -21,7 +21,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.apache.giraph.graph.Computation;
 import org.apache.giraph.utils.ReflectionUtils;
 import org.apache.giraph.utils.WritableUtils;
 import org.apache.hadoop.io.NullWritable;
@@ -35,49 +34,124 @@ import org.apache.hadoop.io.Writable;
  * <li>Wrapper classes around the scenario protocol buffers that are stored
  * under {@link org.apache.giraph.debugger.utils}.
  * </ul>
- * 
- * @author semihsalihoglu
+ *
+ * author semihsalihoglu
  */
 public class DebuggerUtils {
 
+  /**
+   * The path to the HDFS root for storing Graft traces.
+   */
   public static final String TRACE_ROOT = System.getProperty(
     "giraph.debugger.traceRootAtHDFS",
     "/user/" + System.getProperty("user.name") + "/giraph-debug-traces");
+  /**
+   * The path to the HDFS root for storing cached Giraph job jars.
+   */
   public static final String JARCACHE_HDFS = System.getProperty(
     "giraph.debugger.jobCacheAtHDFS", TRACE_ROOT + "/jars");
+  /**
+   * The path to the local root directory for storing cached Giraph job jars.
+   */
   public static final String JARCACHE_LOCAL = System.getProperty(
     "giraph.debugger.jobCacheLocal", System.getenv("HOME") +
       "/.giraph-debug/jars");
 
-  // Enumeration of different trace files Graft saves in HDFS.
+  /**
+   * Enumeration of different trace files Graft saves in HDFS.
+   */
   public enum DebugTrace {
-    VERTEX_REGULAR("regular vertex"), //
-    VERTEX_EXCEPTION("exception from a vertex"), //
-    VERTEX_ALL, //
-    INTEGRITY_MESSAGE_ALL("invalid messages"), //
-    INTEGRITY_MESSAGE_SINGLE_VERTEX("vertex sending invalid messages"), //
-    INTEGRITY_VERTEX("vertex having invalid value"), //
-    MASTER_REGULAR("regular MasterCompute"), //
-    MASTER_EXCEPTION("exception from MasterCompute"), //
-    MASTER_ALL, //
+    /**
+     * Regular trace capturing a vertex computation.
+     */
+    VERTEX_REGULAR("regular vertex"),
+    /**
+     * Captured exception from a vertex.
+     */
+    VERTEX_EXCEPTION("exception from a vertex"),
+    /**
+     * All traces of a particular vertex.
+     */
+    VERTEX_ALL,
+    /**
+     * Captured message integrity violations.
+     */
+    INTEGRITY_MESSAGE_ALL("invalid messages"),
+    /**
+     * Trace of the single message violating constraints.
+     */
+    INTEGRITY_MESSAGE_SINGLE_VERTEX("vertex sending invalid messages"),
+    /**
+     * Trace of the vertex computation that sends an invalid message.
+     */
+    INTEGRITY_VERTEX("vertex having invalid value"),
+    /**
+     * Regular trace of a MasterCompute.
+     */
+    MASTER_REGULAR("regular MasterCompute"),
+    /**
+     * Trace capturing exception thrown from a MasterCompute.
+     */
+    MASTER_EXCEPTION("exception from MasterCompute"),
+    /**
+     * All traces of MasterCompute.
+     */
+    MASTER_ALL,
+    /**
+     * The jar signature that links the instrumented jar.
+     */
     JAR_SIGNATURE;
 
-    public final String label;
+    /**
+     * The label of this debug trace.
+     */
+    private final String label;
 
+    /**
+     * Creates a DebugTrace instance without a label.
+     */
     private DebugTrace() {
       this.label = null;
     }
 
+    /**
+     * Creates a DebugTrace instance with a specific label.
+     * @param label The label.
+     */
     private DebugTrace(String label) {
       this.label = label;
     }
+
+    /**
+     * Returns the label.
+     * @return the label
+     */
+    public String getLabel() {
+      return label;
+    }
   }
 
-  // Prefixes of debug traces
+  /**
+   * File name prefix for regular traces.
+   */
   public static final String PREFIX_TRACE_REGULAR = "reg";
+  /**
+   * File name prefix for exception traces.
+   */
   public static final String PREFIX_TRACE_EXCEPTION = "err";
+  /**
+   * File name prefix for vertex value integrity traces.
+   */
   public static final String PREFIX_TRACE_VERTEX = "vv";
+  /**
+   * File name prefix for message integrity traces.
+   */
   public static final String PREFIX_TRACE_MESSAGE = "msg";
+
+  /**
+   * Disallows creating instances of this class.
+   */
+  private DebuggerUtils() { }
 
   /**
    * Makes a clone of a writable object. Giraph sometimes reuses and overwrites
@@ -85,7 +159,9 @@ public class DebuggerUtils {
    * incoming messages inside a {@link Computation} class through the iterator
    * Giraph supplies, Giraph uses only one object. Therefore in order to keep a
    * pointer to particular object, we need to clone it.
-   * 
+   *
+   * @param <T>
+   *          Type of the clazz.
    * @param writableToClone
    *          Writable object to clone.
    * @param clazz
@@ -124,15 +200,26 @@ public class DebuggerUtils {
 
   /**
    * Instantiates a new object from the given class.
+   *
+   * @param <T> The type of the new instance to create.
+   * @param theClass The class of the new instance to create.
+   * @return The newly created instance.
    */
   public static <T> T newInstance(Class<T> theClass) {
-    return NullWritable.class.isAssignableFrom(theClass) ? null
-      : ReflectionUtils.newInstance(theClass);
+    return NullWritable.class.isAssignableFrom(theClass) ? null :
+      ReflectionUtils.newInstance(theClass);
   }
 
   /**
    * Returns the full trace file name for the given type of debug trace. One or
    * more of the passed arguments will be used in the file name.
+   *
+   * @param debugTrace The debug trace for generating the file name.
+   * @param jobId The job id of the job the debug trace belongs to.
+   * @param superstepNo The superstep number of the debug trace.
+   * @param vertexId The vertex id of the debug trace.
+   * @param taskId The task id of the debug trace.
+   * @return The full trace file name.
    */
   public static String getFullTraceFileName(DebugTrace debugTrace,
     String jobId, Long superstepNo, String vertexId, String taskId) {
@@ -143,44 +230,58 @@ public class DebuggerUtils {
   /**
    * A convenience method around
    * {@link #getFullTraceFileName(DebugTrace, String, Long, String, Integer)}.
+   *
+   * @param superstepNo The superstep number of the trace.
+   * @param jobId The job id of the trace.
+   * @param taskId The task id of the trace.
+   * @return The full trace file name for debug trace of message integrity.
    */
   public static String getMessageIntegrityAllTraceFullFileName(
     long superstepNo, String jobId, String taskId) {
     return getFullTraceFileName(DebugTrace.INTEGRITY_MESSAGE_ALL, jobId,
-      superstepNo, null /*
-                         * no vertex Id
-                         */, taskId);
+      superstepNo, null /* no vertex Id */, taskId);
   }
 
   /**
    * A convenience method around
    * {@link #getFullTraceFileName(DebugTrace, String, Long, String, Integer)}.
+   *
+   * @param masterDebugTrace The debug trace for generating the file name.
+   * @param jobId The job id the debug trace belongs to.
+   * @param superstepNo The superstep number.
+   * @return The full trace file name of the master compute trace.
    */
   public static String getFullMasterTraceFileName(DebugTrace masterDebugTrace,
     String jobId, Long superstepNo) {
-    return getFullTraceFileName(masterDebugTrace, jobId, superstepNo, null /*
-                                                                            * no
-                                                                            * vertex
-                                                                            * Id
-                                                                            */,
-      null /*
-            * no trace Id
-            */);
+    return getFullTraceFileName(masterDebugTrace, jobId, superstepNo,
+      null /* no vertex Id */, null /* no trace Id */);
   }
 
   /**
    * A convenience method around
    * {@link #getFullTraceFileName(DebugTrace, String, Long, String, Integer)}.
+   *
+   * @param debugTrace The debug trace for generating the file name.
+   * @param jobId The job id the debug trace belongs to.
+   * @param superstepNo The superstep number.
+   * @param vertexId The vertex id of the debug trace.
+   * @return The full trace file name without the trace id.
    */
   public static String getFullTraceFileName(DebugTrace debugTrace,
     String jobId, Long superstepNo, String vertexId) {
-    return getFullTraceFileName(debugTrace, jobId, superstepNo, vertexId, null /*
-                                                                                * no
-                                                                                * trace
-                                                                                * Id
-                                                                                */);
+    return getFullTraceFileName(debugTrace, jobId, superstepNo, vertexId,
+      null /* no trace Id */);
   }
 
+  /**
+   * Maps debug trace to file names with additional parameters.
+   *
+   * @param debugTrace The debug trace.
+   * @param superstepNo The superstep number.
+   * @param vertexId The vertex id.
+   * @param taskId The task id.
+   * @return The file name that corresponds to the debug trace.
+   */
   private static String getTraceFileName(DebugTrace debugTrace,
     Long superstepNo, String vertexId, String taskId) {
     String format = getTraceFileFormat(debugTrace);
@@ -207,9 +308,14 @@ public class DebuggerUtils {
   /**
    * Returns the file name of the trace file given the three parameters. Pass
    * arbitrary vertexId for traces which do not require a vertexId.
+   *
+   * @param debugTrace
+   *          The debug trace.
+   * @return The file name format for the debug trace to be used with
+   *         {@link String#format(String, Object...)}.
    */
-  // XXX is this function giving the String format? or regex? Seems like latter.
   public static String getTraceFileFormat(DebugTrace debugTrace) {
+    // XXX is this function giving the String format? or regex? Seems latter.
     switch (debugTrace) {
     case VERTEX_REGULAR:
       return PREFIX_TRACE_REGULAR + "_stp_%s_vid_%s.tr";
@@ -236,6 +342,13 @@ public class DebuggerUtils {
     }
   }
 
+  /**
+   * Maps prefix back to the corresponding debug trace.
+   *
+   * @param prefix The file name prefix.
+   * @return The debug trace value that corresponds to given prefix.
+   * @throws IllegalArgumentException Thrown if prefix isn't supported.
+   */
   public static DebugTrace getVertexDebugTraceForPrefix(String prefix) {
     if (prefix.equals(PREFIX_TRACE_REGULAR)) {
       return DebugTrace.VERTEX_REGULAR;
@@ -252,6 +365,9 @@ public class DebuggerUtils {
 
   /**
    * Returns the root directory of the trace files for the given job.
+   *
+   * @param jobId The job id of the job.
+   * @return The root path for storing traces for the job.
    */
   public static String getTraceFileRoot(String jobId) {
     return String.format("%s/%s", DebuggerUtils.TRACE_ROOT, jobId);

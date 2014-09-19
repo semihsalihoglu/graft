@@ -30,8 +30,8 @@ import com.google.protobuf.GeneratedMessage;
  * Wrapper class around
  * {@link org.apache.giraph.debugger.Scenario.GiraphMasterScenario} protocol
  * buffer.
- * 
- * @author semihsalihoglu
+ *
+ * author semihsalihoglu
  */
 public class GiraphMasterScenarioWrapper extends BaseWrapper {
   private String masterClassUnderTest;
