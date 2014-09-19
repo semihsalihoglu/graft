@@ -381,8 +381,8 @@ public class ServerUtils {
     for (Object outgoingMessage : contextWrapper.getOutgoingMessageWrappers()) {
       OutgoingMessageWrapper outgoingMessageWrapper =
         (OutgoingMessageWrapper) outgoingMessage;
-      outgoingMessagesObj.put(outgoingMessageWrapper.destinationId.toString(),
-        outgoingMessageWrapper.message.toString());
+      outgoingMessagesObj.put(outgoingMessageWrapper.getDestinationId().
+        toString(), outgoingMessageWrapper.getMessage().toString());
     }
     // Add incoming messages.
     ArrayList<String> incomingMessagesList = new ArrayList<String>();
@@ -440,10 +440,10 @@ public class ServerUtils {
       ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper =
          (ExtendedOutgoingMessageWrapper) msgWrapper;
       JSONObject violationObj = new JSONObject();
-      violationObj.put("srcId", extendedOutgoingMessageWrapper.srcId);
+      violationObj.put("srcId", extendedOutgoingMessageWrapper.getSrcId());
       violationObj.put("destinationId",
-        extendedOutgoingMessageWrapper.destinationId);
-      violationObj.put("message", extendedOutgoingMessageWrapper.message);
+        extendedOutgoingMessageWrapper.getDestinationId());
+      violationObj.put("message", extendedOutgoingMessageWrapper.getMessage());
       violationsList.add(violationObj);
     }
     scenarioObj.put("violations", violationsList);

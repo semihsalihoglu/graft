@@ -34,16 +34,35 @@ import com.google.protobuf.GeneratedMessage;
  * author semihsalihoglu
  */
 public class GiraphMasterScenarioWrapper extends BaseWrapper {
+  /**
+   * The MasterCompute class under debugging.
+   */
   private String masterClassUnderTest;
-  private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper = null;
+  /**
+   * The common wrapper instance.
+   */
+  private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper =
+    null;
+  /**
+   * The exception wrapper instance.
+   */
   private ExceptionWrapper exceptionWrapper = null;
 
+  /**
+   * Default constructor.
+   */
   public GiraphMasterScenarioWrapper() {
   }
 
+  /**
+   * Constructor with a MasterCompute class name.
+   *
+   * @param masterClassUnderTest The MasterCompute class name.
+   */
   public GiraphMasterScenarioWrapper(String masterClassUnderTest) {
     this.masterClassUnderTest = masterClassUnderTest;
-    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
+    this.commonVertexMasterContextWrapper = new
+      CommonVertexMasterContextWrapper();
     this.exceptionWrapper = null;
   }
 
@@ -51,7 +70,8 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
     return masterClassUnderTest;
   }
 
-  public CommonVertexMasterContextWrapper getCommonVertexMasterContextWrapper() {
+  public CommonVertexMasterContextWrapper getCommonVertexMasterContextWrapper()
+  {
     return commonVertexMasterContextWrapper;
   }
 
@@ -68,18 +88,22 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
     this.exceptionWrapper = exceptionWrapper;
   }
 
+  /**
+   * Checks if this has an exception wrapper.
+   * @return True if this has an exception wrapper.
+   */
   public boolean hasExceptionWrapper() {
     return exceptionWrapper != null;
   }
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    GiraphMasterScenario.Builder giraphMasterScenarioBuilder = GiraphMasterScenario
-      .newBuilder();
+    GiraphMasterScenario.Builder giraphMasterScenarioBuilder =
+      GiraphMasterScenario.newBuilder();
     giraphMasterScenarioBuilder.setMasterClassUnderTest(masterClassUnderTest);
     giraphMasterScenarioBuilder
-      .setCommonContext((CommonVertexMasterContext) commonVertexMasterContextWrapper
-        .buildProtoObject());
+      .setCommonContext((CommonVertexMasterContext)
+        commonVertexMasterContextWrapper.buildProtoObject());
     if (hasExceptionWrapper()) {
       giraphMasterScenarioBuilder.setException((Exception) exceptionWrapper
         .buildProtoObject());
@@ -89,17 +113,19 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return GiraphMasterScenario.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage protoObject)
-    throws ClassNotFoundException, IOException, InstantiationException,
+      throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    GiraphMasterScenario giraphMasterScenario = (GiraphMasterScenario) protoObject;
+    GiraphMasterScenario giraphMasterScenario = (GiraphMasterScenario)
+      protoObject;
     this.masterClassUnderTest = giraphMasterScenario.getMasterClassUnderTest();
-    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
+    this.commonVertexMasterContextWrapper = new
+      CommonVertexMasterContextWrapper();
     this.commonVertexMasterContextWrapper.loadFromProto(giraphMasterScenario
       .getCommonContext());
     if (giraphMasterScenario.hasException()) {
