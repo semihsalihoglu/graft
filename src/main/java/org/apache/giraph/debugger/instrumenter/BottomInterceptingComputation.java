@@ -62,7 +62,7 @@ public class BottomInterceptingComputation<I extends WritableComparable,
   @Intercept
   @Override
   public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
-      throws IOException {
+    throws IOException {
     boolean shouldCatchException = interceptComputeBegin(vertex, messages);
     if (shouldCatchException) {
       // CHECKSTYLE: stop IllegalCatch

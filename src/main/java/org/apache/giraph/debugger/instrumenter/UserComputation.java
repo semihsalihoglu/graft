@@ -45,7 +45,7 @@ public abstract class UserComputation<I extends WritableComparable,
 
   @Override
   public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
-      throws IOException {
+    throws IOException {
     throw new NotImplementedException();
   }
 
