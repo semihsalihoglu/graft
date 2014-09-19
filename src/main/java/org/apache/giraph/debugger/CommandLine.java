@@ -32,6 +32,7 @@ import org.apache.giraph.debugger.mock.MasterComputeTestGenerator;
 import org.apache.giraph.debugger.utils.DebuggerUtils.DebugTrace;
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper;
+import org.apache.log4j.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -40,11 +41,13 @@ import com.google.common.collect.Sets;
  * This main class is the command line interface for the debugger. The command
  * syntax is as follows: list <job_id> dump <job_id> <superstep> <vertex> mktest
  * <job_id> <superstep> <vertex> [output_prefix]
- * 
- * @author Brian Truong Ba Quan
- * @author netj
  */
-public class CommandLine {
+public final class CommandLine {
+
+  /**
+   * Logger for this class.
+   */
+  private static final Logger LOG = Logger.getLogger(CommandLine.class);
 
   /**
    * Should not instantiate.
@@ -52,7 +55,11 @@ public class CommandLine {
   private CommandLine() {
   }
 
-  public static void main(String[] args) {
+  /**
+   * Main function of the CommandLine.
+   * @param args command line arguments.
+   */
+  public static void main(final String[] args) {
     // Validate
     String mode = args[0];
     if (args.length == 0 || !mode.equalsIgnoreCase("list") &&
@@ -79,26 +86,25 @@ public class CommandLine {
         Collections.sort(allSupersteps);
         for (Long superstepNo : allSupersteps) {
           if (superstepsDebuggedMaster.contains(superstepNo)) {
-            System.out.println(String.format("%-15s  %s  %4d           ",
+            LOG.info(String.format("%-15s  %s  %4d           ",
               "dump-master", jobId, superstepNo));
-            System.out.println(String.format(
+            LOG.info(String.format(
               "%-15s  %s  %4d           TestMaster_%s_S%d", "mktest-master",
               jobId, superstepNo, jobId, superstepNo));
           }
-          List<DebugTrace> debugTraces = Arrays.asList( //
-            DebugTrace.INTEGRITY_MESSAGE_SINGLE_VERTEX //
-            , DebugTrace.INTEGRITY_VERTEX //
-            , DebugTrace.VERTEX_EXCEPTION //
-            , DebugTrace.VERTEX_REGULAR //
-            );
+          List<DebugTrace> debugTraces = Arrays.asList(
+            DebugTrace.INTEGRITY_MESSAGE_SINGLE_VERTEX
+            , DebugTrace.INTEGRITY_VERTEX
+            , DebugTrace.VERTEX_EXCEPTION
+            , DebugTrace.VERTEX_REGULAR
+          );
           for (DebugTrace debugTrace : debugTraces) {
             for (String vertexId : ServerUtils.getVerticesDebugged(jobId,
               superstepNo, debugTrace)) {
-              System.out
-                .println(String.format("%-15s  %s  %4d %8s  # %s", "dump",
-                  jobId, superstepNo, vertexId, debugTrace.label == null ? ""
-                    : "captured " + debugTrace.label));
-              System.out.println(String.format(
+              LOG.info(String.format("%-15s  %s  %4d %8s  # %s", "dump",
+                  jobId, superstepNo, vertexId, debugTrace.label == null ? "" :
+                    "captured " + debugTrace.label));
+              LOG.info(String.format(
                 "%-15s  %s  %4d %8s  Test_%s_S%d_V%s", "mktest", jobId,
                 superstepNo, vertexId, jobId, superstepNo, vertexId));
             }
@@ -126,12 +132,12 @@ public class CommandLine {
             .readScenarioFromTrace(jobId, superstepNo, vertexId,
               DebugTrace.VERTEX_ALL);
           if (scenarioWrapper == null) {
-            System.err.println("The trace file does not exist.");
+            LOG.error("The trace file does not exist.");
             System.exit(2);
           }
 
           if (mode.equalsIgnoreCase("dump")) {
-            System.out.println(scenarioWrapper);
+            LOG.info(scenarioWrapper);
           } else if (mode.equalsIgnoreCase("mktest")) {
             // Read output prefix and test class.
             if (args.length <= 4) {
@@ -150,12 +156,12 @@ public class CommandLine {
             .readMasterScenarioFromTrace(jobId, superstepNo,
               DebugTrace.MASTER_ALL);
           if (scenarioWrapper == null) {
-            System.err.println("The trace file does not exist.");
+            LOG.error("The trace file does not exist.");
             System.exit(2);
           }
 
           if (mode.equalsIgnoreCase("dump-master")) {
-            System.out.println(scenarioWrapper);
+            LOG.info(scenarioWrapper);
           } else if (mode.equalsIgnoreCase("mktest-master")) {
             if (args.length <= 3) {
               printHelp();
@@ -176,6 +182,14 @@ public class CommandLine {
     }
   }
 
+  /**
+   * Writes the generated test case to the specified output prefix. The output
+   * file name is {outputPrefix}.java.
+   *
+   * @param outputPrefix prefix of the output file
+   * @param generatedTestCase contents of the test case file
+   * @throws IOException
+   */
   protected static void outputTestCase(String outputPrefix,
     String generatedTestCase) throws IOException {
     if (outputPrefix != null) {
@@ -184,24 +198,26 @@ public class CommandLine {
         filename)))) {
         writer.append(generatedTestCase);
       }
-      System.err.println("Wrote " + filename);
+      LOG.error("Wrote " + filename);
     } else {
-      System.out.println(generatedTestCase);
+      LOG.info(generatedTestCase);
     }
   }
 
+  /**
+   * Help output when the given command by the user is not recognized.
+   */
   private static void printHelp() {
-    System.out.println("Supported commands: ");
-    System.out.println("\tlist <job_id>");
-    System.out
-      .println("\t\tList available traces/scenarios (supersteps/vertices) for a job");
-    System.out.println("\tdump <job_id> <superstep> <vertex>");
-    System.out.println("\t\tDump a trace in textual form");
-    System.out
-      .println("\tmktest <job_id> <superstep> <vertex> <output_prefix>");
-    System.out
-      .println("\t\tGenerate a JUnit test case code from a trace. If an output_prefix is "
-        + "provided, a .java file is generated at the specified path.");
+    LOG.info("Supported commands: ");
+    LOG.info("\tlist <job_id>");
+    LOG.info(
+      "\t\tList available traces/scenarios (supersteps/vertices) for a job");
+    LOG.info("\tdump <job_id> <superstep> <vertex>");
+    LOG.info("\t\tDump a trace in textual form");
+    LOG.info("\tmktest <job_id> <superstep> <vertex> <output_prefix>");
+    LOG.info("\t\tGenerate a JUnit test case code from a trace. If an " +
+      "output_prefix is provided, a .java file is generated at the " +
+      "specified path.");
     System.exit(1);
   }
 }
