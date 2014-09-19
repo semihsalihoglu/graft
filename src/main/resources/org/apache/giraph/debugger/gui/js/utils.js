@@ -197,8 +197,8 @@ Utils.getAdjListStr = function(editorAdjList) {
     adjList = '';
     $.each(editorAdjList, function(vertexId, obj) {
         adjList += vertexId + '\t';
-        $.each(obj.adj, function(i, neighborId) {
-            adjList += neighborId + '\t';
+        $.each(obj.adj, function(i, edge) {
+            adjList += edge.target.id + '\t';
         });
         // Remove the last tab
         adjList = adjList.slice(0, -1);
@@ -215,14 +215,42 @@ Utils.getAdjListStr = function(editorAdjList) {
 Utils.getAdjListStrForTestGraph = function(editorAdjList) {
     adjList = '';
     $.each(editorAdjList, function(vertexId, obj) {
-        adjList += vertexId + '\t' + obj.vertexValue + '\t';
-        $.each(obj.adj, function(i, neighborId) {
-            adjList += neighborId + '\t';
+        adjList += "{0}{1} ".format(vertexId, obj.vertexValue ? ":" + obj.vertexValue : "");
+        $.each(obj.adj, function(i, edge) {
+            var edgeValue = edge.edgeValue;
+            adjList += "{0}{1} ".format(edge.target.id, edgeValue ? ":" + edgeValue : "");
         });
-        // Remove the last tab
+        // Remove the last whitespace
         adjList = adjList.slice(0, -1);
         adjList += '\n';
     });
     // Remove the last newline
     return adjList.slice(0, -1);
+}
+
+/*
+ * Creates and returns a submit button with an OK icon.
+ */
+Utils.getBtnSubmitSm = function() {
+    return $('<button />')
+        .attr('type', 'button')
+        .addClass('btn btn-primary btn-sm editable-submit')
+        .html('<i class="glyphicon glyphicon-ok"></i>')
+}
+
+/*
+ * Creates and returns a cancel button with REMOVE icon.
+ */
+Utils.getBtnCancelSm = function() {
+    return $('<button />')
+        .attr('type', 'button')
+        .addClass('btn btn-default btn-sm editable-cancel')
+        .html('<i class="glyphicon glyphicon-remove"></i>')
+}
+
+/*
+ * Returns the jQuery selector for element ID.
+ */
+Utils.getSelectorForId = function(id) {
+    return '#' + id;
 }

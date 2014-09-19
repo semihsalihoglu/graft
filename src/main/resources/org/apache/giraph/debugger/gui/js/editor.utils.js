@@ -77,7 +77,6 @@ Editor.prototype.zoomSvg = function(translate, scale) {
 }
 
 Editor.prototype.redraw = function() {
-    console.log("here", d3.event.translate, d3.event.scale);
     this.zoomSvg(d3.event.translate, d3.event.scale);
 }
 
@@ -236,7 +235,7 @@ function getRadius(node) {
     // Radius is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    return 14 + Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
+    return 14 + Math.max(node.id.length, getAttrForDisplay(node.attrs).length) * 3;
 }
 
 /*
@@ -244,10 +243,10 @@ function getRadius(node) {
  * without exploding the circle.
  */
 function getAttrForDisplay(attr) {
-    if (attr.length > 11) {
+    if (attr && attr.length > 11) {
         return attr.slice(0, 4) + "..." + attr.slice(attr.length - 4);    
     }
-    return attr;
+    return attr ? attr : '';
 }
 
 /*
@@ -260,7 +259,7 @@ function getPadding(node) {
     // Offset is detemined by multiplyiing the max of length of node ID
     // and node value (first attribute) by a factor and adding a constant.
     // If node value is not present, only node id length is used.
-    var nodeOffset = Math.max(node.id.length, node.attrs.length > 0 ? getAttrForDisplay(node.attrs[0].toString()).length : 0) * 3;
+    var nodeOffset = Math.max(node.id.length, getAttrForDisplay(node.attrs).length) * 3;
     return [19 + nodeOffset, 12  + nodeOffset];
 }
 
@@ -269,7 +268,17 @@ function getPadding(node) {
  * @param {string} id - Identifier of the node.
  */
 Editor.prototype.getNewNode = function(id) {
-    return {id : id, reflexive : false, attrs : [], x: Math.random(), y: Math.random(), enabled: true, color: this.defaultColor};
+    return {id : id, reflexive : false, attrs : null, x: Math.random(), y: Math.random(), enabled: true, color: this.defaultColor};
+}
+
+/* 
+ * Returns a new edge object. 
+ * @param {object} source - Object for the source node.
+ * @param {object) target - Object for the target node.
+ * @param {object} edgeVal - Any edge value object.
+ */
+Editor.prototype.getNewEdge = function(source, target, edgeValue) {
+    return {source: source, target: target, edgeValue: edgeValue};
 }
 
 /*
@@ -307,6 +316,23 @@ Editor.prototype.getNewLink = function(sourceNodeId, targetNodeId, edgeValue) {
 }
 
 /*
+ * Returns the logical edge(s) from a link object.
+ * @param {object} link - Link object.
+ * This method is required because a single link object may encode
+ * two edges using the left/right attributes.
+ */
+Editor.prototype.getEdges = function(link) {
+    var edges = [];
+    if (link.left || this.undirected) {
+        edges.push(this.getNewEdge(link.target, link.source, link.leftValue));
+    }
+    if (link.right || this.undirected) {
+        edges.push(this.getNewEdge(link.source, link.target, link.rightValue));
+    }
+    return edges;
+}
+
+/*
  * Adds a new link object to the links array or updates an existing link.
  * @param {string} sourceNodeId - Id of the source node in the logical edge.
  * @param {string} targetNodeid - Id of the target node in the logical edge.
@@ -325,9 +351,9 @@ Editor.prototype.addEdge = function(sourceNodeId, targetNodeId, edgeValue) {
     if (existingLink) {
         // Set the existingLink directions to true if either
         // newLink or existingLink denote the edge.
-        existingLink.left |= newLink.left;
-        existingLink.right |= newLink.right;
-        if (edgeValue) {
+        existingLink.left = existingLink.left || newLink.left;
+        existingLink.right = existingLink.right || newLink.right;
+        if (edgeValue != undefined) {
             if (sourceNodeId < targetNodeId) {
                 existingLink.rightValue = edgeValue;
             } else {
@@ -408,11 +434,13 @@ Editor.prototype.restartLinks = function() {
                          return '';
                      }).bind(this))
                      .on('mousedown', (function(d) {
-                         if (d3.event.ctrlKey) {
-                             return;
-                         }
                          // Select link
                          this.mousedown_link = d;
+                         // If edge was selected with shift key, call the openEdge handler and return.
+                         if (d3.event.shiftKey) {
+                            this.onOpenEdge({ event: d3.event, link: d, editor: this });
+                            return; 
+                         }
                          if (this.mousedown_link === this.selected_link) {
                              this.selected_link = null;
                          } else {
@@ -484,7 +512,7 @@ Editor.prototype.addNodes = function() {
              d3.select(d3.event.target).attr('transform', '');
          }).bind(this))
          .on('mousedown', (function(d) {
-             if (d3.event.ctrlKey || this.readonly) {
+             if (d3.event.shiftKey || this.readonly) {
                  return;
              }
              // Select node.
@@ -494,9 +522,7 @@ Editor.prototype.addNodes = function() {
              } else {
                  this.selected_node = this.mousedown_node;
              }
-
              this.selected_link = null;
-
              // Reposition drag line.
              this.drag_line
                     .style('marker-end', 'url(#end-arrow)')
@@ -508,7 +534,6 @@ Editor.prototype.addNodes = function() {
              if (!this.mousedown_node) {
                  return;
              }
-
              this.drag_line
                     .classed('hidden', true)
                     .style('marker-end', '');
@@ -529,8 +554,8 @@ Editor.prototype.addNodes = function() {
              this.restartGraph();
          }).bind(this))
          .on('dblclick', (function(d) {
-             if (this.dblnode) {
-                 this.dblnode({'event' : d3.event, 'node': d, editor : this });
+             if (this.onOpenNode) {
+                 this.onOpenNode({ event: d3.event, node: d , editor: this });
                  this.restartGraph();
              }
          }).bind(this));
@@ -556,6 +581,7 @@ Editor.prototype.restartNodes = function() {
     this.circle.selectAll('circle')
         .style('fill', function(d) { return d.color; })
         .classed('reflexive', function(d) { return d.reflexive; })
+        .classed('selected', (function(d) { return d === this.selected_node }).bind(this))
         .attr('r', function(d) { return getRadius(d);  });
     // If node is not enabled, set its opacity to 0.2    
     this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.2; });
@@ -567,17 +593,17 @@ Editor.prototype.restartNodes = function() {
           })
           .attr('x', 0)
           .attr('dy', function(d) {
-              return d.attrs.length > 0 ? '-8' : '0 ';
+              return d.attrs != null && d.attrs.trim() != '' ? '-8' : '0 ';
           })
           .attr('class', 'id');
     // Node value (if present) is added/updated here
     el.append('tspan')
           .text(function(d) {
-              return d.attrs.length > 0 ? getAttrForDisplay(d.attrs[0]) : "";
+              return getAttrForDisplay(d.attrs);
           })
           .attr('x', 0)
           .attr('dy', function(d) {
-              return d.attrs.length > 0 ? '18' : '0';
+              return d.attrs != null && d.attrs.trim() != '' ? '18' : '0';
           })
           .attr('class', 'vval');
     // remove old nodes
@@ -615,7 +641,7 @@ Editor.prototype.restartTable = function() {
         var dataRow = {};
         var scenario = this.currentScenario[nodeId];
         dataRow.vertexId = nodeId;
-        dataRow.vertexValue = scenario.vertexValues && scenario.vertexValues.length > 0 ? scenario.vertexValues[0] : '-',
+        dataRow.vertexValue = scenario.vertexValue ? scenario.vertexValue : '-',
         dataRow.outgoingMessages = { 
             numOutgoingMessages : Utils.count(scenario.outgoingMessages), 
             data : scenario.outgoingMessages
@@ -705,6 +731,23 @@ Editor.prototype.getNodeIndex = function(id) {
 Editor.prototype.getNodeWithId = function(id) {
     var index = this.getNodeIndex(id);
     return index >= 0 ? this.nodes[index] : null;
+}
+
+/*
+ * Returns the link objeccts with the given id as the source.
+ * Note that source here implies that all these links are outgoing from this node.
+ * @param {string} sourceId - The identifier of the source node.
+ */
+Editor.prototype.getEdgesWithSourceId = function(sourceId) {
+   var edges = [];
+   $.each(this.links, (function(i, link) {
+       $.each(this.getEdges(link), function(index, edge) {
+           if (edge.source.id === sourceId) {
+               edges.push(edge);
+           }
+       });
+   }).bind(this));
+   return edges;
 }
 
 /*
