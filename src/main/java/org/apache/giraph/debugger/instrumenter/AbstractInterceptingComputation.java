@@ -46,9 +46,6 @@ import org.apache.log4j.Logger;
  * Class that intercepts call to the AbstractComputation's exposed methods for
  * GiraphDebugger.
  * 
- * @author semihsalihoglu
- * @author netj
- * 
  * @param <I>
  *          Vertex id
  * @param <V>
@@ -61,10 +58,16 @@ import org.apache.log4j.Logger;
  *          Outgoing message type
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public abstract class AbstractInterceptingComputation<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
+public abstract class AbstractInterceptingComputation<
+  I extends WritableComparable, V extends Writable, E extends Writable,
+  M1 extends Writable, M2 extends Writable>
   extends AbstractComputation<I, V, E, M1, M2> {
 
-  private static final String JAR_SIGNATURE_KEY = "giraph.debugger.jarSignature";
+  /**
+   * Configuration key for the path to the jar signature.
+   */
+  private static final String JAR_SIGNATURE_KEY =
+    "giraph.debugger.jarSignature";
 
   public static final String CONFIG_CLASS_KEY = "giraph.debugger.configClass";
 
