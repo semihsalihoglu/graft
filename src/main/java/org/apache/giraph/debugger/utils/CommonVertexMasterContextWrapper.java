@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.giraph.conf.GiraphConfiguration;
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
@@ -33,8 +34,6 @@ import com.google.protobuf.GeneratedMessage;
  * Wrapper class around
  * {@link org.apache.giraph.debugger.Scenario.CommonVertexMasterContext}
  * protocol buffer.
- * 
- * @author semihsalihoglu
  */
 @SuppressWarnings("rawtypes")
 public class CommonVertexMasterContextWrapper extends BaseWrapper {
@@ -42,7 +41,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
   private long superstepNo;
   private long totalNumVertices;
   private long totalNumEdges;
-  private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
+  private List<AggregatedValueWrapper> previousAggregatedValueWrappers;
 
   public CommonVertexMasterContextWrapper() {
     this.superstepNo = -1;
@@ -90,7 +89,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
   }
 
   public void setPreviousAggregatedValues(
-    ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers) {
+    List<AggregatedValueWrapper> previousAggregatedValueWrappers) {
     this.previousAggregatedValueWrappers = previousAggregatedValueWrappers;
   }
 
@@ -109,14 +108,15 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    CommonVertexMasterContext.Builder commonContextBuilder = CommonVertexMasterContext
-      .newBuilder();
+    CommonVertexMasterContext.Builder commonContextBuilder =
+      CommonVertexMasterContext.newBuilder();
     commonContextBuilder.setConf(toByteString(immutableClassesConfig))
       .setSuperstepNo(getSuperstepNoWrapper())
       .setTotalNumVertices(getTotalNumVerticesWrapper())
       .setTotalNumEdges(getTotalNumEdgesWrapper());
 
-    for (AggregatedValueWrapper aggregatedValueWrapper : getPreviousAggregatedValues()) {
+    for (AggregatedValueWrapper aggregatedValueWrapper :
+      getPreviousAggregatedValues()) {
       commonContextBuilder
         .addPreviousAggregatedValue((AggregatedValue) aggregatedValueWrapper
           .buildProtoObject());
@@ -128,11 +128,12 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
   public void loadFromProto(GeneratedMessage generatedMessage)
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    CommonVertexMasterContext commonContext = (CommonVertexMasterContext) generatedMessage;
+    CommonVertexMasterContext commonContext = (CommonVertexMasterContext)
+      generatedMessage;
     GiraphConfiguration config = new GiraphConfiguration();
     fromByteString(commonContext.getConf(), config);
-    ImmutableClassesGiraphConfiguration immutableClassesGiraphConfiguration = new ImmutableClassesGiraphConfiguration(
-      config);
+    ImmutableClassesGiraphConfiguration immutableClassesGiraphConfiguration =
+      new ImmutableClassesGiraphConfiguration(config);
     setConfig(immutableClassesGiraphConfiguration);
 
     setSuperstepNoWrapper(commonContext.getSuperstepNo());
@@ -141,7 +142,8 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
     for (AggregatedValue previousAggregatedValueProto : commonContext
       .getPreviousAggregatedValueList()) {
-      AggregatedValueWrapper aggregatedValueWrapper = new AggregatedValueWrapper();
+      AggregatedValueWrapper aggregatedValueWrapper =
+        new AggregatedValueWrapper();
       aggregatedValueWrapper.loadFromProto(previousAggregatedValueProto);
       addPreviousAggregatedValue(aggregatedValueWrapper);
     }
@@ -149,7 +151,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return CommonVertexMasterContext.parseFrom(inputStream);
   }
 
@@ -162,7 +164,8 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
     stringBuilder.append("\ntotalNumEdges: " + totalNumEdges);
     stringBuilder.append("\nnumAggregators: " +
       getPreviousAggregatedValues().size());
-    for (AggregatedValueWrapper aggregatedValueWrapper : getPreviousAggregatedValues()) {
+    for (AggregatedValueWrapper aggregatedValueWrapper :
+      getPreviousAggregatedValues()) {
       stringBuilder.append("\n" + aggregatedValueWrapper);
     }
     return stringBuilder.toString();

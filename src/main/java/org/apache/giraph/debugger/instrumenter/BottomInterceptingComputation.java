@@ -29,8 +29,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 /**
- * The Computation class to be instrumented as one that extends user's actual
- * Computation class, and run by Graft for debugging.
+ * The intercepting Computation class to be instrumented as one that extends
+ * user's actual Computation class, and run by Graft for debugging.
  *
  * @param <I> Vertex id type.
  * @param <V> Vertex value type.

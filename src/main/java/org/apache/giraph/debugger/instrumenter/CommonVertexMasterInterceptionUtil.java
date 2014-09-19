@@ -19,13 +19,12 @@ package org.apache.giraph.debugger.instrumenter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.BaseWrapper;
 import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
-import org.apache.giraph.graph.AbstractComputation;
-import org.apache.giraph.master.MasterCompute;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.Writable;
@@ -45,67 +44,116 @@ import org.apache.log4j.Logger;
  * <li>Contains a helper method to return the trace directory for a particular
  * job.
  * </ul>
- * 
+ *
  * TODO: We might consider adding a method to {@link AbstractComputation} and
  * {@link MasterCompute} to return all registered aggregators, such as
  * getAllRegisteredAggregators. Right now we do not intercept aggregators that
  * were never called.
- * 
- * @author semihsalihoglu
  */
 @SuppressWarnings("rawtypes")
 public class CommonVertexMasterInterceptionUtil {
+  /**
+   * Logger for this class.
+   */
   private static final Logger LOG = Logger
     .getLogger(CommonVertexMasterInterceptionUtil.class);
-  private static FileSystem fileSystem = null;
+  /**
+   * The HDFS file system instance to load and save data for debugging.
+   */
+  private static FileSystem FILE_SYSTEM = null;
+  /**
+   * The Giraph job id of the job being debugged.
+   */
   private final String jobId;
-  private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
+  /**
+   * A list of Giraph aggregator values.
+   */
+  private List<AggregatedValueWrapper> previousAggregatedValueWrappers;
+  /**
+   * The master context being captured.
+   */
   private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper;
 
-  // Warning: Caller's should create a new object at least once each superstep.
+  /**
+   * Constructs a new instance for the given job.
+   *
+   * Warning: Caller's should create a new object at least once each superstep.
+   *
+   * @param jobId The job id of the job being debugged.
+   */
   public CommonVertexMasterInterceptionUtil(String jobId) {
     this.jobId = jobId;
     previousAggregatedValueWrappers = new ArrayList<>();
-    if (fileSystem == null) {
+    if (FILE_SYSTEM == null) {
       try {
-        fileSystem = FileSystem.get(new Configuration());
+        FILE_SYSTEM = FileSystem.get(new Configuration());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
   }
 
+  /**
+   * Initializes this instance.
+   *
+   * @param immutableClassesConfig The Giraph configuration.
+   * @param superstepNo The superstep number.
+   * @param totalNumVertices Total number of vertices at this superstep.
+   * @param totalNumEdges  Total number of edges at this superstep.
+   */
   public void initCommonVertexMasterContextWrapper(
     ImmutableClassesGiraphConfiguration immutableClassesConfig,
     long superstepNo, long totalNumVertices, long totalNumEdges) {
-    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper(
+    this.commonVertexMasterContextWrapper = new
+      CommonVertexMasterContextWrapper(
       immutableClassesConfig, superstepNo, totalNumVertices, totalNumEdges);
     commonVertexMasterContextWrapper
       .setPreviousAggregatedValues(previousAggregatedValueWrappers);
   }
 
+  /**
+   * Captures value of a Giraph aggregator.
+   *
+   * @param <A> The aggregator value type.
+   * @param name The Giraph aggregator name.
+   * @param value The aggregator value to capture.
+   */
   public <A extends Writable> void addAggregatedValueIfNotExists(String name,
-    A retVal) {
-    if (getPreviousAggregatedValueWrapper(name) == null && retVal != null) {
+    A value) {
+    if (getPreviousAggregatedValueWrapper(name) == null && value != null) {
       previousAggregatedValueWrappers.add(new AggregatedValueWrapper(name,
-        retVal));
+        value));
     }
   }
 
-  private AggregatedValueWrapper getPreviousAggregatedValueWrapper(String key) {
-    for (AggregatedValueWrapper previousAggregatedValueWrapper : previousAggregatedValueWrappers) {
-      if (key.equals(previousAggregatedValueWrapper.getKey())) {
+  /**
+   * Returns captured values of a Giraph aggregator.
+   *
+   * @param name The Giraph aggregator name.
+   * @return The captured aggregator values.
+   */
+  private AggregatedValueWrapper getPreviousAggregatedValueWrapper(String name)
+  {
+    for (AggregatedValueWrapper previousAggregatedValueWrapper :
+      previousAggregatedValueWrappers) {
+      if (name.equals(previousAggregatedValueWrapper.getKey())) {
         return previousAggregatedValueWrapper;
       }
     }
     return null;
   }
 
+  /**
+   * Saves captured scenario.
+   *
+   * @param masterOrVertexScenarioWrapper The scenario to save.
+   * @param fullFileName HDFS path for the saved file.
+   */
   public void saveScenarioWrapper(BaseWrapper masterOrVertexScenarioWrapper,
     String fullFileName) {
     LOG.info("saving trace at: " + fullFileName);
     try {
-      masterOrVertexScenarioWrapper.saveToHDFS(fileSystem, fullFileName);
+      masterOrVertexScenarioWrapper.saveToHDFS(FILE_SYSTEM, fullFileName);
     } catch (IOException e) {
       LOG.error("Could not save the " +
         masterOrVertexScenarioWrapper.getClass().getName() +
@@ -115,7 +163,7 @@ public class CommonVertexMasterInterceptionUtil {
     }
   }
 
-  public ArrayList<AggregatedValueWrapper> getPreviousAggregatedValueWrappers() {
+  public List<AggregatedValueWrapper> getPreviousAggregatedValueWrappers() {
     return previousAggregatedValueWrappers;
   }
 
@@ -124,12 +172,13 @@ public class CommonVertexMasterInterceptionUtil {
     this.previousAggregatedValueWrappers = previousAggregatedValueWrappers;
   }
 
-  public CommonVertexMasterContextWrapper getCommonVertexMasterContextWrapper() {
+  public CommonVertexMasterContextWrapper getCommonVertexMasterContextWrapper()
+  {
     return commonVertexMasterContextWrapper;
   }
 
   public FileSystem getFileSystem() {
-    return fileSystem;
+    return FILE_SYSTEM;
   }
 
   public String getJobId() {

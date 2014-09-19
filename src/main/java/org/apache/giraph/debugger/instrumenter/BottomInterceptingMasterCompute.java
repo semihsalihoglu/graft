@@ -21,12 +21,17 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+/**
+ * The intercepting MasterCompute class to be instrumented as one that extends
+ * user's actual MasterCompute class, and run by Graft for debugging.
+ */
 public class BottomInterceptingMasterCompute extends UserMasterCompute {
 
   @Intercept
   @Override
   public void compute() {
     interceptComputeBegin();
+    // CHECKSTYLE: stop IllegalCatch
     try {
       super.compute();
       interceptComputeEnd();
@@ -34,6 +39,7 @@ public class BottomInterceptingMasterCompute extends UserMasterCompute {
       interceptComputeException(e);
       throw e;
     }
+    // CHECKSTYLE: resume IllegalCatch
   }
 
   @Override
