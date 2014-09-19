@@ -19,7 +19,8 @@ public abstract class UserComputation<I extends WritableComparable, V extends Wr
   extends AbstractInterceptingComputation<I, V, E, M1, M2> {
 
   @Override
-  public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
+  public void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
+    throws IOException {
     throw new NotImplementedException();
   }
 

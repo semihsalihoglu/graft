@@ -17,7 +17,7 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
 
   @SuppressWarnings("rawtypes")
   private Set<Class> complexWritables = new HashSet<>();
-  
+
   @SuppressWarnings("rawtypes")
   public Set<Class> getComplexWritableList() {
     return complexWritables;
@@ -44,7 +44,7 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
     private void addHelper() {
       context.put("helper", new FormatHelper(complexWritables));
     }
-    
+
     private void addWritableReadFromString() {
       context.put("complexWritables", complexWritables);
     }
@@ -67,7 +67,8 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
     }
 
     @SuppressWarnings("rawtypes")
-    public void addTestClassInfo(String testPackage, Class classUnderTest, String className) {
+    public void addTestClassInfo(String testPackage, Class classUnderTest,
+      String className) {
       addPackage(testPackage);
       addClassUnderTest(classUnderTest);
       addClassName(className);
@@ -75,7 +76,7 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
 
     @SuppressWarnings("rawtypes")
     public void addVertexScenarioClassesWrapper(
-        VertexScenarioClassesWrapper vertexScenarioClassesWrapper) {
+      VertexScenarioClassesWrapper vertexScenarioClassesWrapper) {
       HashSet<Class> usedTypes = new LinkedHashSet<>(6);
       usedTypes.add(vertexScenarioClassesWrapper.getClassUnderTest());
       usedTypes.add(vertexScenarioClassesWrapper.getVertexIdClass());
@@ -87,17 +88,22 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
     }
 
     public void addCommonMasterVertexContext(
-        CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
-      context.put("superstepNo", commonVertexMasterContextWrapper.getSuperstepNoWrapper());
-      context.put("nVertices", commonVertexMasterContextWrapper.getTotalNumVerticesWrapper());
-      context.put("nEdges", commonVertexMasterContextWrapper.getTotalNumEdgesWrapper());
+      CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
+      context.put("superstepNo",
+        commonVertexMasterContextWrapper.getSuperstepNoWrapper());
+      context.put("nVertices",
+        commonVertexMasterContextWrapper.getTotalNumVerticesWrapper());
+      context.put("nEdges",
+        commonVertexMasterContextWrapper.getTotalNumEdgesWrapper());
 
-      context.put("aggregators", commonVertexMasterContextWrapper.getPreviousAggregatedValues());
+      context.put("aggregators",
+        commonVertexMasterContextWrapper.getPreviousAggregatedValues());
 
       List<Config> configs = new ArrayList<>();
       if (commonVertexMasterContextWrapper.getConfig() != null) {
         for (Iterator<Entry<String, String>> configIter =
-            commonVertexMasterContextWrapper.getConfig().iterator(); configIter.hasNext();) {
+          commonVertexMasterContextWrapper.getConfig().iterator(); configIter
+          .hasNext();) {
           Entry<String, String> entry = configIter.next();
           configs.add(new Config(entry.getKey(), entry.getValue()));
         }

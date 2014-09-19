@@ -11,8 +11,9 @@ import org.apache.hadoop.io.LongWritable;
  * 
  * @author semihsalihoglu
  */
-public class SimpleShortestPathsDebugConfig extends DebugConfig<
-  LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable>{
+public class SimpleShortestPathsDebugConfig
+  extends
+  DebugConfig<LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
 
   @Override
   public boolean shouldDebugSuperstep(long superstepNo) {
@@ -20,7 +21,8 @@ public class SimpleShortestPathsDebugConfig extends DebugConfig<
   }
 
   @Override
-  public boolean shouldDebugVertex(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex) {
+  public boolean shouldDebugVertex(
+    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex) {
     return true;
   }
 }

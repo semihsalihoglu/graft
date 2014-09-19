@@ -12,17 +12,20 @@ public abstract class BaseComputation extends
   BasicComputation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
 
   @Override
-  public final void compute(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+  public final void compute(
+    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages) throws IOException {
     collect(vertex, messages);
     signal(vertex, messages);
     vertex.voteToHalt();
   }
 
-  protected abstract void signal(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+  protected abstract void signal(
+    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages);
 
-  protected abstract void collect(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+  protected abstract void collect(
+    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages);
 
 }

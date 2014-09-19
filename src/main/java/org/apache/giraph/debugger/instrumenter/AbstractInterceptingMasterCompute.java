@@ -21,63 +21,74 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
 
-  protected static final Logger LOG = Logger.getLogger(AbstractInterceptingMasterCompute.class);
+  protected static final Logger LOG = Logger
+    .getLogger(AbstractInterceptingMasterCompute.class);
   private GiraphMasterScenarioWrapper giraphMasterScenarioWrapper;
   private CommonVertexMasterInterceptionUtil commonVertexMasterInterceptionUtil;
-  
+
   /**
-   * Called immediately as user's {@link MasterCompute#compute()} method is entered.
+   * Called immediately as user's {@link MasterCompute#compute()} method is
+   * entered.
    */
   public void interceptComputeBegin() {
     LOG.info(this.getClass().getName() + ".interceptInitializeEnd is called ");
-    giraphMasterScenarioWrapper = new GiraphMasterScenarioWrapper(this.getClass().getName());
+    giraphMasterScenarioWrapper =
+      new GiraphMasterScenarioWrapper(this.getClass().getName());
     if (commonVertexMasterInterceptionUtil == null) {
-      commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(getContext()
-        .getJobID().toString());
+      commonVertexMasterInterceptionUtil =
+        new CommonVertexMasterInterceptionUtil(getContext().getJobID()
+          .toString());
     }
-    commonVertexMasterInterceptionUtil.initCommonVertexMasterContextWrapper(getConf(),
-      getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
-    giraphMasterScenarioWrapper.setCommonVertexMasterContextWrapper(
-      commonVertexMasterInterceptionUtil.getCommonVertexMasterContextWrapper());
+    commonVertexMasterInterceptionUtil.initCommonVertexMasterContextWrapper(
+      getConf(), getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
+    giraphMasterScenarioWrapper
+      .setCommonVertexMasterContextWrapper(commonVertexMasterInterceptionUtil
+        .getCommonVertexMasterContextWrapper());
   }
 
-  @Intercept(renameTo="getAggregatedValue")
-  //@Override
+  @Intercept(renameTo = "getAggregatedValue")
+  // @Override
   public <A extends Writable> A getAggregatedValueIntercept(String name) {
     A retVal = super.<A> getAggregatedValue(name);
-    commonVertexMasterInterceptionUtil.addAggregatedValueIfNotExists(name, retVal);
+    commonVertexMasterInterceptionUtil.addAggregatedValueIfNotExists(name,
+      retVal);
     return retVal;
   }
 
   /**
-   * Called when user's {@link MasterCompute#compute()} method throws an exception.
-   *
-   * @param e exception thrown.
+   * Called when user's {@link MasterCompute#compute()} method throws an
+   * exception.
+   * 
+   * @param e
+   *          exception thrown.
    */
   final protected void interceptComputeException(Exception e) {
-    LOG.info("Caught an exception in user's MasterCompute. message: " + e.getMessage()
-      + ". Saving a trace in HDFS.");
-    ExceptionWrapper exceptionWrapper = new ExceptionWrapper(e.getMessage(),
-      ExceptionUtils.getStackTrace(e));
+    LOG.info("Caught an exception in user's MasterCompute. message: " +
+      e.getMessage() + ". Saving a trace in HDFS.");
+    ExceptionWrapper exceptionWrapper =
+      new ExceptionWrapper(e.getMessage(), ExceptionUtils.getStackTrace(e));
     giraphMasterScenarioWrapper.setExceptionWrapper(exceptionWrapper);
-    commonVertexMasterInterceptionUtil.saveScenarioWrapper(giraphMasterScenarioWrapper,
-      DebuggerUtils.getFullMasterTraceFileName(DebugTrace.MASTER_EXCEPTION,
-        commonVertexMasterInterceptionUtil.getJobId(),
-        getSuperstep()));
+    commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+      giraphMasterScenarioWrapper, DebuggerUtils.getFullMasterTraceFileName(
+        DebugTrace.MASTER_EXCEPTION,
+        commonVertexMasterInterceptionUtil.getJobId(), getSuperstep()));
   }
 
   /**
    * Called after user's {@link MasterCompute#compute()} method returns.
    */
   public void interceptComputeEnd() {
-    commonVertexMasterInterceptionUtil.saveScenarioWrapper(giraphMasterScenarioWrapper,
-      DebuggerUtils.getFullMasterTraceFileName(DebugTrace.MASTER_REGULAR, 
+    commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+      giraphMasterScenarioWrapper, DebuggerUtils.getFullMasterTraceFileName(
+        DebugTrace.MASTER_REGULAR,
         commonVertexMasterInterceptionUtil.getJobId(), getSuperstep()));
   }
 
   @Override
-  public void readFields(DataInput arg0) throws IOException {}
+  public void readFields(DataInput arg0) throws IOException {
+  }
 
   @Override
-  public void write(DataOutput arg0) throws IOException {}
+  public void write(DataOutput arg0) throws IOException {
+  }
 }

@@ -16,24 +16,30 @@ import org.apache.log4j.Logger;
 
 /**
  * Common class used by both {@link AbstractInterceptingComputation} and
- * {@link AbstractInterceptingMasterCompute}. Serves following functions: 
+ * {@link AbstractInterceptingMasterCompute}. Serves following functions:
  * <ul>
- *   <li> Maintains a {@link CommonVertexMasterContextWrapper} which contains common information
- *   captured by both the Master and the Vertex class, such as aggregators that the user accesses,
- *   superstepNo, totalNumberOfVertices and edges. 
- *   <li> Contains helper methods to save a master or vertex trace file to HDFS and maintains a
- *   {@link FileSystem} object that can be used to write other traces to HDFS.
- *   <li> Contains a helper method to return the trace directory for a particular job.
+ * <li>Maintains a {@link CommonVertexMasterContextWrapper} which contains
+ * common information captured by both the Master and the Vertex class, such as
+ * aggregators that the user accesses, superstepNo, totalNumberOfVertices and
+ * edges.
+ * <li>Contains helper methods to save a master or vertex trace file to HDFS and
+ * maintains a {@link FileSystem} object that can be used to write other traces
+ * to HDFS.
+ * <li>Contains a helper method to return the trace directory for a particular
+ * job.
  * </ul>
- *
- * TODO: We might consider adding a method to {@link AbstractComputation} and {@link MasterCompute}
- * to return all registered aggregators, such as getAllRegisteredAggregators. Right now we do
- * not intercept aggregators that were never called.
+ * 
+ * TODO: We might consider adding a method to {@link AbstractComputation} and
+ * {@link MasterCompute} to return all registered aggregators, such as
+ * getAllRegisteredAggregators. Right now we do not intercept aggregators that
+ * were never called.
+ * 
  * @author semihsalihoglu
  */
 @SuppressWarnings("rawtypes")
 public class CommonVertexMasterInterceptionUtil {
-  private static final Logger LOG = Logger.getLogger(CommonVertexMasterInterceptionUtil.class);
+  private static final Logger LOG = Logger
+    .getLogger(CommonVertexMasterInterceptionUtil.class);
   private static FileSystem fileSystem = null;
   private String jobId;
   private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
@@ -53,17 +59,20 @@ public class CommonVertexMasterInterceptionUtil {
   }
 
   public void initCommonVertexMasterContextWrapper(
-    ImmutableClassesGiraphConfiguration immutableClassesConfig, long superstepNo,
-    long totalNumVertices, long totalNumEdges) {
+    ImmutableClassesGiraphConfiguration immutableClassesConfig,
+    long superstepNo, long totalNumVertices, long totalNumEdges) {
     this.commonVertexMasterContextWrapper =
-      new CommonVertexMasterContextWrapper(immutableClassesConfig, superstepNo, totalNumVertices,
-        totalNumEdges);
-    commonVertexMasterContextWrapper.setPreviousAggregatedValues(previousAggregatedValueWrappers);
+      new CommonVertexMasterContextWrapper(immutableClassesConfig, superstepNo,
+        totalNumVertices, totalNumEdges);
+    commonVertexMasterContextWrapper
+      .setPreviousAggregatedValues(previousAggregatedValueWrappers);
   }
- 
-  public <A extends Writable> void addAggregatedValueIfNotExists(String name, A retVal) {
+
+  public <A extends Writable> void addAggregatedValueIfNotExists(String name,
+    A retVal) {
     if (getPreviousAggregatedValueWrapper(name) == null && retVal != null) {
-      previousAggregatedValueWrappers.add(new AggregatedValueWrapper(name, retVal));
+      previousAggregatedValueWrappers.add(new AggregatedValueWrapper(name,
+        retVal));
     }
   }
 
@@ -76,22 +85,26 @@ public class CommonVertexMasterInterceptionUtil {
     return null;
   }
 
-  public void saveScenarioWrapper(BaseWrapper masterOrVertexScenarioWrapper, String fullFileName) {
+  public void saveScenarioWrapper(BaseWrapper masterOrVertexScenarioWrapper,
+    String fullFileName) {
     LOG.info("saving trace at: " + fullFileName);
     try {
       masterOrVertexScenarioWrapper.saveToHDFS(fileSystem, fullFileName);
     } catch (IOException e) {
-      LOG.error("Could not save the " + masterOrVertexScenarioWrapper.getClass().getName()
-        + " protobuf trace. IOException was thrown. exceptionMessage: " + e.getMessage());
+      LOG.error("Could not save the " +
+        masterOrVertexScenarioWrapper.getClass().getName() +
+        " protobuf trace. IOException was thrown. exceptionMessage: " +
+        e.getMessage());
       e.printStackTrace();
     }
   }
-  
+
   public ArrayList<AggregatedValueWrapper> getPreviousAggregatedValueWrappers() {
     return previousAggregatedValueWrappers;
   }
 
-  public void setPreviousAggregatedValueWrappers(ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers) {
+  public void setPreviousAggregatedValueWrappers(
+    ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers) {
     this.previousAggregatedValueWrappers = previousAggregatedValueWrappers;
   }
 

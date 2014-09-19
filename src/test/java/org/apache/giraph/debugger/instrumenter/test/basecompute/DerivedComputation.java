@@ -21,7 +21,8 @@ public class DerivedComputation extends BaseComputation {
   private double minDist;
 
   @Override
-  protected void collect(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+  protected void collect(
+    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages) {
     if (getSuperstep() == 0) {
       vertex.setValue(new DoubleWritable(Double.MAX_VALUE));
@@ -33,21 +34,22 @@ public class DerivedComputation extends BaseComputation {
       minDist = Math.min(minDist, message.get());
     }
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Vertex " + vertex.getId() + " got minDist = " + minDist + " vertex value = "
-        + vertex.getValue());
+      LOG.debug("Vertex " + vertex.getId() + " got minDist = " + minDist +
+        " vertex value = " + vertex.getValue());
     }
   }
 
   @Override
-  protected void signal(Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
+  protected void signal(
+    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages) {
     if (minDist < vertex.getValue().get()) {
       vertex.setValue(new DoubleWritable(minDist));
       for (Edge<LongWritable, FloatWritable> edge : vertex.getEdges()) {
         double distance = minDist + edge.getValue().get();
         if (LOG.isDebugEnabled()) {
-          LOG.debug("Vertex " + vertex.getId() + " sent to " + edge.getTargetVertexId() + " = "
-            + distance);
+          LOG.debug("Vertex " + vertex.getId() + " sent to " +
+            edge.getTargetVertexId() + " = " + distance);
         }
         // INTENTIONAL BUG:Instead of sending the distance (i.e. by
         // adding edge values), we send the vertex value.

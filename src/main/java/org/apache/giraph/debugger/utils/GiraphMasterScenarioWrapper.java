@@ -10,21 +10,25 @@ import org.apache.giraph.debugger.Scenario.GiraphMasterScenario;
 import com.google.protobuf.GeneratedMessage;
 
 /**
- * Wrapper class around {@link org.apache.giraph.debugger.Scenario.GiraphMasterScenario}
- * protocol buffer.
+ * Wrapper class around
+ * {@link org.apache.giraph.debugger.Scenario.GiraphMasterScenario} protocol
+ * buffer.
  * 
  * @author semihsalihoglu
  */
 public class GiraphMasterScenarioWrapper extends BaseWrapper {
   private String masterClassUnderTest;
-  private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper = null;
+  private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper =
+    null;
   private ExceptionWrapper exceptionWrapper = null;
-  
-  public GiraphMasterScenarioWrapper() {}
-  
+
+  public GiraphMasterScenarioWrapper() {
+  }
+
   public GiraphMasterScenarioWrapper(String masterClassUnderTest) {
     this.masterClassUnderTest = masterClassUnderTest;
-    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
+    this.commonVertexMasterContextWrapper =
+      new CommonVertexMasterContextWrapper();
     this.exceptionWrapper = null;
   }
 
@@ -36,7 +40,8 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
     return commonVertexMasterContextWrapper;
   }
 
-  public void setCommonVertexMasterContextWrapper(CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
+  public void setCommonVertexMasterContextWrapper(
+    CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
     this.commonVertexMasterContextWrapper = commonVertexMasterContextWrapper;
   }
 
@@ -54,34 +59,42 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    GiraphMasterScenario.Builder giraphMasterScenarioBuilder = GiraphMasterScenario.newBuilder();
+    GiraphMasterScenario.Builder giraphMasterScenarioBuilder =
+      GiraphMasterScenario.newBuilder();
     giraphMasterScenarioBuilder.setMasterClassUnderTest(masterClassUnderTest);
-    giraphMasterScenarioBuilder.setCommonContext(
-      (CommonVertexMasterContext) commonVertexMasterContextWrapper.buildProtoObject());
+    giraphMasterScenarioBuilder
+      .setCommonContext((CommonVertexMasterContext) commonVertexMasterContextWrapper
+        .buildProtoObject());
     if (hasExceptionWrapper()) {
-      giraphMasterScenarioBuilder.setException((Exception) exceptionWrapper.buildProtoObject());
+      giraphMasterScenarioBuilder.setException((Exception) exceptionWrapper
+        .buildProtoObject());
     }
     return giraphMasterScenarioBuilder.build();
   }
 
   @Override
-  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+    throws IOException {
     return GiraphMasterScenario.parseFrom(inputStream);
   }
 
   @Override
-  public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
-    IOException, InstantiationException, IllegalAccessException {
-    GiraphMasterScenario giraphMasterScenario = (GiraphMasterScenario) protoObject;
+  public void loadFromProto(GeneratedMessage protoObject)
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException {
+    GiraphMasterScenario giraphMasterScenario =
+      (GiraphMasterScenario) protoObject;
     this.masterClassUnderTest = giraphMasterScenario.getMasterClassUnderTest();
-    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
-    this.commonVertexMasterContextWrapper.loadFromProto(giraphMasterScenario.getCommonContext());
+    this.commonVertexMasterContextWrapper =
+      new CommonVertexMasterContextWrapper();
+    this.commonVertexMasterContextWrapper.loadFromProto(giraphMasterScenario
+      .getCommonContext());
     if (giraphMasterScenario.hasException()) {
       this.exceptionWrapper = new ExceptionWrapper();
       this.exceptionWrapper.loadFromProto(giraphMasterScenario.getException());
     }
   }
-  
+
   @Override
   public String toString() {
     StringBuilder stringBuilder = new StringBuilder();

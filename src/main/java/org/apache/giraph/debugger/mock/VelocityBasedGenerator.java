@@ -7,9 +7,9 @@ class VelocityBasedGenerator {
 
   protected VelocityBasedGenerator() {
     Velocity.setProperty(VelocityEngine.RESOURCE_LOADER, "class");
-    Velocity.setProperty("class." + VelocityEngine.RESOURCE_LOADER + ".class", 
-        PrefixedClasspathResourceLoader.class.getName());
-    Velocity.setProperty("class." + VelocityEngine.RESOURCE_LOADER + ".prefix", 
+    Velocity.setProperty("class." + VelocityEngine.RESOURCE_LOADER + ".class",
+      PrefixedClasspathResourceLoader.class.getName());
+    Velocity.setProperty("class." + VelocityEngine.RESOURCE_LOADER + ".prefix",
       "/" + getClass().getPackage().getName().replaceAll("\\.", "/") + "/");
     Velocity.init();
   }

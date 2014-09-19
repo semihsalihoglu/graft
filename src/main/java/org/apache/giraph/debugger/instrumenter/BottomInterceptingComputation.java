@@ -19,13 +19,13 @@ public class BottomInterceptingComputation<I extends WritableComparable, V exten
   @Override
   public void initialize(GraphState graphState,
     WorkerClientRequestProcessor<I, V, E> workerClientRequestProcessor,
-    GraphTaskManager<I, V, E> graphTaskManager, WorkerAggregatorUsage workerAggregatorUsage,
-    WorkerContext workerContext) {
+    GraphTaskManager<I, V, E> graphTaskManager,
+    WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
     try {
       // We first call super.initialize so that the getConf() call below
       // returns a non-null value.
-      super.initialize(graphState, workerClientRequestProcessor, graphTaskManager,
-        workerAggregatorUsage, workerContext);
+      super.initialize(graphState, workerClientRequestProcessor,
+        graphTaskManager, workerAggregatorUsage, workerContext);
     } finally {
       interceptInitializeEnd();
     }
@@ -33,7 +33,8 @@ public class BottomInterceptingComputation<I extends WritableComparable, V exten
 
   @Intercept
   @Override
-  public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages) throws IOException {
+  public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
+    throws IOException {
     boolean shouldCatchException = interceptComputeBegin(vertex, messages);
     if (shouldCatchException) {
       try {

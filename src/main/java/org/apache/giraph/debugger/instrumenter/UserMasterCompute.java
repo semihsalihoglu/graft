@@ -9,7 +9,8 @@ import org.apache.commons.lang.NotImplementedException;
  * 
  * @author netj
  */
-public abstract class UserMasterCompute extends AbstractInterceptingMasterCompute {
+public abstract class UserMasterCompute extends
+  AbstractInterceptingMasterCompute {
 
   @Override
   public void compute() {
@@ -17,7 +18,8 @@ public abstract class UserMasterCompute extends AbstractInterceptingMasterComput
   }
 
   @Override
-  public void initialize() throws InstantiationException, IllegalAccessException {
+  public void initialize() throws InstantiationException,
+    IllegalAccessException {
     throw new NotImplementedException();
   }
 

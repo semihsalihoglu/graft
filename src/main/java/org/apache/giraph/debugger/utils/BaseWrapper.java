@@ -18,7 +18,7 @@ import org.apache.hadoop.io.Writable;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.GeneratedMessage;
 
-/** 
+/**
  * Base class for all wrapper classes that wrap a protobuf.
  * 
  * @author semihsalihoglu
@@ -26,10 +26,11 @@ import com.google.protobuf.GeneratedMessage;
 public abstract class BaseWrapper {
 
   @SuppressWarnings("unchecked")
-  protected <U> Class<U> castClassToUpperBound(Class<?> clazz, Class<U> upperBound) {
+  protected <U> Class<U> castClassToUpperBound(Class<?> clazz,
+    Class<U> upperBound) {
     if (!upperBound.isAssignableFrom(clazz)) {
-      throw new IllegalArgumentException("The class " + clazz.getName() + " is not a subclass of "
-          + upperBound.getName());
+      throw new IllegalArgumentException("The class " + clazz.getName() +
+        " is not a subclass of " + upperBound.getName());
     }
     return (Class<U>) clazz;
   }
@@ -39,11 +40,11 @@ public abstract class BaseWrapper {
       WritableUtils.readFieldsFromByteArray(byteString.toByteArray(), writable);
     }
   }
-  
+
   ByteString toByteString(Writable writable) {
     return ByteString.copyFrom(WritableUtils.writeToByteArray(writable));
   }
-  
+
   public void save(String fileName) throws IOException {
     try (FileOutputStream output = new FileOutputStream(fileName)) {
       buildProtoObject().writeTo(output);
@@ -57,24 +58,27 @@ public abstract class BaseWrapper {
     buildProtoObject().writeTo(wrappedStream);
     wrappedStream.close();
   }
-  
+
   public abstract GeneratedMessage buildProtoObject();
 
-  public void load(String fileName) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException {
+  public void load(String fileName) throws ClassNotFoundException, IOException,
+    InstantiationException, IllegalAccessException {
     loadFromProto(parseProtoFromInputStream(new FileInputStream(fileName)));
   }
 
-  public void loadFromHDFS(FileSystem fs, String fileName) throws ClassNotFoundException,
-    IOException, InstantiationException, IllegalAccessException {
+  public void loadFromHDFS(FileSystem fs, String fileName)
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException {
     loadFromProto(parseProtoFromInputStream(fs.open(new Path(fileName))));
   }
-  
-  public abstract GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException ;
 
-  public abstract void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
-    IOException, InstantiationException, IllegalAccessException;
-  
+  public abstract GeneratedMessage parseProtoFromInputStream(
+    InputStream inputStream) throws IOException;
+
+  public abstract void loadFromProto(GeneratedMessage protoObject)
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException;
+
   /**
    * Add given URLs to the CLASSPATH before loading from HDFS. To do so, we hack
    * the system class loader, assuming it is an URLClassLoader.
@@ -92,14 +96,16 @@ public abstract class BaseWrapper {
    * @throws IOException
    */
   public void loadFromHDFS(FileSystem fs, String fileName, URL... classPaths)
-    throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException {
+    throws ClassNotFoundException, InstantiationException,
+    IllegalAccessException, IOException {
     for (URL url : classPaths)
       addPath(url);
     loadFromHDFS(fs, fileName);
   }
 
   /**
-   * @param u the URL to add to the CLASSPATH
+   * @param u
+   *          the URL to add to the CLASSPATH
    * @see http://stackoverflow.com/a/252967/390044
    */
   private static void addPath(URL u) {
@@ -110,15 +116,20 @@ public abstract class BaseWrapper {
       URLClassLoader urlClassLoader = (URLClassLoader) cl;
       Class<URLClassLoader> urlClass = URLClassLoader.class;
       try {
-        Method method = urlClass.getDeclaredMethod("addURL", new Class[] { URL.class });
+        Method method =
+          urlClass.getDeclaredMethod("addURL", new Class[] { URL.class });
         method.setAccessible(true);
         method.invoke(urlClassLoader, new Object[] { u });
-      } catch (NoSuchMethodException | SecurityException | IllegalAccessException
-        | IllegalArgumentException | InvocationTargetException e) {
-        throw new IllegalStateException("Cannot add URL to system ClassLoader", e);
+      } catch (NoSuchMethodException | SecurityException
+        | IllegalAccessException | IllegalArgumentException
+        | InvocationTargetException e) {
+        throw new IllegalStateException("Cannot add URL to system ClassLoader",
+          e);
       }
     } else {
-      throw new IllegalStateException("Cannot add URL to system ClassLoader of type " + cl.getClass().getSimpleName());
+      throw new IllegalStateException(
+        "Cannot add URL to system ClassLoader of type " +
+          cl.getClass().getSimpleName());
     }
   }
 }

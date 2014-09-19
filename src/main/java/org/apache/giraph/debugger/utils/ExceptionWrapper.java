@@ -17,7 +17,8 @@ public class ExceptionWrapper extends BaseWrapper {
   private String errorMessage = "";
   private String stackTrace = "";
 
-  public ExceptionWrapper() {}
+  public ExceptionWrapper() {
+  }
 
   public ExceptionWrapper(String errorMessage, String stackTrace) {
     this.errorMessage = errorMessage;
@@ -51,13 +52,15 @@ public class ExceptionWrapper extends BaseWrapper {
   }
 
   @Override
-  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+    throws IOException {
     return Exception.parseFrom(inputStream);
   }
 
   @Override
-  public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
-    IOException, InstantiationException, IllegalAccessException {
+  public void loadFromProto(GeneratedMessage generatedMessage)
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException {
     Exception exceptionProto = (Exception) generatedMessage;
     this.errorMessage = exceptionProto.getMessage();
     this.stackTrace = exceptionProto.getStackTrace();

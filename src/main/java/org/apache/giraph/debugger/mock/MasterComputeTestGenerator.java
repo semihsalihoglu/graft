@@ -20,14 +20,16 @@ public class MasterComputeTestGenerator extends TestGenerator {
   public MasterComputeTestGenerator() {
     super();
   }
-  
-  public String generateTest(GiraphMasterScenarioWrapper input, String testPackage) 
-      throws VelocityException, IOException, ClassNotFoundException {
+
+  public String generateTest(GiraphMasterScenarioWrapper input,
+    String testPackage) throws VelocityException, IOException,
+    ClassNotFoundException {
     return generateTest(input, testPackage, null);
   }
 
-  public String generateTest(GiraphMasterScenarioWrapper input, String testPackage, String className) 
-      throws VelocityException, IOException, ClassNotFoundException {
+  public String generateTest(GiraphMasterScenarioWrapper input,
+    String testPackage, String className) throws VelocityException,
+    IOException, ClassNotFoundException {
     VelocityContext context = buildContext(input, testPackage, className);
 
     try (StringWriter sw = new StringWriter()) {
@@ -36,16 +38,19 @@ public class MasterComputeTestGenerator extends TestGenerator {
       return sw.toString();
     }
   }
-  
-  private VelocityContext buildContext(GiraphMasterScenarioWrapper giraphScenarioWrapper, 
-      String testPackage, String className) throws ClassNotFoundException {
+
+  private VelocityContext buildContext(
+    GiraphMasterScenarioWrapper giraphScenarioWrapper, String testPackage,
+    String className) throws ClassNotFoundException {
     ContextBuilder builder = new ContextBuilder();
-    
-    Class<?> classUnderTest = Class.forName(giraphScenarioWrapper.getMasterClassUnderTest());
+
+    Class<?> classUnderTest =
+      Class.forName(giraphScenarioWrapper.getMasterClassUnderTest());
     builder.addTestClassInfo(testPackage, classUnderTest, className);
-    builder.addCommonMasterVertexContext(giraphScenarioWrapper.getCommonVertexMasterContextWrapper());
-    
+    builder.addCommonMasterVertexContext(giraphScenarioWrapper
+      .getCommonVertexMasterContextWrapper());
+
     return builder.getContext();
   }
-  
+
 }

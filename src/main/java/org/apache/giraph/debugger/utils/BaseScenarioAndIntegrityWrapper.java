@@ -3,17 +3,22 @@ package org.apache.giraph.debugger.utils;
 import org.apache.hadoop.io.WritableComparable;
 
 /**
- * Base wrapper class for {@link GiraphVertexScenarioWrapper}, {@link MsgIntegrityViolationWrapper},
+ * Base wrapper class for {@link GiraphVertexScenarioWrapper},
+ * {@link MsgIntegrityViolationWrapper},
  * {@link VertexValueIntegrityViolationWrapper}.
+ * 
  * @author semihsalihoglu
- *
- * @param <I> Vertex id 
+ * 
+ * @param <I>
+ *          Vertex id
  */
 @SuppressWarnings("rawtypes")
-public abstract class BaseScenarioAndIntegrityWrapper<I extends WritableComparable> extends BaseWrapper {
+public abstract class BaseScenarioAndIntegrityWrapper<I extends WritableComparable>
+  extends BaseWrapper {
   Class<I> vertexIdClass;
 
-  BaseScenarioAndIntegrityWrapper() {};
+  BaseScenarioAndIntegrityWrapper() {
+  };
 
   public BaseScenarioAndIntegrityWrapper(Class<I> vertexIdClass) {
     initialize(vertexIdClass);
@@ -30,5 +35,5 @@ public abstract class BaseScenarioAndIntegrityWrapper<I extends WritableComparab
   @Override
   public String toString() {
     return "\nvertexIdClass: " + getVertexIdClass().getCanonicalName();
-  }  
+  }
 }

@@ -18,18 +18,18 @@ import org.apache.hadoop.io.Writable;
 public class FormatHelper {
 
   private final DecimalFormat decimalFormat = new DecimalFormat("#.#####");
-  
+
   @SuppressWarnings("rawtypes")
   private Set<Class> complexWritables;
-  
+
   public FormatHelper() {
   }
-  
+
   @SuppressWarnings("rawtypes")
   public FormatHelper(Set<Class> complexWritables) {
     registerComplexWritableClassList(complexWritables);
   }
-  
+
   @SuppressWarnings("rawtypes")
   public void registerComplexWritableClassList(Set<Class> complexWritables) {
     this.complexWritables = complexWritables;
@@ -39,31 +39,38 @@ public class FormatHelper {
     if (writable instanceof NullWritable) {
       return "NullWritable.get()";
     } else if (writable instanceof BooleanWritable) {
-      return String.format("new BooleanWritable(%s)", format(((BooleanWritable) writable).get()));
+      return String.format("new BooleanWritable(%s)",
+        format(((BooleanWritable) writable).get()));
     } else if (writable instanceof ByteWritable) {
-      return String.format("new ByteWritable(%s)", format(((ByteWritable) writable).get()));
+      return String.format("new ByteWritable(%s)",
+        format(((ByteWritable) writable).get()));
     } else if (writable instanceof IntWritable) {
-      return String.format("new IntWritable(%s)", format(((IntWritable) writable).get()));
+      return String.format("new IntWritable(%s)",
+        format(((IntWritable) writable).get()));
     } else if (writable instanceof LongWritable) {
-      return String.format("new LongWritable(%s)", format(((LongWritable) writable).get()));
+      return String.format("new LongWritable(%s)",
+        format(((LongWritable) writable).get()));
     } else if (writable instanceof FloatWritable) {
-      return String.format("new FloatWritable(%s)", format(((FloatWritable) writable).get()));
+      return String.format("new FloatWritable(%s)",
+        format(((FloatWritable) writable).get()));
     } else if (writable instanceof DoubleWritable) {
-      return String.format("new DoubleWritable(%s)", format(((DoubleWritable) writable).get()));
+      return String.format("new DoubleWritable(%s)",
+        format(((DoubleWritable) writable).get()));
     } else if (writable instanceof Text) {
       return String.format("new Text(%s)", ((Text) writable).toString());
     } else {
       if (complexWritables != null)
         complexWritables.add(writable.getClass());
       String str = toByteArrayString(WritableUtils.writeToByteArray(writable));
-      return String.format("(%s)read%sFromByteArray(new byte[] {%s})", writable.getClass()
-          .getSimpleName(), writable.getClass().getSimpleName(), str);
+      return String.format("(%s)read%sFromByteArray(new byte[] {%s})", writable
+        .getClass().getSimpleName(), writable.getClass().getSimpleName(), str);
     }
   }
 
   public String format(Object input) {
-    if (input instanceof Boolean || input instanceof Byte || input instanceof Character
-        || input instanceof Short || input instanceof Integer) {
+    if (input instanceof Boolean || input instanceof Byte ||
+      input instanceof Character || input instanceof Short ||
+      input instanceof Integer) {
       return input.toString();
     } else if (input instanceof Long) {
       return input.toString() + "l";

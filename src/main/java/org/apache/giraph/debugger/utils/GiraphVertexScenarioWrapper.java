@@ -19,10 +19,11 @@ import org.apache.hadoop.io.WritableComparable;
 import com.google.protobuf.GeneratedMessage;
 
 /**
- * Wrapper class around {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario}
- * protocol buffer. In {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario} most fields
- * are stored as serialized byte arrays and this class gives them access through the java classes
- * that those byte arrays serialize.
+ * Wrapper class around
+ * {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario} protocol
+ * buffer. In {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario}
+ * most fields are stored as serialized byte arrays and this class gives them
+ * access through the java classes that those byte arrays serialize.
  * 
  * @param <I>
  *          vertex ID class.
@@ -37,21 +38,25 @@ import com.google.protobuf.GeneratedMessage;
  * @author Brian Truong
  */
 @SuppressWarnings("rawtypes")
-public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends Writable,
-  E extends Writable, M1 extends Writable, M2 extends Writable> extends BaseWrapper {
+public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
+  extends BaseWrapper {
 
   private VertexScenarioClassesWrapper vertexScenarioClassesWrapper = null;
   private VertexContextWrapper contextWrapper = null;
   private ExceptionWrapper exceptionWrapper = null;
 
   // Empty constructor to be used for loading from HDFS.
-  public GiraphVertexScenarioWrapper() {}
+  public GiraphVertexScenarioWrapper() {
+  }
 
-  public GiraphVertexScenarioWrapper(Class<? extends Computation<I, V, E, M1, M2>> classUnderTest,
+  public GiraphVertexScenarioWrapper(
+    Class<? extends Computation<I, V, E, M1, M2>> classUnderTest,
     Class<I> vertexIdClass, Class<V> vertexValueClass, Class<E> edgeValueClass,
     Class<M1> incomingMessageClass, Class<M2> outgoingMessageClass) {
-    this.vertexScenarioClassesWrapper = new VertexScenarioClassesWrapper(classUnderTest,
-      vertexIdClass, vertexValueClass, edgeValueClass, incomingMessageClass, outgoingMessageClass);
+    this.vertexScenarioClassesWrapper =
+      new VertexScenarioClassesWrapper(classUnderTest, vertexIdClass,
+        vertexValueClass, edgeValueClass, incomingMessageClass,
+        outgoingMessageClass);
     this.contextWrapper = new VertexContextWrapper();
   }
 
@@ -89,9 +94,10 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
   }
 
   /**
-   * Wrapper class around {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext}
+   * Wrapper class around
+   * {@link org.apache.giraph.debugger.Scenario.GiraphVertexScenario.VertexContext}
    * protocol buffer.
-   *
+   * 
    * @author semihsalihoglu
    */
   public class VertexContextWrapper extends BaseWrapper {
@@ -108,7 +114,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     }
 
     public void reset() {
-      this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
+      this.commonVertexMasterContextWrapper =
+        new CommonVertexMasterContextWrapper();
       this.vertexIdWrapper = null;
       this.vertexValueBeforeWrapper = null;
       this.vertexValueAfterWrapper = null;
@@ -121,7 +128,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       return commonVertexMasterContextWrapper;
     }
 
-    public void setCommonVertexMasterContextWrapper(CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
+    public void setCommonVertexMasterContextWrapper(
+      CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
       this.commonVertexMasterContextWrapper = commonVertexMasterContextWrapper;
     }
 
@@ -140,7 +148,7 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     public V getVertexValueAfterWrapper() {
       return vertexValueAfterWrapper;
     }
-    
+
     public void setVertexValueBeforeWrapper(V vertexValueBefore) {
       // Because Giraph does not create new objects for writables, we need
       // to make a clone them to get a copy of the objects. Otherwise, if
@@ -148,21 +156,24 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       // both of our copies end up pointing to the same object (in this case to
       // the value passed to setVertexValueAfterWrapper, because it was called
       // later).
-      this.vertexValueBeforeWrapper = DebuggerUtils.makeCloneOf(vertexValueBefore,
-        getVertexScenarioClassesWrapper().vertexValueClass);
+      this.vertexValueBeforeWrapper =
+        DebuggerUtils.makeCloneOf(vertexValueBefore,
+          getVertexScenarioClassesWrapper().vertexValueClass);
     }
 
     public void setVertexValueAfterWrapper(V vertexValueAfter) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      this.vertexValueAfterWrapper = DebuggerUtils.makeCloneOf(vertexValueAfter,
-        getVertexScenarioClassesWrapper().vertexValueClass);
+      this.vertexValueAfterWrapper =
+        DebuggerUtils.makeCloneOf(vertexValueAfter,
+          getVertexScenarioClassesWrapper().vertexValueClass);
     }
 
     public void addIncomingMessageWrapper(M1 message) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      inMsgsWrapper.add(DebuggerUtils.makeCloneOf(message, getVertexScenarioClassesWrapper().incomingMessageClass));
+      inMsgsWrapper.add(DebuggerUtils.makeCloneOf(message,
+        getVertexScenarioClassesWrapper().incomingMessageClass));
     }
 
     public Collection<M1> getIncomingMessageWrappers() {
@@ -172,9 +183,10 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     public void addOutgoingMessageWrapper(I receiverId, M2 message) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      outMsgsWrapper.add(new OutgoingMessageWrapper(DebuggerUtils.makeCloneOf(receiverId,
-        getVertexScenarioClassesWrapper().vertexIdClass),
-        DebuggerUtils.makeCloneOf(message, getVertexScenarioClassesWrapper().outgoingMessageClass)));
+      outMsgsWrapper.add(new OutgoingMessageWrapper(DebuggerUtils.makeCloneOf(
+        receiverId, getVertexScenarioClassesWrapper().vertexIdClass),
+        DebuggerUtils.makeCloneOf(message,
+          getVertexScenarioClassesWrapper().outgoingMessageClass)));
     }
 
     public Collection<OutgoingMessageWrapper> getOutgoingMessageWrappers() {
@@ -184,9 +196,10 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     public void addNeighborWrapper(I neighborId, E edgeValue) {
       // See the explanation for making a clone inside
       // setVertexValueBeforeWrapper
-      neighborsWrapper.add(new NeighborWrapper(
-        DebuggerUtils.makeCloneOf(neighborId, getVertexScenarioClassesWrapper().vertexIdClass),
-        DebuggerUtils.makeCloneOf(edgeValue, getVertexScenarioClassesWrapper().edgeValueClass)));
+      neighborsWrapper.add(new NeighborWrapper(DebuggerUtils.makeCloneOf(
+        neighborId, getVertexScenarioClassesWrapper().vertexIdClass),
+        DebuggerUtils.makeCloneOf(edgeValue,
+          getVertexScenarioClassesWrapper().edgeValueClass)));
     }
 
     public Collection<NeighborWrapper> getNeighborWrappers() {
@@ -198,8 +211,10 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       StringBuilder stringBuilder = new StringBuilder();
       stringBuilder.append(commonVertexMasterContextWrapper.toString());
       stringBuilder.append("\nvertexId: " + getVertexIdWrapper());
-      stringBuilder.append("\nvertexValueBefore: " + getVertexValueBeforeWrapper());
-      stringBuilder.append("\nvertexValueAfter: " + getVertexValueAfterWrapper());
+      stringBuilder.append("\nvertexValueBefore: " +
+        getVertexValueBeforeWrapper());
+      stringBuilder.append("\nvertexValueAfter: " +
+        getVertexValueAfterWrapper());
       stringBuilder.append("\nnumNeighbors: " + getNeighborWrappers().size());
 
       for (NeighborWrapper neighborWrapper : getNeighborWrappers()) {
@@ -210,7 +225,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
         stringBuilder.append("\nincoming message: " + incomingMesage);
       }
 
-      stringBuilder.append("\nnumOutgoingMessages: " + getOutgoingMessageWrappers().size());
+      stringBuilder.append("\nnumOutgoingMessages: " +
+        getOutgoingMessageWrappers().size());
       for (OutgoingMessageWrapper outgoingMessageWrapper : getOutgoingMessageWrappers()) {
         stringBuilder.append("\n" + outgoingMessageWrapper);
       }
@@ -232,7 +248,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
         this.edgeValue = edgeValue;
       }
 
-      public NeighborWrapper() {}
+      public NeighborWrapper() {
+      }
 
       public I getNbrId() {
         return nbrId;
@@ -260,19 +277,24 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       }
 
       @Override
-      public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+      public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+        throws IOException {
         return Neighbor.parseFrom(inputStream);
       }
 
       @Override
-      public void loadFromProto(GeneratedMessage protoObject) throws ClassNotFoundException,
-        IOException, InstantiationException, IllegalAccessException {
+      public void loadFromProto(GeneratedMessage protoObject)
+        throws ClassNotFoundException, IOException, InstantiationException,
+        IllegalAccessException {
         Neighbor neighbor = (Neighbor) protoObject;
-        this.nbrId = DebuggerUtils.newInstance(vertexScenarioClassesWrapper.vertexIdClass);
+        this.nbrId =
+          DebuggerUtils.newInstance(vertexScenarioClassesWrapper.vertexIdClass);
         fromByteString(neighbor.getNeighborId(), this.nbrId);
 
         if (neighbor.hasEdgeValue()) {
-          this.edgeValue = DebuggerUtils.newInstance(vertexScenarioClassesWrapper.edgeValueClass);
+          this.edgeValue =
+            DebuggerUtils
+              .newInstance(vertexScenarioClassesWrapper.edgeValueClass);
           fromByteString(neighbor.getEdgeValue(), this.edgeValue);
         } else {
           this.edgeValue = null;
@@ -288,27 +310,31 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
         this.destinationId = destinationId;
         this.message = message;
       }
-      
-      public OutgoingMessageWrapper() {}
+
+      public OutgoingMessageWrapper() {
+      }
 
       public I getDestinationId() {
         return destinationId;
       }
-      
+
       public M2 getMessage() {
         return message;
       }
 
       @Override
       public String toString() {
-        return "outgoingMessage: destinationId: " + destinationId + " message: " + message;
+        return "outgoingMessage: destinationId: " + destinationId +
+          " message: " + message;
       }
-      
+
       @Override
       public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((destinationId == null) ? 0 : destinationId.hashCode());
+        result =
+          prime * result +
+            ((destinationId == null) ? 0 : destinationId.hashCode());
         result = prime * result + ((message == null) ? 0 : message.hashCode());
         return result;
       }
@@ -338,24 +364,33 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
       @Override
       public GeneratedMessage buildProtoObject() {
-        OutgoingMessage.Builder outgoingMessageBuilder = OutgoingMessage.newBuilder();
+        OutgoingMessage.Builder outgoingMessageBuilder =
+          OutgoingMessage.newBuilder();
         outgoingMessageBuilder.setMsgData(toByteString(this.message));
-        outgoingMessageBuilder.setDestinationId(toByteString(this.destinationId));
+        outgoingMessageBuilder
+          .setDestinationId(toByteString(this.destinationId));
         return outgoingMessageBuilder.build();
       }
 
       @Override
-      public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+      public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+        throws IOException {
         return OutgoingMessage.parseFrom(inputStream);
       }
 
       @Override
-      public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
-        IOException, InstantiationException, IllegalAccessException {
-        OutgoingMessage outgoingMessageProto = (OutgoingMessage) generatedMessage;
-        this.destinationId = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
+      public void loadFromProto(GeneratedMessage generatedMessage)
+        throws ClassNotFoundException, IOException, InstantiationException,
+        IllegalAccessException {
+        OutgoingMessage outgoingMessageProto =
+          (OutgoingMessage) generatedMessage;
+        this.destinationId =
+          DebuggerUtils
+            .newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
         fromByteString(outgoingMessageProto.getDestinationId(), destinationId);
-        this.message = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().outgoingMessageClass);
+        this.message =
+          DebuggerUtils
+            .newInstance(getVertexScenarioClassesWrapper().outgoingMessageClass);
         fromByteString(outgoingMessageProto.getMsgData(), this.message);
       }
     }
@@ -363,19 +398,22 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     @Override
     public GeneratedMessage buildProtoObject() {
       VertexContext.Builder contextBuilder = VertexContext.newBuilder();
-      contextBuilder.setCommonContext((CommonVertexMasterContext)
-        commonVertexMasterContextWrapper.buildProtoObject());
+      contextBuilder
+        .setCommonContext((CommonVertexMasterContext) commonVertexMasterContextWrapper
+          .buildProtoObject());
       contextBuilder.setVertexId(toByteString(vertexIdWrapper));
       if (vertexValueBeforeWrapper != null) {
-        contextBuilder.setVertexValueBefore(toByteString(vertexValueBeforeWrapper));
+        contextBuilder
+          .setVertexValueBefore(toByteString(vertexValueBeforeWrapper));
       }
       if (vertexValueAfterWrapper != null) {
-        contextBuilder.setVertexValueAfter(toByteString(vertexValueAfterWrapper));
+        contextBuilder
+          .setVertexValueAfter(toByteString(vertexValueAfterWrapper));
       }
 
-      for (GiraphVertexScenarioWrapper<I, V, E, M1, M2>.VertexContextWrapper.NeighborWrapper neighborWrapper : 
-        neighborsWrapper) {
-        contextBuilder.addNeighbor((Neighbor) neighborWrapper.buildProtoObject());
+      for (GiraphVertexScenarioWrapper<I, V, E, M1, M2>.VertexContextWrapper.NeighborWrapper neighborWrapper : neighborsWrapper) {
+        contextBuilder.addNeighbor((Neighbor) neighborWrapper
+          .buildProtoObject());
       }
 
       for (M1 msg : inMsgsWrapper) {
@@ -383,37 +421,46 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
       }
 
       for (OutgoingMessageWrapper outgoingMessageWrapper : outMsgsWrapper) {
-        contextBuilder.addOutMessage(
-          (OutgoingMessage) outgoingMessageWrapper.buildProtoObject());
+        contextBuilder.addOutMessage((OutgoingMessage) outgoingMessageWrapper
+          .buildProtoObject());
       }
 
       return contextBuilder.build();
     }
 
     @Override
-    public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+    public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+      throws IOException {
       return VertexContext.parseFrom(inputStream);
     }
 
     @Override
-    public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
-      IOException, InstantiationException, IllegalAccessException {
+    public void loadFromProto(GeneratedMessage generatedMessage)
+      throws ClassNotFoundException, IOException, InstantiationException,
+      IllegalAccessException {
       VertexContext context = (VertexContext) generatedMessage;
 
       CommonVertexMasterContextWrapper commonVertexMasterContextWrapper =
         new CommonVertexMasterContextWrapper();
-      commonVertexMasterContextWrapper.loadFromProto(context.getCommonContext());
+      commonVertexMasterContextWrapper
+        .loadFromProto(context.getCommonContext());
       this.commonVertexMasterContextWrapper = commonVertexMasterContextWrapper;
 
-      I vertexId = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
+      I vertexId =
+        DebuggerUtils
+          .newInstance(getVertexScenarioClassesWrapper().vertexIdClass);
       fromByteString(context.getVertexId(), vertexId);
       this.vertexIdWrapper = vertexId;
 
-      V vertexValueBefore = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
+      V vertexValueBefore =
+        DebuggerUtils
+          .newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
       fromByteString(context.getVertexValueBefore(), vertexValueBefore);
       this.vertexValueBeforeWrapper = vertexValueBefore;
       if (context.hasVertexValueAfter()) {
-        V vertexValueAfter = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
+        V vertexValueAfter =
+          DebuggerUtils
+            .newInstance(getVertexScenarioClassesWrapper().vertexValueClass);
         fromByteString(context.getVertexValueAfter(), vertexValueAfter);
         this.vertexValueAfterWrapper = vertexValueAfter;
       }
@@ -424,38 +471,44 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
         this.neighborsWrapper.add(neighborWrapper);
       }
       for (int i = 0; i < context.getInMessageCount(); i++) {
-        M1 msg = DebuggerUtils.newInstance(getVertexScenarioClassesWrapper().incomingMessageClass);
+        M1 msg =
+          DebuggerUtils
+            .newInstance(getVertexScenarioClassesWrapper().incomingMessageClass);
         fromByteString(context.getInMessage(i), msg);
         this.addIncomingMessageWrapper(msg);
       }
 
       for (OutgoingMessage outgoingMessageProto : context.getOutMessageList()) {
-        OutgoingMessageWrapper outgoingMessageWrapper = new OutgoingMessageWrapper();
+        OutgoingMessageWrapper outgoingMessageWrapper =
+          new OutgoingMessageWrapper();
         outgoingMessageWrapper.loadFromProto(outgoingMessageProto);
         this.outMsgsWrapper.add(outgoingMessageWrapper);
       }
     }
   }
 
-  public class VertexScenarioClassesWrapper extends BaseScenarioAndIntegrityWrapper<I> {
+  public class VertexScenarioClassesWrapper extends
+    BaseScenarioAndIntegrityWrapper<I> {
     private Class<?> classUnderTest;
     private Class<V> vertexValueClass;
     private Class<E> edgeValueClass;
     private Class<M1> incomingMessageClass;
     private Class<M2> outgoingMessageClass;
 
-    public VertexScenarioClassesWrapper() {}
+    public VertexScenarioClassesWrapper() {
+    }
 
     public VertexScenarioClassesWrapper(
       Class<? extends Computation<I, V, E, M1, M2>> classUnderTest,
-      Class<I> vertexIdClass, Class<V> vertexValueClass, Class<E> edgeValueClass,
-      Class<M1> incomingMessageClass, Class<M2> outgoingMessageClass) {
+      Class<I> vertexIdClass, Class<V> vertexValueClass,
+      Class<E> edgeValueClass, Class<M1> incomingMessageClass,
+      Class<M2> outgoingMessageClass) {
       super(vertexIdClass);
       this.classUnderTest = classUnderTest;
       this.vertexValueClass = vertexValueClass;
       this.edgeValueClass = edgeValueClass;
       this.incomingMessageClass = incomingMessageClass;
-      this.outgoingMessageClass = outgoingMessageClass;    
+      this.outgoingMessageClass = outgoingMessageClass;
     }
 
     public Class<?> getClassUnderTest() {
@@ -482,61 +535,87 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     public GeneratedMessage buildProtoObject() {
       VertexScenarioClasses.Builder vertexScenarioClassesBuilder =
         VertexScenarioClasses.newBuilder();
-      vertexScenarioClassesBuilder.setClassUnderTest(getClassUnderTest().getName());
-      vertexScenarioClassesBuilder.setVertexIdClass(getVertexIdClass().getName());
-      vertexScenarioClassesBuilder.setVertexValueClass(getVertexValueClass().getName());
-      vertexScenarioClassesBuilder.setEdgeValueClass(getEdgeValueClass().getName());
-      vertexScenarioClassesBuilder.setIncomingMessageClass(getIncomingMessageClass().getName());
-      vertexScenarioClassesBuilder.setOutgoingMessageClass(getOutgoingMessageClass().getName());
+      vertexScenarioClassesBuilder.setClassUnderTest(getClassUnderTest()
+        .getName());
+      vertexScenarioClassesBuilder.setVertexIdClass(getVertexIdClass()
+        .getName());
+      vertexScenarioClassesBuilder.setVertexValueClass(getVertexValueClass()
+        .getName());
+      vertexScenarioClassesBuilder.setEdgeValueClass(getEdgeValueClass()
+        .getName());
+      vertexScenarioClassesBuilder
+        .setIncomingMessageClass(getIncomingMessageClass().getName());
+      vertexScenarioClassesBuilder
+        .setOutgoingMessageClass(getOutgoingMessageClass().getName());
       return vertexScenarioClassesBuilder.build();
     }
 
     @Override
-    public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+    public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+      throws IOException {
       return VertexScenarioClasses.parseFrom(inputStream);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
-      IOException, InstantiationException, IllegalAccessException {
-      VertexScenarioClasses vertexScenarioClass = (VertexScenarioClasses) generatedMessage;
+    public void loadFromProto(GeneratedMessage generatedMessage)
+      throws ClassNotFoundException, IOException, InstantiationException,
+      IllegalAccessException {
+      VertexScenarioClasses vertexScenarioClass =
+        (VertexScenarioClasses) generatedMessage;
       Class<?> clazz = Class.forName(vertexScenarioClass.getClassUnderTest());
       this.classUnderTest = castClassToUpperBound(clazz, Computation.class);
-      this.vertexIdClass = (Class<I>) castClassToUpperBound(
-        Class.forName(vertexScenarioClass.getVertexIdClass()), WritableComparable.class);
-      this.vertexValueClass = (Class<V>) castClassToUpperBound(
-        Class.forName(vertexScenarioClass.getVertexValueClass()), Writable.class);
-      this.edgeValueClass = (Class<E>) castClassToUpperBound(
-        Class.forName(vertexScenarioClass.getEdgeValueClass()), Writable.class);
-      this.incomingMessageClass = (Class<M1>) castClassToUpperBound(
-        Class.forName(vertexScenarioClass.getIncomingMessageClass()), Writable.class);
-      this.outgoingMessageClass = (Class<M2>) castClassToUpperBound(
-        Class.forName(vertexScenarioClass.getOutgoingMessageClass()), Writable.class);
+      this.vertexIdClass =
+        (Class<I>) castClassToUpperBound(
+          Class.forName(vertexScenarioClass.getVertexIdClass()),
+          WritableComparable.class);
+      this.vertexValueClass =
+        (Class<V>) castClassToUpperBound(
+          Class.forName(vertexScenarioClass.getVertexValueClass()),
+          Writable.class);
+      this.edgeValueClass =
+        (Class<E>) castClassToUpperBound(
+          Class.forName(vertexScenarioClass.getEdgeValueClass()),
+          Writable.class);
+      this.incomingMessageClass =
+        (Class<M1>) castClassToUpperBound(
+          Class.forName(vertexScenarioClass.getIncomingMessageClass()),
+          Writable.class);
+      this.outgoingMessageClass =
+        (Class<M2>) castClassToUpperBound(
+          Class.forName(vertexScenarioClass.getOutgoingMessageClass()),
+          Writable.class);
     }
 
     @Override
     public String toString() {
       StringBuilder stringBuilder = new StringBuilder();
       stringBuilder.append(super.toString());
-      stringBuilder.append("\nclassUnderTest: " + getClassUnderTest().getCanonicalName());
-      stringBuilder.append("\nvertexValueClass: " + getVertexValueClass().getCanonicalName());
-      stringBuilder.append("\nincomingMessageClass: " + getIncomingMessageClass().getCanonicalName());
-      stringBuilder.append("\noutgoingMessageClass: " + getOutgoingMessageClass().getCanonicalName());
+      stringBuilder.append("\nclassUnderTest: " +
+        getClassUnderTest().getCanonicalName());
+      stringBuilder.append("\nvertexValueClass: " +
+        getVertexValueClass().getCanonicalName());
+      stringBuilder.append("\nincomingMessageClass: " +
+        getIncomingMessageClass().getCanonicalName());
+      stringBuilder.append("\noutgoingMessageClass: " +
+        getOutgoingMessageClass().getCanonicalName());
       return stringBuilder.toString();
     }
 
   }
 
-  public void loadFromProto(GeneratedMessage generatedMessage) throws ClassNotFoundException,
-    IOException, InstantiationException, IllegalAccessException {
-    GiraphVertexScenario giraphScenario = (GiraphVertexScenario) generatedMessage;
+  public void loadFromProto(GeneratedMessage generatedMessage)
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException {
+    GiraphVertexScenario giraphScenario =
+      (GiraphVertexScenario) generatedMessage;
     this.vertexScenarioClassesWrapper = new VertexScenarioClassesWrapper();
-    this.vertexScenarioClassesWrapper.loadFromProto(giraphScenario.getVertexScenarioClasses());
+    this.vertexScenarioClassesWrapper.loadFromProto(giraphScenario
+      .getVertexScenarioClasses());
 
     this.contextWrapper = new VertexContextWrapper();
     this.contextWrapper.loadFromProto(giraphScenario.getContext());
-    
+
     if (giraphScenario.hasException()) {
       this.exceptionWrapper = new ExceptionWrapper();
       this.exceptionWrapper.loadFromProto(giraphScenario.getException());
@@ -544,20 +623,25 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
   }
 
   @Override
-  public  GeneratedMessage buildProtoObject() {
-    GiraphVertexScenario.Builder giraphScenarioBuilder = GiraphVertexScenario.newBuilder();
-    giraphScenarioBuilder.setVertexScenarioClasses(
-      (VertexScenarioClasses) vertexScenarioClassesWrapper.buildProtoObject());
-    giraphScenarioBuilder.setContext((VertexContext) contextWrapper.buildProtoObject());
+  public GeneratedMessage buildProtoObject() {
+    GiraphVertexScenario.Builder giraphScenarioBuilder =
+      GiraphVertexScenario.newBuilder();
+    giraphScenarioBuilder
+      .setVertexScenarioClasses((VertexScenarioClasses) vertexScenarioClassesWrapper
+        .buildProtoObject());
+    giraphScenarioBuilder.setContext((VertexContext) contextWrapper
+      .buildProtoObject());
     if (hasExceptionWrapper()) {
-      giraphScenarioBuilder.setException((Exception) exceptionWrapper.buildProtoObject());
+      giraphScenarioBuilder.setException((Exception) exceptionWrapper
+        .buildProtoObject());
     }
     GiraphVertexScenario giraphScenario = giraphScenarioBuilder.build();
     return giraphScenario;
   }
 
   @Override
-  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream) throws IOException {
+  public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
+    throws IOException {
     return GiraphVertexScenario.parseFrom(inputStream);
   }
 
@@ -565,7 +649,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
     return vertexScenarioClassesWrapper;
   }
 
-  public void setVertexScenarioClassesWrapper(VertexScenarioClassesWrapper vertexScenarioClassesWrapper) {
+  public void setVertexScenarioClassesWrapper(
+    VertexScenarioClassesWrapper vertexScenarioClassesWrapper) {
     this.vertexScenarioClassesWrapper = vertexScenarioClassesWrapper;
   }
 }

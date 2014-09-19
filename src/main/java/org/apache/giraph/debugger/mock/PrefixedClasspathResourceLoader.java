@@ -20,7 +20,8 @@ public class PrefixedClasspathResourceLoader extends ClasspathResourceLoader {
   }
 
   @Override
-  public InputStream getResourceStream(String name) throws ResourceNotFoundException {
+  public InputStream getResourceStream(String name)
+    throws ResourceNotFoundException {
     return super.getResourceStream(prefix + name);
   }
 

@@ -38,7 +38,8 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
   private VelocityContext buildContext(String[] inputStrs) {
     VelocityContext context = new VelocityContext();
     context.put("helper", new FormatHelper());
-    // Parse the string and check whether the inputs are integers or floating-point numbers
+    // Parse the string and check whether the inputs are integers or
+    // floating-point numbers
     String[][] tokens = new String[inputStrs.length][];
     WritableType idWritableType = WritableType.NULL;
     WritableType valueWritableType = WritableType.NULL;
@@ -48,26 +49,27 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
       String[] nums = tokens[i][0].split(":");
       WritableType type;
       idWritableType =
-          ((type = parseWritableType(nums[0])).ordinal() > idWritableType.ordinal() ? type
-              : idWritableType);
+        ((type = parseWritableType(nums[0])).ordinal() > idWritableType
+          .ordinal() ? type : idWritableType);
       if (nums.length > 1)
         valueWritableType =
-            ((type = parseWritableType(nums[1])).ordinal() > valueWritableType.ordinal() ? type
-                : valueWritableType);
+          ((type = parseWritableType(nums[1])).ordinal() > valueWritableType
+            .ordinal() ? type : valueWritableType);
 
       for (int j = 1; j < tokens[i].length; j++) {
         nums = tokens[i][j].split(":");
         idWritableType =
-            ((type = parseWritableType(nums[0])).ordinal() > idWritableType.ordinal() ? type
-                : idWritableType);
+          ((type = parseWritableType(nums[0])).ordinal() > idWritableType
+            .ordinal() ? type : idWritableType);
         if (nums.length > 1)
           edgeValueWritableType =
-              ((type = parseWritableType(nums[1])).ordinal() > edgeValueWritableType.ordinal() ? type
-                  : edgeValueWritableType);
+            ((type = parseWritableType(nums[1])).ordinal() > edgeValueWritableType
+              .ordinal() ? type : edgeValueWritableType);
       }
     }
-    
-    Map<Object, TemplateVertex> vertexMap = new LinkedHashMap<>(inputStrs.length);
+
+    Map<Object, TemplateVertex> vertexMap =
+      new LinkedHashMap<>(inputStrs.length);
     String str;
     for (int i = 0; i < inputStrs.length; i++) {
       String[] nums = tokens[i][0].split(":");
@@ -92,10 +94,11 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
         vertex.addNeighbor(nbrId, edgeValue);
       }
     }
-    
+
     updateContextByWritableType(context, "vertexIdClass", idWritableType);
     updateContextByWritableType(context, "vertexValueClass", valueWritableType);
-    updateContextByWritableType(context, "edgeValueClass", edgeValueWritableType);
+    updateContextByWritableType(context, "edgeValueClass",
+      edgeValueWritableType);
     context.put("vertices", vertexMap);
 
     return context;
@@ -114,33 +117,33 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     }
   }
 
-  private void updateContextByWritableType(VelocityContext context, String contextKey,
-      WritableType type) {
+  private void updateContextByWritableType(VelocityContext context,
+    String contextKey, WritableType type) {
     switch (type) {
-      case NULL:
-        context.put(contextKey, NullWritable.class.getSimpleName());
-        break;
-      case LONG:
-        context.put(contextKey, LongWritable.class.getSimpleName());
-        break;
-      case DOUBLE:
-        context.put(contextKey, DoubleWritable.class.getSimpleName());
-        break;
-      default:
-        throw new IllegalStateException("Unknown type!");
+    case NULL:
+      context.put(contextKey, NullWritable.class.getSimpleName());
+      break;
+    case LONG:
+      context.put(contextKey, LongWritable.class.getSimpleName());
+      break;
+    case DOUBLE:
+      context.put(contextKey, DoubleWritable.class.getSimpleName());
+      break;
+    default:
+      throw new IllegalStateException("Unknown type!");
     }
   }
 
   private Writable convertToSuitableType(String token, WritableType type) {
     switch (type) {
-      case NULL:
-        return NullWritable.get();
-      case LONG:
-        return new LongWritable(Long.valueOf(token));
-      case DOUBLE:
-        return new DoubleWritable(Double.valueOf(token));
-      default:
-        throw new IllegalStateException("Unknown type!");
+    case NULL:
+      return NullWritable.get();
+    case LONG:
+      return new LongWritable(Long.valueOf(token));
+    case DOUBLE:
+      return new DoubleWritable(Double.valueOf(token));
+    default:
+      throw new IllegalStateException("Unknown type!");
     }
   }
 

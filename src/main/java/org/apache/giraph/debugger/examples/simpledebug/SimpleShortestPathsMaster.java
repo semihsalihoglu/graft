@@ -7,41 +7,47 @@ import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.LongWritable;
 
 /**
- * Master compute associated with {@link BuggySimpleShortestPathsComputation}. It handles
- * dangling nodes.
+ * Master compute associated with {@link BuggySimpleShortestPathsComputation}.
+ * It handles dangling nodes.
  */
 public class SimpleShortestPathsMaster extends DefaultMasterCompute {
 
-  public static String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR = "nvWithDistanceLessThanThree";
+  public static String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR =
+    "nvWithDistanceLessThanThree";
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void compute() {
-    System.out.println("Running SimpleShortestPathsMaster.compute. superstep " + getSuperstep());
-    LongWritable aggregatorValue = getAggregatedValue(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    System.out.println("Running SimpleShortestPathsMaster.compute. superstep " +
+      getSuperstep());
+    LongWritable aggregatorValue =
+      getAggregatedValue(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
     if (aggregatorValue != null) {
-      System.out.println("At Master.compute() with aggregator: " + aggregatorValue.get());
+      System.out.println("At Master.compute() with aggregator: " +
+        aggregatorValue.get());
     }
-//    if (getSuperstep() == 2) {
-//      throw new IllegalArgumentException("DUMMY EXCEPTION FOR TESTING");
-//    }
+    // if (getSuperstep() == 2) {
+    // throw new IllegalArgumentException("DUMMY EXCEPTION FOR TESTING");
+    // }
 
-    // Dummy code for testing Instrumenter analysis 
+    // Dummy code for testing Instrumenter analysis
     if (getSuperstep() == 100000) {
-    	// which is extremely less likely to happen,
-    	setComputation(BuggySimpleTriangleClosingComputation.class);
+      // which is extremely less likely to happen,
+      setComputation(BuggySimpleTriangleClosingComputation.class);
     } else if (getSuperstep() == 200000) {
-    	try {
-			setComputation((Class<? extends Computation>) Class.forName("org.apache.giraph.debugger.examples.integrity.ConnectedComponentsActualComputation"));
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+      try {
+        setComputation((Class<? extends Computation>) Class
+          .forName("org.apache.giraph.debugger.examples.integrity.ConnectedComponentsActualComputation"));
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
     }
   }
 
   @Override
   public void initialize() throws InstantiationException,
-      IllegalAccessException {
-    registerPersistentAggregator(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR, LongSumAggregator.class);
+    IllegalAccessException {
+    registerPersistentAggregator(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR,
+      LongSumAggregator.class);
   }
 }
