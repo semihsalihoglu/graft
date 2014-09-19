@@ -25,12 +25,9 @@ import org.apache.hadoop.io.LongWritable;
 
 /**
  * Debug configuration file for SimpleShortestPathDebugComputation.
- * 
- * @author semihsalihoglu
  */
-public class SimpleShortestPathsDebugConfig
-  extends
-  DebugConfig<LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
+public class SimpleShortestPathsDebugConfig extends DebugConfig<LongWritable,
+  DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
 
   @Override
   public boolean shouldDebugSuperstep(long superstepNo) {

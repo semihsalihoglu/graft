@@ -48,7 +48,7 @@ import org.apache.log4j.Logger;
  * {@link #shouldCheckVertexValueIntegrity()} and then overriding
  * {@link #isVertexValueCorrect(WritableComparable, Writable)}.
  * </ul>
- * 
+ *
  * If instead the programmers use this class without extending it, they can
  * configure it as follows:
  * <ul>
@@ -62,12 +62,10 @@ import org.apache.log4j.Logger;
  * <li>By passing -D{@link #SUPERSTEPS_TO_DEBUG_FLAG}=s1,s2,...,sm specify a set
  * of supersteps to debug. By default all supersteps are debugged.
  * </ul>
- * 
+ *
  * Note that if programmers use this class directly, then by default the
  * debugger will capture exceptions.
- * 
- * @author semihsalihoglu
- * 
+ *
  * @param <I>
  *          Vertex id
  * @param <V>
@@ -80,23 +78,76 @@ import org.apache.log4j.Logger;
  *          Outgoing message type
  */
 @SuppressWarnings({ "rawtypes" })
-public class DebugConfig<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable> {
+public class DebugConfig<I extends WritableComparable, V extends Writable,
+  E extends Writable, M1 extends Writable, M2 extends Writable> {
 
-  private static final String SUPERSTEP_DELIMITER = ":";
+  /**
+   * String constant for splitting the parameter specifying which
+   * supersteps should be debugged.
+   */
+  private static String SUPERSTEP_DELIMITER = ":";
+  /**
+   * String constant for splitting the parameter specifying which
+   * vertices should be debugged.
+   */
   private static final String VERTEX_ID_DELIMITER = ":";
 
-  public static final String VERTICES_TO_DEBUG_FLAG = "giraph.debugger.verticesToDebug";
-  public static final String DEBUG_NEIGHBORS_FLAG = "giraph.debugger.debugNeighbors";
-  public static final String SUPERSTEPS_TO_DEBUG_FLAG = "giraph.debugger.superstepsToDebug";
-  public static final String DEBUG_ALL_VERTICES_FLAG = "giraph.debugger.debugAllVertices";
+  /**
+   * String constant for specifying the subset of vertices to debug
+   * when the user chooses not to debug all vertices
+   */
+  private static final String VERTICES_TO_DEBUG_FLAG =
+     "giraph.debugger.verticesToDebug";
+  /**
+   * String constant for specifying whether the neighbors of specified
+   * vertices should be debugged.
+   */
+  private static final String DEBUG_NEIGHBORS_FLAG =
+    "giraph.debugger.debugNeighbors";
+  /**
+   * String constant for specifying the subset of supersteps to debug
+   * when the user chooses not to debug the vertices in all supersteps.
+   */
+  private static final String SUPERSTEPS_TO_DEBUG_FLAG =
+    "giraph.debugger.superstepsToDebug";
+  /**
+   * String constant for specifying whether all vertices should be debugged.
+   */
+  private static final String DEBUG_ALL_VERTICES_FLAG =
+    "giraph.debugger.debugAllVertices";
 
-  protected static final Logger LOG = Logger.getLogger(DebugConfig.class);
+  /**
+   * Logger for this class.
+   */
+  private static final Logger LOG = Logger.getLogger(DebugConfig.class);
 
+  /**
+   * Stores the set of specified vertices to debug, when VERTICES_TO_DEBUG_FLAG
+   * is specified.
+   */
   private Set<I> verticesToDebugSet;
+  /**
+   * Stores the set of specified supersteps to debug in, when
+   * SUPERSTEPS_TO_DEBUG_FLAG is specified.
+   */
   private Set<Long> superstepsToDebugSet;
+  /**
+   * Whether the user has specified to debug the neighbors of the vertices
+   * that have been specified to be debugged, i.e. whether DEBUG_NEIGHBORS_FLAG
+   * is set to true.
+   */
   private boolean debugNeighborsOfVerticesToDebug;
+  /**
+   * Whether the user has specified to debug all vertices, i.e., whether
+   * DEBUG_ALL_VERTICES_FLAG is set to true.
+   */
   private boolean debugAllVertices = false;
 
+  /**
+   * Default public constructor. Configures not to debug any vertex in
+   * any superstep. But below {#link {@link #shouldCatchExceptions()} returns
+   * true by default, so configures Graft to only catch exceptions.
+   */
   public DebugConfig() {
     verticesToDebugSet = null;
     debugAllVertices = false;
@@ -104,6 +155,11 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
     superstepsToDebugSet = null;
   }
 
+  /**
+   * Configures this class through a {@link GiraphConfiguration}, which may
+   * contain some flags passed in by the user.
+   * @param config a {@link GiraphConfiguration} object.
+   */
   @SuppressWarnings("unchecked")
   public final void readConfig(GiraphConfiguration config) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(
@@ -142,9 +198,9 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
               .valueOf(idString)));
           } else {
             throw new IllegalArgumentException(
-              "When using the giraph.debugger.verticesToDebug"
-                + " argument, the vertex IDs of the computation class needs to be LongWritable"
-                + " or IntWritable.");
+              "When using the giraph.debugger.verticesToDebug argument, the " +
+                "vertex IDs of the computation class needs to be LongWritable" +
+                " or IntWritable.");
           }
         }
       }
@@ -152,11 +208,21 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
     LOG.debug("DebugConfig" + this);
   }
 
+  /**
+   * Whether vertices should be debugged in the specified superstep.
+   * @param superstepNo superstep number.
+   * @return whether the superstep should be debugged.
+   */
   public boolean shouldDebugSuperstep(long superstepNo) {
     return superstepsToDebugSet == null ||
       superstepsToDebugSet.contains(superstepNo);
   }
 
+  /**
+   * Whether the specified vertex should be debugged.
+   * @param vertex a vertex.
+   * @return whether the vertex should be debugged.
+   */
   public boolean shouldDebugVertex(Vertex<I, V, E> vertex) {
     if (debugAllVertices) {
       return true;
@@ -171,6 +237,14 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
     }
   }
 
+  /**
+   * Whether the given vertex is a neighbor of a vertex that has been
+   * configured to be debugged. If so then the given vertex will also
+   * be debugged.
+   * @param vertex a vertex.
+   * @return whether the vertex is a neighbor of vertex that should be
+   * debugged.
+   */
   private boolean isVertexANeighborOfAVertexToDebug(Vertex<I, V, E> vertex) {
     for (Edge<I, E> edge : vertex.getEdges()) {
       if (verticesToDebugSet.contains(edge.getTargetVertexId())) {
@@ -180,22 +254,48 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
     return false;
   }
 
+  /**
+   * @return whether exceptions should be caught.
+   */
   public boolean shouldCatchExceptions() {
     return true;
   }
 
+  /**
+   * @return whether message integrity constraints should be checked, i.e.,
+   * whether Graft should call the {@link #isMessageCorrect(WritableComparable,
+   * WritableComparable, Writable)} method on this message.
+   */
   public boolean shouldCheckMessageIntegrity() {
     return false;
   }
 
+  /**
+   * @param srcId source id of the message.
+   * @param dstId destination id of the message.
+   * @param message message sent between srcId and dstId.
+   * @return whether this message is correct, i.e, does not violate a
+   * constraint.
+   */
   public boolean isMessageCorrect(I srcId, I dstId, M1 message) {
     return true;
   }
 
+  /**
+   * @return whether a vertex value integrity constraints should be checked,
+   * i.e., whether Graft should call the {@link #isVertexValueCorrect(
+   * WritableComparable, Writable) method on this vertex.
+   */
   public boolean shouldCheckVertexValueIntegrity() {
     return false;
   }
 
+  /**
+   * @param vertexId id of the vertex.
+   * @param value value of the vertex.
+   * @return whether this vertex's value is correct, i.e, does not violate a
+   * constraint.
+   */
   public boolean isVertexValueCorrect(I vertexId, V value) {
     return true;
   }

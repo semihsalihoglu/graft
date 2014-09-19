@@ -32,9 +32,10 @@ import org.apache.log4j.Logger;
 /**
  * Debug version of SimpleShortestPathsComputation.
  */
-@Algorithm(name = "Shortest paths", description = "Finds all shortest paths from a selected vertex")
-public class BuggySimpleShortestPathsComputation extends
-  BasicComputation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
+@Algorithm(name = "Shortest paths", description = "Finds all shortest paths" +
+    "from a selected vertex")
+public class BuggySimpleShortestPathsComputation extends BasicComputation<
+  LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
 
   /** The shortest paths id */
   public static final LongConfOption SOURCE_ID = new LongConfOption(
@@ -45,7 +46,7 @@ public class BuggySimpleShortestPathsComputation extends
 
   /**
    * Is this vertex the source id?
-   * 
+   *
    * @param vertex
    *          Vertex
    * @return True if the source id
@@ -61,14 +62,15 @@ public class BuggySimpleShortestPathsComputation extends
     // We do a dummy read of the aggregator below because for now we only
     // intercept an aggregator
     // if at least one vertex reads it.
-    LongWritable aggregatedValue = getAggregatedValue(SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    LongWritable aggregatedValue = getAggregatedValue(
+      SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
     if (aggregatedValue != null) {
-      System.out.println("NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR: " +
-        aggregatedValue.get());
+      System.out.print("NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR: " +
+        aggregatedValue.get() + "\n");
     }
     if (getSuperstep() == 0) {
-      vertex.setValue(new DoubleWritable(isSource(vertex) ? 0d
-        : Double.MAX_VALUE));
+      vertex.setValue(new DoubleWritable(isSource(vertex) ? 0d :
+        Double.MAX_VALUE));
     }
     double previousValue = vertex.getValue().get();
     double minDist = previousValue;

@@ -19,10 +19,8 @@ package org.apache.giraph.debugger.examples.instrumented;
 
 import java.io.IOException;
 
-import org.apache.giraph.debugger.examples.integrity.BuggyConnectedComponentsComputation;
 import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
 import org.apache.giraph.edge.Edge;
-import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -35,30 +33,30 @@ import org.apache.hadoop.io.NullWritable;
  * Graft generates is {@link BuggyConnectedComponentsDebugComputationToRun}.
  * Please see the Graft documentation for more details on how Graft instruments
  * {@link Computation} classes.
- * 
+ *
  * Implementation of the HCC algorithm that identifies connected components and
  * assigns each vertex its "component identifier" (the smallest vertex id in the
  * component)
- * 
+ *
  * The idea behind the algorithm is very simple: propagate the smallest vertex
  * id along the edges to all vertices of a connected component. The number of
  * supersteps necessary is equal to the length of the maximum diameter of all
  * components + 1
- * 
+ *
  * The original Hadoop-based variant of this algorithm was proposed by Kang,
  * Charalampos, Tsourakakis and Faloutsos in
  * "PEGASUS: Mining Peta-Scale Graphs", 2010
- * 
+ *
  * http://www.cs.cmu.edu/~ukang/papers/PegasusKAIS.pdf
  */
 public abstract class BuggyConnectedComponentsDebugComputationModified
-  extends
-  AbstractInterceptingComputation<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+  extends AbstractInterceptingComputation<IntWritable, IntWritable,
+  NullWritable, IntWritable, IntWritable> {
 
   /**
    * Propagates the smallest vertex id to all neighbors. Will always choose to
    * halt and only reactivate if a smaller id has been sent to it.
-   * 
+   *
    * @param vertex
    *          Vertex
    * @param messages
@@ -86,9 +84,9 @@ public abstract class BuggyConnectedComponentsDebugComputationModified
       // INTENTIONAL BUG: in the original algorithm the value of the comparison
       // sign should be <.
       if (candidateComponent > currentComponent) {
-        System.out.println("changing value in superstep: " + getSuperstep() +
+        System.out.print("changing value in superstep: " + getSuperstep() +
           " vertex.id: " + vertex.getId() + " newComponent: " +
-          candidateComponent);
+          candidateComponent + "\n");
         currentComponent = candidateComponent;
         changed = true;
       }
@@ -103,5 +101,4 @@ public abstract class BuggyConnectedComponentsDebugComputationModified
     }
     vertex.voteToHalt();
   }
-
 }

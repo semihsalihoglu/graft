@@ -50,10 +50,25 @@ import com.sun.net.httpserver.HttpServer;
  */
 public class Server {
 
+  /**
+   * Logger for the class.
+   */
   private static final Logger LOG = Logger.getLogger(Server.class);
+  /**
+   * Default port number for the server.
+   */
   private static final int SERVER_PORT = Integer.parseInt(System.getProperty(
     "giraph.debugger.guiPort", "8000"));
 
+  /**
+   * Private constructor to disallow construction outside of the class.
+   */
+  private Server() { }
+
+  /**
+   * @param args command line arguments for the server
+   * @throws Exception
+   */
   public static void main(String[] args) throws Exception {
     HttpServer server = HttpServer
       .create(new InetSocketAddress(SERVER_PORT), 0);
@@ -72,6 +87,9 @@ public class Server {
     server.start();
   }
 
+  /**
+   * Handler when accessing the landing page for the server.
+   */
   static class GetEditor implements HttpHandler {
 
     @Override
@@ -121,7 +139,7 @@ public class Server {
 
   /**
    * Handles /job HTTP GET call. Returns the details of the given jobId.
-   * 
+   *
    * @URLparams -{jobId}
    */
   static class GetJob extends ServerHttpHandler {
@@ -144,15 +162,35 @@ public class Server {
      * Returns superstep data of the job in JSON format. TODO(vikesh):
      * Sample/Demo method for now. Will remove after modifying the front-end
      * with the new API.
+     * @param jobId id of the job.
+     * @return the default sample/demo data for the beginning.
      */
-    private String getSuperstepData(String joId) {
-      return "[{'PR1' : {neighbors: [{ 'neighborId' : 'PR2'}, { 'neighborId' : 'PR3'}], vertexValues : [0.244], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', 'PR3' : 'msgFrom1To3.step-1'}}, 'PR2' : {neighbors: [{ neighborId : 'PR3'}], vertexValues: [0.455], outgoingMessages: {'PR3': 'msgTo3From2.step-1'}}, 'PR4' : {neighbors: [ { neighborId : 'PR1'}], vertexValues : [0.78]}},  {'PR1' : {vertexValues:[0.44], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step0', 'PR3' : 'msgFrom1To3.step0'}}, 'PR2' : {vertexValues:[0.889], outgoingMessages: {'PR3': 'msgTo3From2.step0'}}, 'PR4' : {vertexValues:[0.98]}}, {'PR1' : {vertexValues:[0.001], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', 'PR3' : 'msgFrom1To3.step1'}}, 'PR2' : {vertexValues:[0.667], outgoingMessages: {'PR3': 'msgTo3From2.step1'}}}, {'PR1' : {vertexValues:[0.232], outgoingMessages:{ 'PR2' : 'msgFrom1To2.step2', 'PR3' : 'msgFrom1To3.step2'}}, 'PR2' : {vertexValues:[0.787], outgoingMessages: {'PR3': 'msgTo3From2.step2'}}}]";
+    private String getSuperstepData(String jobId) {
+      return "[{'PR1' : {neighbors: [{ 'neighborId' : 'PR2'}, " +
+        "{ 'neighborId' : 'PR3'}], vertexValues : [0.244], " +
+        "outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', " +
+        "'PR3' : 'msgFrom1To3.step-1'}}, " +
+        "'PR2' : {neighbors: [{ neighborId : 'PR3'}], vertexValues: [0.455]," +
+        " outgoingMessages: {'PR3': 'msgTo3From2.step-1'}}, " +
+        "'PR4' : {neighbors: [ { neighborId : 'PR1'}], " +
+        "vertexValues : [0.78]}},  {'PR1' : {vertexValues:[0.44], " +
+        "outgoingMessages:{ 'PR2' : 'msgFrom1To2.step0', " +
+        "'PR3' : 'msgFrom1To3.step0'}}, 'PR2' : {vertexValues:[0.889]," +
+        " outgoingMessages: {'PR3': 'msgTo3From2.step0'}}, " +
+        "'PR4' : {vertexValues:[0.98]}}, {'PR1' : {vertexValues:[0.001]," +
+        " outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', " +
+        "'PR3' : 'msgFrom1To3.step1'}}, 'PR2' : {vertexValues:[0.667], " +
+        "outgoingMessages: {'PR3': 'msgTo3From2.step1'}}}, " +
+        "{'PR1' : {vertexValues:[0.232], outgoingMessages:{ 'PR2' : " +
+        "'msgFrom1To2.step2', 'PR3' : 'msgFrom1To3.step2'}}, 'PR2' : " +
+        "{vertexValues:[0.787], outgoingMessages: " +
+        "{'PR3': 'msgTo3From2.step2'}}}]";
     }
   }
 
   /**
    * Returns the list of vertices debugged in a given Superstep for a given job.
-   * 
+   *
    * @URLParams: {jobId, superstepId}
    */
   static class GetVertices extends ServerHttpHandler {
@@ -161,6 +199,7 @@ public class Server {
       Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
+      // CHECKSTYLE: stop IllegalCatch
       try {
         // jobId and superstepId are mandatory. Validate.
         if (jobId == null || superstepId == null) {
@@ -183,6 +222,7 @@ public class Server {
           "Invalid parameters. %s is a mandatory parameter.",
           ServerUtils.JOB_ID_KEY));
       }
+      // CHECKSTYLE: resume IllegalCatch
     }
   }
 
@@ -194,6 +234,7 @@ public class Server {
     public void processRequest(HttpExchange httpExchange,
       Map<String, String> paramMap) {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
+      // CHECKSTYLE: stop IllegalCatch
       try {
         // jobId and superstepId are mandatory. Validate.
         if (jobId == null) {
@@ -210,12 +251,13 @@ public class Server {
           "Invalid parameters. %s and %s are mandatory parameter.",
           ServerUtils.JOB_ID_KEY, ServerUtils.SUPERSTEP_ID_KEY));
       }
+      // CHECKSTYLE: resume IllegalCatch
     }
   }
 
   /**
    * Returns the scenario for a given superstep of a given job.
-   * 
+   *
    * @URLParams - {jobId, superstepId, [vertexId], [raw]}
    * @desc vertexId - vertexId is optional. It can be a single value or a comma
    *       separated list. If it is not supplied, returns the scenario for all
@@ -230,6 +272,7 @@ public class Server {
       String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
       String superstepId = paramMap.get(ServerUtils.SUPERSTEP_ID_KEY);
       // Check both jobId and superstepId are present
+      // CHECKSTYLE: stop IllegalCatch
       try {
         if (jobId == null || superstepId == null) {
           throw new IllegalArgumentException("Missing mandatory parameters");
@@ -272,12 +315,13 @@ public class Server {
           "Invalid parameters. %s and %s are mandatory parameter.",
           ServerUtils.JOB_ID_KEY, ServerUtils.SUPERSTEP_ID_KEY));
       }
+      // CHECKSTYLE: stop IllegalCatch
     }
   }
 
   /**
    * Returns the JAVA code for vertex scenario.
-   * 
+   *
    * @URLParams : {jobId, superstepId, vertexId, traceType}
    * @desc traceType : Can be one of reg, err, msg or vv
    */
@@ -307,7 +351,8 @@ public class Server {
         GiraphVertexScenarioWrapper giraphScenarioWrapper = ServerUtils
           .readScenarioFromTrace(jobId, superstepNo, vertexId.trim(),
             debugTrace);
-        ComputationComputeTestGenerator testGenerator = new ComputationComputeTestGenerator();
+        ComputationComputeTestGenerator testGenerator =
+          new ComputationComputeTestGenerator();
         // Set the content-disposition header to force a download with the
         // given filename.
         String filename = String.format("%sTest.java", giraphScenarioWrapper
@@ -332,7 +377,7 @@ public class Server {
 
   /**
    * Returns the JAVA code for master scenario.
-   * 
+   *
    * @URLParams : {jobId, superstepId}
    */
   static class GetMasterTest extends ServerHttpHandler {
@@ -358,7 +403,8 @@ public class Server {
         GiraphMasterScenarioWrapper giraphScenarioWrapper = ServerUtils
           .readMasterScenarioFromTrace(jobId, superstepNo,
             DebugTrace.MASTER_ALL);
-        MasterComputeTestGenerator masterTestGenerator = new MasterComputeTestGenerator();
+        MasterComputeTestGenerator masterTestGenerator =
+          new MasterComputeTestGenerator();
         // Set the content-disposition header to force a download with the
         // given filename.
         String filename = String.format("%sTest.java",
@@ -382,21 +428,20 @@ public class Server {
   /**
    * Returns the integrity violations based on the requested parameter. The
    * requested parameter (type) may be one of M, E or V.
-   * 
+   *
    * @URLParams : jobId, superstepId, violiationType It is an optional parameter
    *            and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
-    // The server returns only a limited number of msg or vertex value
-    // violations.
-    // For message violations, it may not put the limit at exactly this number
-    // because it
-    // reads each violation trace which may include multiple message violations
-    // and adds all the
-    // violations in the trace to the response. Once the total message
-    // violations is over this
-    // number it stops reading traces.
-    private static final int _NUM_VIOLATIONS_THRESHOLD = 50;
+    /**
+     * The server returns only a limited number of msg or vertex value
+     * violations. For message violations, it may not put the limit at exactly
+     * this number because it reads each violation trace which may include
+     * multiple message violations and adds all the violations in the trace to
+     * the response. Once the total message violations is over this number it
+     * stops reading traces.
+     */
+    private static final int NUM_VIOLATIONS_THRESHOLD = 50;
 
     @Override
     @SuppressWarnings("rawtypes")
@@ -424,12 +469,13 @@ public class Server {
 
           int numViolations = 0;
           for (String taskId : taskIds) {
-            MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = ServerUtils
-              .readMsgIntegrityViolationFromTrace(jobId, taskId, superstepNo);
+            MsgIntegrityViolationWrapper msgIntegrityViolationWrapper =
+              ServerUtils.readMsgIntegrityViolationFromTrace(jobId, taskId,
+                superstepNo);
             integrityObj.put(taskId,
               ServerUtils.msgIntegrityToJson(msgIntegrityViolationWrapper));
             numViolations += msgIntegrityViolationWrapper.numMsgWrappers();
-            if (numViolations >= _NUM_VIOLATIONS_THRESHOLD) {
+            if (numViolations >= NUM_VIOLATIONS_THRESHOLD) {
               break;
             }
           }
@@ -440,13 +486,13 @@ public class Server {
             superstepNo, DebugTrace.INTEGRITY_VERTEX);
           int numViolations = 0;
           for (String vertexId : vertexIds) {
-            GiraphVertexScenarioWrapper giraphVertexScenarioWrapper = ServerUtils
-              .readVertexIntegrityViolationFromTrace(jobId, superstepNo,
-                vertexId);
+            GiraphVertexScenarioWrapper giraphVertexScenarioWrapper =
+              ServerUtils.readVertexIntegrityViolationFromTrace(jobId,
+                superstepNo, vertexId);
             numViolations++;
             integrityObj.put(vertexId,
               ServerUtils.vertexIntegrityToJson(giraphVertexScenarioWrapper));
-            if (numViolations >= _NUM_VIOLATIONS_THRESHOLD) {
+            if (numViolations >= NUM_VIOLATIONS_THRESHOLD) {
               break;
             }
           }
@@ -489,7 +535,7 @@ public class Server {
 
   /**
    * Returns the TestGraph JAVA code.
-   * 
+   *
    * @URLParam adjList - Adjacency list of the graph
    */
   static class GetTestGraph extends ServerHttpHandler {

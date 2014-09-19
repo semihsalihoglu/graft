@@ -57,27 +57,58 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-/*
+/**
  * Utility methods for Debugger Server.
  */
 @SuppressWarnings("rawtypes")
 public class ServerUtils {
+  /**
+   * String for specifying the job id parameter.
+   */
   public static final String JOB_ID_KEY = "jobId";
+  /**
+   * String for specifying the vertex id parameter.
+   */
   public static final String VERTEX_ID_KEY = "vertexId";
+  /**
+   * String for specifying the superstep id parameter.
+   */
   public static final String SUPERSTEP_ID_KEY = "superstepId";
+  /**
+   * String for specifying the type of integrity violation parameter.
+   */
   public static final String INTEGRITY_VIOLATION_TYPE_KEY = "type";
+  /**
+   * String for specifying the task id.
+   */
   public static final String TASK_ID_KEY = "taskId";
+  /**
+   * String for specifying the trace type, i.e., {@link DebugTrace}.
+   */
   public static final String VERTEX_TEST_TRACE_TYPE_KEY = "traceType";
+  /**
+   * String for specifying the adjacency list parameter.
+   */
   public static final String ADJLIST_KEY = "adjList";
 
+  /**
+   * Logger for this class.
+   */
   private static final Logger LOG = Logger.getLogger(ServerUtils.class);
 
   /**
+   * Private constructor to disallow construction.
+   */
+  private ServerUtils() { }
+
+  /**
    * Returns parameters of the URL in a hash map. For instance,
-   * http://localhost:9000/?key1=val1&key2=val2&key3=val3
+   * http://localhost:9000/?key1=val1&key2=val2&key3=val3.
+   * @param rawUrl url with the parameters attached, which will be parsed.
+   * @return the parameters on the url.
    */
   public static Map<String, String> getUrlParams(String rawUrl)
-    throws UnsupportedEncodingException {
+      throws UnsupportedEncodingException {
     HashMap<String, String> paramMap = Maps.newHashMap();
 
     if (rawUrl != null) {
@@ -96,12 +127,17 @@ public class ServerUtils {
    * Returns the HDFS FileSystem reference. Note: We assume that the classpath
    * contains the Hadoop's conf directory or the core-site.xml and hdfs-site.xml
    * configuration directories.
+   * @return a {@link FileSystem} object to be used to read from HDFS.
    */
   public static FileSystem getFileSystem() throws IOException {
     Configuration configuration = new Configuration();
     return FileSystem.get(configuration);
   }
 
+  /**
+   * @param jobId id of the job, whose jar path will be returned.
+   * @return a url wrapped inside an array for convenience.
+   */
   public static URL[] getCachedJobJarPath(String jobId) {
     // read the jar signature file under the TRACE_ROOT/jobId/
     Path jarSignaturePath = new Path(DebuggerUtils.getTraceFileRoot(jobId) +
@@ -127,15 +163,18 @@ public class ServerUtils {
       }
     } catch (IOException e) {
       // gracefully ignore if we failed to read the jar.signature
+      LOG.warn("An IOException is thrown but will be ignored: " +
+        e.toString());
     }
     return new URL[0];
   }
 
   /**
-   * Returns the path of the vertex trace file on HDFS.
-   * 
-   * @param debugTrace
-   *          - Must be one of VERTEX_* or INTEGRITY_VERTEX types.
+   * @param jobId id of the job.
+   * @param superstepNo superstep number.
+   * @param vertexId id of the vertex.
+   * @param debugTrace must be one of VERTEX_* or INTEGRITY_VERTEX types.
+   * @return path of the vertex trace file on HDFS.
    */
   public static String getVertexTraceFilePath(String jobId, long superstepNo,
     String vertexId, DebugTrace debugTrace) {
@@ -147,10 +186,11 @@ public class ServerUtils {
   }
 
   /**
-   * Returns the path of the vertex trace file on HDFS.
-   * 
-   * @param debugTrace
-   *          - Must be INTEGRITY_MESSAGE.
+   * @param jobId id of the job.
+   * @param taskId id of the task.
+   * @param superstepNo superstep number.
+   * @param debugTrace must be INTEGRITY_MESSAGE.
+   * @return path of the vertex trace file on HDFS.
    */
   public static String getIntegrityTraceFilePath(String jobId, String taskId,
     long superstepNo, DebugTrace debugTrace) {
@@ -161,7 +201,10 @@ public class ServerUtils {
   }
 
   /**
-   * Returns the path of the master compute trace file on HDFS.
+   * @param jobId id of the job.
+   * @param superstepNo superstep number.
+   * @param debugTrace must be of type MASTER_*.
+   * @return path of the master compute trace file on HDFS.
    */
   public static String getMasterTraceFilePath(String jobId, long superstepNo,
     DebugTrace debugTrace) {
@@ -174,22 +217,25 @@ public class ServerUtils {
   /**
    * Reads the protocol buffer trace corresponding to the given jobId,
    * superstepNo and vertexId and returns the giraphScenarioWrapper.
-   * 
+   *
    * @param jobId
    *          : ID of the job debugged.
    * @param superstepNo
    *          : Superstep number debugged.
    * @param vertexId
    *          - ID of the vertex debugged. Returns GiraphScenarioWrapper.
-   * @param [debugTrace] - Can be either any one of VERTEX_* and
+   * @param debugTrace - Can be either any one of VERTEX_* and
    *        INTEGRITY_MESSAGE_SINGLE_VERTEX.
+   * @return the vertex scenario stored in the trace file represented as a
+   *        {@link GiraphVertexScenarioWrapper} object.
    */
   public static GiraphVertexScenarioWrapper readScenarioFromTrace(String jobId,
     long superstepNo, String vertexId, DebugTrace debugTrace)
-    throws IOException, ClassNotFoundException, InstantiationException,
+      throws IOException, ClassNotFoundException, InstantiationException,
     IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
-    GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
+    GiraphVertexScenarioWrapper giraphScenarioWrapper =
+      new GiraphVertexScenarioWrapper();
     EnumSet<DebugTrace> enumSet = EnumSet.of(debugTrace);
     if (debugTrace == DebugTrace.VERTEX_ALL) {
       enumSet = EnumSet.of(DebugTrace.VERTEX_REGULAR,
@@ -218,14 +264,16 @@ public class ServerUtils {
   /**
    * Reads the master protocol buffer trace corresponding to the given jobId and
    * superstepNo and returns the GiraphMasterScenarioWrapper object.
-   * 
+   *
    * @param jobId
    *          : ID of the job debugged.
    * @param superstepNo
    *          : Superstep number debugged.
-   * @param [debugTrace] - Can be either MASTER_REGULAR, MASTER_EXCEPTION OR
+   * @param debugTrace - Can be either MASTER_REGULAR, MASTER_EXCEPTION OR
    *        MASTER_ALL. In case of MASTER_ALL, returns whichever trace is
    *        available.
+   * @return the master scenario stored in the trace file represented as a
+   *        {@link GiraphMasterScenarioWrapper} object.
    */
   public static GiraphMasterScenarioWrapper readMasterScenarioFromTrace(
     String jobId, long superstepNo, DebugTrace debugTrace) throws IOException,
@@ -237,7 +285,8 @@ public class ServerUtils {
         "DebugTrace type is invalid. Use REGULAR, EXCEPTION or ALL_VERTICES");
     }
     FileSystem fs = ServerUtils.getFileSystem();
-    GiraphMasterScenarioWrapper giraphScenarioWrapper = new GiraphMasterScenarioWrapper();
+    GiraphMasterScenarioWrapper giraphScenarioWrapper =
+      new GiraphMasterScenarioWrapper();
     // For each superstep, there is either a "regular" master trace (saved in
     // master_reg_stp_i.tr files), or an "exception" master trace (saved in
     // master_err_stp_i.tr files). We first check to see if a regular master
@@ -256,8 +305,8 @@ public class ServerUtils {
         // If debugTrace was null, ignore this exception since
         // we will try reading exception trace later.
         if (debugTrace == DebugTrace.MASTER_ALL) {
-          LOG
-            .info("readMasterScenarioFromTrace: Regular file not found. Ignoring.");
+          LOG.info("readMasterScenarioFromTrace: Regular file not found. " +
+            "Ignoring.");
         } else {
           throw e;
         }
@@ -274,7 +323,10 @@ public class ServerUtils {
   }
 
   /**
-   * Returns the MessageIntegrityViolationWrapper from trace file.
+   * @param jobId id of the job.
+   * @param taskId id of the task.
+   * @param superstepNo superstep number.
+   * @return the {@linke MsgIntegrityViolationWrapper} from trace file.
    */
   public static MsgIntegrityViolationWrapper readMsgIntegrityViolationFromTrace(
     String jobId, String taskId, long superstepNo) throws IOException,
@@ -282,22 +334,29 @@ public class ServerUtils {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = ServerUtils.getIntegrityTraceFilePath(jobId, taskId,
       superstepNo, DebugTrace.INTEGRITY_MESSAGE_ALL);
-    MsgIntegrityViolationWrapper msgIntegrityViolationWrapper = new MsgIntegrityViolationWrapper();
+    MsgIntegrityViolationWrapper msgIntegrityViolationWrapper =
+      new MsgIntegrityViolationWrapper();
     msgIntegrityViolationWrapper.loadFromHDFS(fs, traceFilePath,
       getCachedJobJarPath(jobId));
     return msgIntegrityViolationWrapper;
   }
 
   /**
-   * Returns the MessageIntegrityViolationWrapper from trace file.
+   * @param jobId id of the job.
+   * @param superstepNo superstep number.
+   * @param vertexId id of the vertex.
+   * @return the vertex integrity data from the trace file stored inside
+   *    {@link GiraphVertexScenarioWrapper}.
    */
-  public static GiraphVertexScenarioWrapper readVertexIntegrityViolationFromTrace(
-    String jobId, long superstepNo, String vertexId) throws IOException,
+  public static GiraphVertexScenarioWrapper
+  readVertexIntegrityViolationFromTrace(String jobId, long superstepNo,
+    String vertexId) throws IOException,
     ClassNotFoundException, InstantiationException, IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFilePath = ServerUtils.getVertexTraceFilePath(jobId,
       superstepNo, vertexId, DebugTrace.INTEGRITY_VERTEX);
-    GiraphVertexScenarioWrapper giraphScenarioWrapper = new GiraphVertexScenarioWrapper();
+    GiraphVertexScenarioWrapper giraphScenarioWrapper =
+      new GiraphVertexScenarioWrapper();
     giraphScenarioWrapper.loadFromHDFS(fs, traceFilePath);
     return giraphScenarioWrapper;
   }
@@ -305,9 +364,9 @@ public class ServerUtils {
   /**
    * Converts a Giraph Scenario (giraphScenarioWrapper object) to JSON
    * (JSONObject)
-   * 
-   * @param giraphScenarioWrapper
-   *          : Giraph Scenario object.
+   *
+   * @param giraphScenarioWrapper Giraph Scenario object.
+   * @return scenario data stored as json.
    */
   public static JSONObject scenarioToJSON(
     GiraphVertexScenarioWrapper giraphScenarioWrapper) throws JSONException {
@@ -320,7 +379,8 @@ public class ServerUtils {
     JSONArray neighborsList = new JSONArray();
     // Add outgoing messages.
     for (Object outgoingMessage : contextWrapper.getOutgoingMessageWrappers()) {
-      OutgoingMessageWrapper outgoingMessageWrapper = (OutgoingMessageWrapper) outgoingMessage;
+      OutgoingMessageWrapper outgoingMessageWrapper =
+        (OutgoingMessageWrapper) outgoingMessage;
       outgoingMessagesObj.put(outgoingMessageWrapper.destinationId.toString(),
         outgoingMessageWrapper.message.toString());
     }
@@ -352,7 +412,8 @@ public class ServerUtils {
     JSONObject aggregateObj = new JSONObject();
     for (Object aggregatedValue : contextWrapper
       .getCommonVertexMasterContextWrapper().getPreviousAggregatedValues()) {
-      AggregatedValueWrapper aggregatedValueWrapper = (AggregatedValueWrapper) aggregatedValue;
+      AggregatedValueWrapper aggregatedValueWrapper =
+        (AggregatedValueWrapper) aggregatedValue;
       aggregateObj.put(aggregatedValueWrapper.getKey(),
         aggregatedValueWrapper.getValue());
     }
@@ -362,17 +423,22 @@ public class ServerUtils {
 
   /**
    * Converts the message integrity violation wrapper to JSON.
+   *
+   * @param msgIntegrityViolationWrapper {@link MsgIntegrityViolationWrapper}
+   *        object.
+   * @return message integrity violation data stored as json.
    */
   public static JSONObject msgIntegrityToJson(
     MsgIntegrityViolationWrapper msgIntegrityViolationWrapper)
-    throws JSONException {
+      throws JSONException {
     JSONObject scenarioObj = new JSONObject();
     ArrayList<JSONObject> violationsList = new ArrayList<JSONObject>();
     scenarioObj.put("superstepId",
       msgIntegrityViolationWrapper.getSuperstepNo());
     for (Object msgWrapper : msgIntegrityViolationWrapper
       .getExtendedOutgoingMessageWrappers()) {
-      ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper = (ExtendedOutgoingMessageWrapper) msgWrapper;
+      ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper =
+         (ExtendedOutgoingMessageWrapper) msgWrapper;
       JSONObject violationObj = new JSONObject();
       violationObj.put("srcId", extendedOutgoingMessageWrapper.srcId);
       violationObj.put("destinationId",
@@ -386,10 +452,14 @@ public class ServerUtils {
 
   /**
    * Converts the vertex integrity violation wrapper to JSON.
+   *
+   * @param giraphVertexScenarioWrapper {@link GiraphVertexScenarioWrapper}
+   *        object storing the vertex value violation data.
+   * @return vertex integrity violation data stored as json.
    */
   public static JSONObject vertexIntegrityToJson(
     GiraphVertexScenarioWrapper giraphVertexScenarioWrapper)
-    throws JSONException {
+      throws JSONException {
     JSONObject scenarioObj = new JSONObject();
     VertexContextWrapper vertexContextWrapper = giraphVertexScenarioWrapper
       .getContextWrapper();
@@ -400,7 +470,10 @@ public class ServerUtils {
   }
 
   /**
-   * Returns a list of vertex Ids that were debugged in the given superstep by
+   * @param jobId id of the job.
+   * @param superstepNo superstep number.
+   * @param debugTrace type of vertex trace files.
+   * @return a list of vertex Ids that were debugged in the given superstep by
    * reading (the file names of) the debug traces on HDFS. File names follow the
    * <prefix>_stp_<superstepNo>_vid_<vertexId>.tr naming convention.
    */
@@ -437,10 +510,10 @@ public class ServerUtils {
   }
 
   /**
-   * Returns the IDs of all the tasks that caused the given integrity violation.
-   * 
-   * @param debugTrace
-   *          - Must be one of INTEGRITY_* types.
+   * @param jobId id of the job.
+   * @param superstepNo superstep number.
+   * @param debugTrace must be one of INTEGRITY_* types.
+   * @return the IDs of all the tasks that caused the given integrity violation.
    */
   public static List<String> getTasksWithIntegrityViolations(String jobId,
     long superstepNo, DebugTrace debugTrace) throws IOException {
@@ -473,11 +546,12 @@ public class ServerUtils {
   }
 
   /**
-   * Returns the list of supersteps for which there is an exception or regular
+   * @param jobId id of the job.
+   * @return the list of supersteps for which there is an exception or regular
    * trace.
    */
   public static List<Long> getSuperstepsDebugged(String jobId)
-    throws IOException {
+      throws IOException {
     Set<Long> superstepIds = Sets.newHashSet();
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
@@ -498,12 +572,13 @@ public class ServerUtils {
     return Lists.newArrayList(superstepIds);
   }
 
-  /*
-   * Returns the list of supersteps for which there is an exception or regular
+  /**
+   * @param jobId id of the job.
+   * @return the list of supersteps for which there is an exception or regular
    * trace.
    */
   public static List<Long> getSuperstepsMasterDebugged(String jobId)
-    throws IOException {
+      throws IOException {
     Set<Long> superstepIds = Sets.newHashSet();
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);

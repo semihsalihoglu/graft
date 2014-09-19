@@ -34,7 +34,7 @@ import com.google.common.collect.Sets;
 
 /**
  * Demonstrates triangle closing in simple, unweighted graphs for Giraph.
- * 
+ *
  * Triangle Closing: Vertex A and B maintain out-edges to C and D The algorithm,
  * when finished, populates all vertices' value with an array of Writables
  * representing all the vertices that each should form an out-edge to (connect
@@ -43,19 +43,19 @@ import com.google.common.collect.Sets;
  * the graph is undirected, C would hold value, D and D would hold value C,
  * since both are neighbors of A and B and yet both were not previously
  * connected to each other.
- * 
+ *
  * In a social graph, the result values for vertex X would represent people that
  * are likely a part of a person X's social circle (they know one or more people
  * X is connected to already) but X had not previously met them yet. Given this
  * new information, X can decide to connect to vertices (peoople) in the result
  * array or not.
- * 
+ *
  * Results at each vertex are ordered in terms of the # of neighbors who are
  * connected to each vertex listed in the final vertex value. The more of a
  * vertex's neighbors who "know" someone, the stronger your social relationship
  * is presumed to be to that vertex (assuming a social graph) and the more
  * likely you should connect with them.
- * 
+ *
  * In this implementation, Edge Values are not used, but could be adapted to
  * represent additional qualities that could affect the ordering of the final
  * result array.
@@ -64,7 +64,7 @@ public class BuggySimpleTriangleClosingComputation extends
   BasicComputation<IntWritable, IntWritable, NullWritable, IntWritable> {
   /** Vertices to close the triangle, ranked by frequency of in-msgs */
   private final Map<IntWritable, Integer> closeMap = Maps
-    .<IntWritable, Integer> newHashMap();
+    .<IntWritable, Integer>newHashMap();
 
   @Override
   public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex,
@@ -86,7 +86,7 @@ public class BuggySimpleTriangleClosingComputation extends
       }
       // make sure the result values are sorted and
       // packaged in an IntArrayListWritable for output
-      Set<Pair> sortedResults = Sets.<Pair> newTreeSet();
+      Set<Pair> sortedResults = Sets.<Pair>newTreeSet();
       for (Map.Entry<IntWritable, Integer> entry : closeMap.entrySet()) {
         sortedResults.add(new Pair(entry.getKey(), entry.getValue()));
       }
@@ -111,14 +111,14 @@ public class BuggySimpleTriangleClosingComputation extends
   public static class Pair implements Comparable<Pair> {
     /**
      * key
-     * 
+     *
      * @param key
      *          the IntWritable key
      */
     private final IntWritable key;
     /**
      * value
-     * 
+     *
      * @param value
      *          the Integer value
      */
@@ -126,7 +126,7 @@ public class BuggySimpleTriangleClosingComputation extends
 
     /**
      * Constructor
-     * 
+     *
      * @param k
      *          the key
      * @param v
@@ -139,7 +139,7 @@ public class BuggySimpleTriangleClosingComputation extends
 
     /**
      * key getter
-     * 
+     *
      * @return the key
      */
     public IntWritable getKey() {
@@ -148,7 +148,7 @@ public class BuggySimpleTriangleClosingComputation extends
 
     /**
      * value getter
-     * 
+     *
      * @return the value
      */
     public Integer getValue() {
@@ -157,7 +157,7 @@ public class BuggySimpleTriangleClosingComputation extends
 
     /**
      * Comparator to quickly sort by values
-     * 
+     *
      * @param other
      *          the Pair to compare with THIS
      * @return the comparison value as an integer

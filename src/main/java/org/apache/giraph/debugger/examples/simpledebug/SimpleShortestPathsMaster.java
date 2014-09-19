@@ -29,17 +29,23 @@ import org.apache.hadoop.io.LongWritable;
  */
 public class SimpleShortestPathsMaster extends DefaultMasterCompute {
 
-  public static String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR = "nvWithDistanceLessThanThree";
+  /**
+   * Name of the aggregator keeping the number of vertices which have distance
+   * less than three to the source vertex.
+   */
+  public static final String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR =
+    "nvWithDistanceLessThanThree";
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void compute() {
-    System.out.println("Running SimpleShortestPathsMaster.compute. superstep " +
-      getSuperstep());
-    LongWritable aggregatorValue = getAggregatedValue(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    System.out.print("Running SimpleShortestPathsMaster.compute. superstep " +
+      getSuperstep() + "\n");
+    LongWritable aggregatorValue = getAggregatedValue(
+      NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
     if (aggregatorValue != null) {
-      System.out.println("At Master.compute() with aggregator: " +
-        aggregatorValue.get());
+      System.out.print("At Master.compute() with aggregator: " +
+        aggregatorValue.get() + "\n");
     }
     // if (getSuperstep() == 2) {
     // throw new IllegalArgumentException("DUMMY EXCEPTION FOR TESTING");
@@ -51,8 +57,9 @@ public class SimpleShortestPathsMaster extends DefaultMasterCompute {
       setComputation(BuggySimpleTriangleClosingComputation.class);
     } else if (getSuperstep() == 200000) {
       try {
-        setComputation((Class<? extends Computation>) Class
-          .forName("org.apache.giraph.debugger.examples.integrity.ConnectedComponentsActualComputation"));
+        setComputation((Class<? extends Computation>) Class.forName(
+          "org.apache.giraph.debugger.examples.integrity." +
+          "ConnectedComponentsActualComputation"));
       } catch (ClassNotFoundException e) {
         e.printStackTrace();
       }
