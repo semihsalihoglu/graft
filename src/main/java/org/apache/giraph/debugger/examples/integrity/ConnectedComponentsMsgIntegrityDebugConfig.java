@@ -25,11 +25,9 @@ import org.apache.hadoop.io.NullWritable;
  * Debug configuration file for ConnectedComponents, that is configured to check
  * the integrity of the messages setn: The current check is that the message
  * value is less than or equal to the id of the source vertex.
- * 
- * @author semihsalihoglu
  */
-public class ConnectedComponentsMsgIntegrityDebugConfig extends
-  DebugConfig<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
+  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
   @Override
   public boolean shouldCheckMessageIntegrity() {

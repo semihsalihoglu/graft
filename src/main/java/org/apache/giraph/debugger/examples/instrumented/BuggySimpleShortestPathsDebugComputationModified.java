@@ -21,11 +21,9 @@ import java.io.IOException;
 
 import org.apache.giraph.Algorithm;
 import org.apache.giraph.conf.LongConfOption;
-import org.apache.giraph.debugger.examples.simpledebug.BuggySimpleShortestPathsComputation;
 import org.apache.giraph.debugger.examples.simpledebug.SimpleShortestPathsMaster;
 import org.apache.giraph.debugger.instrumenter.AbstractInterceptingComputation;
 import org.apache.giraph.edge.Edge;
-import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
@@ -40,13 +38,14 @@ import org.apache.log4j.Logger;
  * Graft generates is {@link BuggySimpleShortestPathsDebugComputationToRun}.
  * Please see the Graft documentation for more details on how Graft instruments
  * {@link Computation} classes.
- * 
+ *
  * Debug version of SimpleShortestPathsComputation.
  */
-@Algorithm(name = "Shortest paths", description = "Finds all shortest paths from a selected vertex")
+@Algorithm(name = "Shortest paths", description = "Finds all shortest paths" +
+    "from a selected vertex")
 public abstract class BuggySimpleShortestPathsDebugComputationModified
-  extends
-  AbstractInterceptingComputation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
+  extends AbstractInterceptingComputation<LongWritable, DoubleWritable,
+  FloatWritable, DoubleWritable, DoubleWritable> {
 
   /** The shortest paths id */
   public static final LongConfOption SOURCE_ID = new LongConfOption(
@@ -57,7 +56,7 @@ public abstract class BuggySimpleShortestPathsDebugComputationModified
 
   /**
    * Is this vertex the source id?
-   * 
+   *
    * @param vertex
    *          Vertex
    * @return True if the source id
@@ -73,14 +72,15 @@ public abstract class BuggySimpleShortestPathsDebugComputationModified
     // We do a dummy read of the aggregator below because for now we only
     // intercept an aggregator
     // if at least one vertex reads it.
-    LongWritable aggregatedValue = getAggregatedValue(SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    LongWritable aggregatedValue = getAggregatedValue(
+      SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
     if (aggregatedValue != null) {
-      System.out.println("NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR: " +
-        aggregatedValue.get());
+      System.out.print("NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR: " +
+        aggregatedValue.get() + "\n");
     }
     if (getSuperstep() == 0) {
-      vertex.setValue(new DoubleWritable(isSource(vertex) ? 0d
-        : Double.MAX_VALUE));
+      vertex.setValue(new DoubleWritable(isSource(vertex) ? 0d :
+        Double.MAX_VALUE));
     }
     double previousValue = vertex.getValue().get();
     double minDist = previousValue;
@@ -113,5 +113,4 @@ public abstract class BuggySimpleShortestPathsDebugComputationModified
     }
     vertex.voteToHalt();
   }
-
 }

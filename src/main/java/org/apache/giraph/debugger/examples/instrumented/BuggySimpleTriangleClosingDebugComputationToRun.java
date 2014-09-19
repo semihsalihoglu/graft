@@ -20,8 +20,6 @@ package org.apache.giraph.debugger.examples.instrumented;
 import java.io.IOException;
 
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
-import org.apache.giraph.debugger.examples.exceptiondebug.BuggySimpleTriangleClosingComputation;
-import org.apache.giraph.graph.Computation;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
@@ -59,16 +57,18 @@ public class BuggySimpleTriangleClosingDebugComputationToRun extends
 
   @Override
   public final void compute(Vertex vertex, Iterable messages)
-    throws IOException {
+      throws IOException {
     boolean shouldCatchException = interceptComputeBegin(vertex, messages);
     try {
       if (shouldCatchException) {
+        // CHECKSTYLE: stop IllegalCatch
         try {
           super.compute(vertex, messages);
         } catch (Exception e) {
           interceptComputeException(vertex, messages, e);
           throw e;
         }
+        // CHECKSTYLE: resume IllegalCatch
       } else {
         super.compute(vertex, messages);
       }

@@ -28,8 +28,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 
-import sun.security.ssl.Debug;
-
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -38,21 +36,36 @@ import com.sun.net.httpserver.HttpHandler;
  * The Abstract class for HTTP handlers.
  */
 public abstract class ServerHttpHandler implements HttpHandler {
+
+  /**
+   * Logger for this class.
+   */
   private static final Logger LOG = Logger.getLogger(ServerHttpHandler.class);
-  // Response body.
+  /**
+   * Response body.
+   */
   protected String response;
-  // Response body as a byte array
+  /**
+   * Response body as a byte array
+   */
   protected byte[] responseBytes;
-  // Response status code. Please use HttpUrlConnection final static members.
+  /**
+   * Response status code. Please use HttpUrlConnection final static members.
+   */
   protected int statusCode;
-  // MimeType of the response. Please use MediaType final static members.
+  /**
+   * MimeType of the response. Please use MediaType final static members.
+   */
   protected String responseContentType;
-  // HttpExchange object received in the handle call.
+  /**
+   * HttpExchange object received in the handle call.
+   */
   protected HttpExchange httpExchange;
 
   /**
    * Handles an HTTP call's lifecycle - read parameters, process and send
    * response.
+   * @param httpExchange the http exchange object.
    */
   @Override
   public void handle(HttpExchange httpExchange) throws IOException {
@@ -113,9 +126,9 @@ public abstract class ServerHttpHandler implements HttpHandler {
 
   /**
    * Sets the given headerKey to the given headerValue.
-   * 
-   * @param {String} headerKey - Header Key
-   * @param {String} headerValue - Header Value.
+   *
+   * @param headerKey - Header Key
+   * @param headerValue - Header Value.
    * @desc - For example, call like this to set the Content-disposition header
    *       setResponseHeader("Content-disposition", "attachment");
    */
@@ -126,8 +139,9 @@ public abstract class ServerHttpHandler implements HttpHandler {
 
   /**
    * Handle the common exceptions in processRequest.
-   * 
-   * @params {String} [illegalArgumentMessage] - Message when illegal argument
+   *
+   * @param e thrown exception.
+   * @param illegalArgumentMessage - Message when illegal argument
    *         exception is thrown. Optional - May be null.
    */
   protected void handleException(Exception e, String illegalArgumentMessage) {
@@ -142,7 +156,8 @@ public abstract class ServerHttpHandler implements HttpHandler {
         ServerUtils.SUPERSTEP_ID_KEY);
     } else if (e instanceof FileNotFoundException) {
       this.statusCode = HttpURLConnection.HTTP_NOT_FOUND;
-      this.response = "File not found on the server. Please ensure this vertex/master was debugged.";
+      this.response = "File not found on the server. Please ensure this " +
+        "vertex/master was debugged.";
     } else if (e instanceof IOException ||
       e instanceof InstantiationException ||
       e instanceof IllegalAccessException ||
@@ -150,7 +165,7 @@ public abstract class ServerHttpHandler implements HttpHandler {
       this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
       this.response = "Internal Server Error.";
     } else {
-      Debug.println("Unknown Exception", e.toString());
+      LOG.error("Unknown Exception: " + e.toString());
       this.statusCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
       this.response = "Unknown exception occured.";
     }
@@ -161,6 +176,10 @@ public abstract class ServerHttpHandler implements HttpHandler {
    * and response (or responseBytes) class members appropriately. In case the
    * Content type is not JSON, must specify the new Content type. Default type
    * is application/json. Non-200 Status is automatically assigned text/plain.
+   *
+   * @param httpExchange the http exchange object within which the paramters
+   *                     will be set.
+   * @param paramMap map of parameters.
    */
   public abstract void processRequest(HttpExchange httpExchange,
     Map<String, String> paramMap);
