@@ -83,8 +83,8 @@ public class DebuggerUtils {
       return writableToClone;
     }
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    DataOutputStream dataOutputStream =
-      new DataOutputStream(byteArrayOutputStream);
+    DataOutputStream dataOutputStream = new DataOutputStream(
+      byteArrayOutputStream);
     try {
       writableToClone.write(dataOutputStream);
     } catch (IOException e) {

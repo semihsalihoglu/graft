@@ -27,8 +27,9 @@ public class DerivedComputation extends BaseComputation {
     if (getSuperstep() == 0) {
       vertex.setValue(new DoubleWritable(Double.MAX_VALUE));
     }
-    if (getSuperstep() == 8)
+    if (getSuperstep() == 8) {
       throw new RuntimeException("bug");
+    }
     minDist = isSource(vertex) ? 0d : Double.MAX_VALUE;
     for (DoubleWritable message : messages) {
       minDist = Math.min(minDist, message.get());

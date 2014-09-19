@@ -44,8 +44,8 @@ public class MasterComputeTestGenerator extends TestGenerator {
     String className) throws ClassNotFoundException {
     ContextBuilder builder = new ContextBuilder();
 
-    Class<?> classUnderTest =
-      Class.forName(giraphScenarioWrapper.getMasterClassUnderTest());
+    Class<?> classUnderTest = Class.forName(giraphScenarioWrapper
+      .getMasterClassUnderTest());
     builder.addTestClassInfo(testPackage, classUnderTest, className);
     builder.addCommonMasterVertexContext(giraphScenarioWrapper
       .getCommonVertexMasterContextWrapper());

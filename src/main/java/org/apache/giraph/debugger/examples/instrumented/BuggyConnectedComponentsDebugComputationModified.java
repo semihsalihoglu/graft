@@ -48,6 +48,7 @@ public abstract class BuggyConnectedComponentsDebugComputationModified
    *          Iterator of messages from the previous superstep.
    * @throws IOException
    */
+  @Override
   public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex,
     Iterable<IntWritable> messages) throws IOException {
     int currentComponent = vertex.getValue().get();

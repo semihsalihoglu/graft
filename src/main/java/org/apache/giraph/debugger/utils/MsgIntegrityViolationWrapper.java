@@ -30,8 +30,7 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
   extends BaseScenarioAndIntegrityWrapper<I> {
 
   private Class<M2> outgoingMessageClass;
-  private List<ExtendedOutgoingMessageWrapper> extendedOutgoingMessageWrappers =
-    new ArrayList<>();
+  private final List<ExtendedOutgoingMessageWrapper> extendedOutgoingMessageWrappers = new ArrayList<>();
   private long superstepNo;
 
   // Empty constructor to be used for loading from HDFS.
@@ -101,8 +100,8 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
 
     @Override
     public GeneratedMessage buildProtoObject() {
-      ExtendedOutgoingMessage.Builder extendedOutgoingMessageBuilder =
-        ExtendedOutgoingMessage.newBuilder();
+      ExtendedOutgoingMessage.Builder extendedOutgoingMessageBuilder = ExtendedOutgoingMessage
+        .newBuilder();
       extendedOutgoingMessageBuilder.setSrcId(toByteString(srcId));
       extendedOutgoingMessageBuilder
         .setDestinationId(toByteString(destinationId));
@@ -112,16 +111,15 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
 
     @Override
     public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-        throws IOException {
+      throws IOException {
       return ExtendedOutgoingMessage.parseFrom(inputStream);
     }
 
     @Override
     public void loadFromProto(GeneratedMessage generatedMessage)
-        throws ClassNotFoundException, IOException, InstantiationException,
+      throws ClassNotFoundException, IOException, InstantiationException,
       IllegalAccessException {
-      ExtendedOutgoingMessage extendedOutgoingMessage =
-        (ExtendedOutgoingMessage) generatedMessage;
+      ExtendedOutgoingMessage extendedOutgoingMessage = (ExtendedOutgoingMessage) generatedMessage;
       this.srcId = DebuggerUtils.newInstance(vertexIdClass);
       fromByteString(extendedOutgoingMessage.getSrcId(), this.srcId);
       this.destinationId = DebuggerUtils.newInstance(vertexIdClass);
@@ -142,8 +140,8 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    MessageIntegrityViolation.Builder messageIntegrityViolationBuilder =
-      MessageIntegrityViolation.newBuilder();
+    MessageIntegrityViolation.Builder messageIntegrityViolationBuilder = MessageIntegrityViolation
+      .newBuilder();
     messageIntegrityViolationBuilder.setVertexIdClass(getVertexIdClass()
       .getName());
     messageIntegrityViolationBuilder
@@ -157,27 +155,26 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable, M2 exten
     return messageIntegrityViolationBuilder.build();
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public void loadFromProto(GeneratedMessage generatedMessage)
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    MessageIntegrityViolation msgIntegrityViolation =
-      (MessageIntegrityViolation) generatedMessage;
-    Class<I> vertexIdClass =
-      (Class<I>) castClassToUpperBound(Class.forName(msgIntegrityViolation
-        .getVertexIdClass()), WritableComparable.class);
+    MessageIntegrityViolation msgIntegrityViolation = (MessageIntegrityViolation) generatedMessage;
+    Class<I> vertexIdClass = (Class<I>) castClassToUpperBound(
+      Class.forName(msgIntegrityViolation.getVertexIdClass()),
+      WritableComparable.class);
 
-    Class<M2> outgoingMessageClass =
-      (Class<M2>) castClassToUpperBound(Class.forName(msgIntegrityViolation
-        .getOutgoingMessageClass()), Writable.class);
+    Class<M2> outgoingMessageClass = (Class<M2>) castClassToUpperBound(
+      Class.forName(msgIntegrityViolation.getOutgoingMessageClass()),
+      Writable.class);
 
     initialize(vertexIdClass, outgoingMessageClass);
     setSuperstepNo(msgIntegrityViolation.getSuperstepNo());
 
     for (ExtendedOutgoingMessage extendOutgoingMessage : msgIntegrityViolation
       .getMessageList()) {
-      ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper =
-        new ExtendedOutgoingMessageWrapper();
+      ExtendedOutgoingMessageWrapper extendedOutgoingMessageWrapper = new ExtendedOutgoingMessageWrapper();
       extendedOutgoingMessageWrapper.loadFromProto(extendOutgoingMessage);
       extendedOutgoingMessageWrappers.add(extendedOutgoingMessageWrapper);
     }

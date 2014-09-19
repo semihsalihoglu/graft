@@ -12,16 +12,14 @@ import org.apache.hadoop.io.LongWritable;
  */
 public class SimpleShortestPathsMaster extends DefaultMasterCompute {
 
-  public static String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR =
-    "nvWithDistanceLessThanThree";
+  public static String NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR = "nvWithDistanceLessThanThree";
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void compute() {
     System.out.println("Running SimpleShortestPathsMaster.compute. superstep " +
       getSuperstep());
-    LongWritable aggregatorValue =
-      getAggregatedValue(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    LongWritable aggregatorValue = getAggregatedValue(NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
     if (aggregatorValue != null) {
       System.out.println("At Master.compute() with aggregator: " +
         aggregatorValue.get());

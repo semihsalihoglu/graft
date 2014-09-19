@@ -18,8 +18,7 @@ import com.google.protobuf.GeneratedMessage;
  */
 public class GiraphMasterScenarioWrapper extends BaseWrapper {
   private String masterClassUnderTest;
-  private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper =
-    null;
+  private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper = null;
   private ExceptionWrapper exceptionWrapper = null;
 
   public GiraphMasterScenarioWrapper() {
@@ -27,8 +26,7 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
 
   public GiraphMasterScenarioWrapper(String masterClassUnderTest) {
     this.masterClassUnderTest = masterClassUnderTest;
-    this.commonVertexMasterContextWrapper =
-      new CommonVertexMasterContextWrapper();
+    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
     this.exceptionWrapper = null;
   }
 
@@ -59,8 +57,8 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    GiraphMasterScenario.Builder giraphMasterScenarioBuilder =
-      GiraphMasterScenario.newBuilder();
+    GiraphMasterScenario.Builder giraphMasterScenarioBuilder = GiraphMasterScenario
+      .newBuilder();
     giraphMasterScenarioBuilder.setMasterClassUnderTest(masterClassUnderTest);
     giraphMasterScenarioBuilder
       .setCommonContext((CommonVertexMasterContext) commonVertexMasterContextWrapper
@@ -82,11 +80,9 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
   public void loadFromProto(GeneratedMessage protoObject)
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    GiraphMasterScenario giraphMasterScenario =
-      (GiraphMasterScenario) protoObject;
+    GiraphMasterScenario giraphMasterScenario = (GiraphMasterScenario) protoObject;
     this.masterClassUnderTest = giraphMasterScenario.getMasterClassUnderTest();
-    this.commonVertexMasterContextWrapper =
-      new CommonVertexMasterContextWrapper();
+    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper();
     this.commonVertexMasterContextWrapper.loadFromProto(giraphMasterScenario
       .getCommonContext());
     if (giraphMasterScenario.hasException()) {

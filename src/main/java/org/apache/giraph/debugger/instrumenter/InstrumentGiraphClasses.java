@@ -59,10 +59,10 @@ public class InstrumentGiraphClasses {
     }
 
     Collection<String> userComputationClassNames = Sets.newHashSet(args[0]);
-    String outputDir = (args.length > 1 ? args[1] : null);
-    String masterComputeClassName = (args.length > 2 ? args[2] : null);
+    String outputDir = args.length > 1 ? args[1] : null;
+    String masterComputeClassName = args.length > 2 ? args[2] : null;
     // Additional Computation classes
-    boolean shouldAnalyzeMaster = (masterComputeClassName != null);
+    boolean shouldAnalyzeMaster = masterComputeClassName != null;
     for (int i = 3; i < args.length; i++) {
       userComputationClassNames.add(args[i]);
       // Don't analyze the MasterCompute class when a chosen list of
@@ -102,9 +102,8 @@ public class InstrumentGiraphClasses {
 
       // Finally, write the modified classes so that a new jar can be
       // created or an existing one can be updated.
-      String jarRoot =
-        outputDir != null ? outputDir : Files.createTempDirectory(
-          tmpDirNamePrefix, new FileAttribute[0]).toString();
+      String jarRoot = outputDir != null ? outputDir : Files
+        .createTempDirectory(tmpDirNamePrefix, new FileAttribute[0]).toString();
       LOG.info("Writing " + classesModified.size() +
         " instrumented classes to " + jarRoot);
       for (CtClass c : classesModified) {
@@ -114,10 +113,11 @@ public class InstrumentGiraphClasses {
 
       LOG.info("Finished instrumentation");
 
-      if (outputDir == null)
+      if (outputDir == null) {
         // Show where we produced the instrumented .class files (unless
         // specified)
         System.out.println(jarRoot);
+      }
       System.exit(0);
     } catch (NotFoundException e) {
       System.err
@@ -142,15 +142,15 @@ public class InstrumentGiraphClasses {
     throws NotFoundException {
     Collection<String> classNames = Lists.newArrayList();
     CtClass computationClass = classPool.get(Computation.class.getName());
-    CtClass rootMasterComputeClass =
-      classPool.get(MasterCompute.class.getName());
+    CtClass rootMasterComputeClass = classPool.get(MasterCompute.class
+      .getName());
     CtClass masterComputeClass = classPool.get(masterComputeClassName);
     CtClass mc = masterComputeClass;
     while (mc != null && !mc.equals(rootMasterComputeClass)) {
       // find all class names appearing in the master compute class
       @SuppressWarnings("unchecked")
-      Collection<String> classNamesInMasterCompute =
-        Lists.newArrayList(mc.getRefClasses());
+      Collection<String> classNamesInMasterCompute = Lists.newArrayList(mc
+        .getRefClasses());
       // as well as in string literals
       ConstPool constPool = mc.getClassFile().getConstPool();
       for (int i = 1; i < constPool.getSize(); i++) {
@@ -163,8 +163,9 @@ public class InstrumentGiraphClasses {
       // collect Computation class names
       for (String className : classNamesInMasterCompute) {
         try {
-          if (classPool.get(className).subtypeOf(computationClass))
+          if (classPool.get(className).subtypeOf(computationClass)) {
             classNames.add(className);
+          }
         } catch (Exception e) {
         }
       }
@@ -183,13 +184,13 @@ public class InstrumentGiraphClasses {
     // Load the involved classes with Javassist
     LOG.debug("Looking for classes to instrument: " + targetClassName + "...");
     String alternativeClassName = targetClassName + ORIGINAL_CLASS_NAME_SUFFIX;
-    CtClass targetClass =
-      classPool.getAndRename(targetClassName, alternativeClassName);
+    CtClass targetClass = classPool.getAndRename(targetClassName,
+      alternativeClassName);
     // We need two classes: one at the bottom (subclass) and
     // another at the top (superclass).
     CtClass topClass = classPool.get(topClassName);
-    CtClass bottomClass =
-      classPool.getAndRename(bottomClassName, targetClassName);
+    CtClass bottomClass = classPool.getAndRename(bottomClassName,
+      targetClassName);
 
     LOG.debug("  target class to instrument (targetClass):\n" +
       getGenericsName(targetClass));
@@ -239,14 +240,14 @@ public class InstrumentGiraphClasses {
       {
         // XXX Unless we take care of generic signature as well,
         // GiraphConfigurationValidator will complain.
-        String jvmNameForTopClassSuperclass =
-          Descriptor.of(topClass.getSuperclass()).replaceAll(";$", "");
-        String jvmNameForTopClass =
-          Descriptor.of(topClass).replaceAll(";$", "");
+        String jvmNameForTopClassSuperclass = Descriptor.of(
+          topClass.getSuperclass()).replaceAll(";$", "");
+        String jvmNameForTopClass = Descriptor.of(topClass)
+          .replaceAll(";$", "");
         String genSig = targetTopClass.getGenericSignature();
         if (genSig != null) {
-          String genSig2 =
-            genSig.replace(jvmNameForTopClassSuperclass, jvmNameForTopClass);
+          String genSig2 = genSig.replace(jvmNameForTopClassSuperclass,
+            jvmNameForTopClass);
           targetTopClass.setGenericSignature(genSig2);
         }
       }
@@ -270,18 +271,19 @@ public class InstrumentGiraphClasses {
       + " changing Generics signature of bottomClass, and"
       + " erasing final modifier...");
     for (CtMethod overridingMethod : bottomClass.getMethods()) {
-      if (!overridingMethod.hasAnnotation(Intercept.class))
+      if (!overridingMethod.hasAnnotation(Intercept.class)) {
         continue;
-      Intercept annotation =
-        (Intercept) overridingMethod.getAnnotation(Intercept.class);
+      }
+      Intercept annotation = (Intercept) overridingMethod
+        .getAnnotation(Intercept.class);
       String targetMethodName = annotation.renameTo();
-      if (targetMethodName == null || targetMethodName.isEmpty())
+      if (targetMethodName == null || targetMethodName.isEmpty()) {
         targetMethodName = overridingMethod.getName();
+      }
       // 2-b. Copy generics signature to the overriding method if
       // necessary.
-      CtMethod targetMethod =
-        targetClass
-          .getMethod(targetMethodName, overridingMethod.getSignature());
+      CtMethod targetMethod = targetClass.getMethod(targetMethodName,
+        overridingMethod.getSignature());
       LOG.debug(" from: " + overridingMethod.getName() +
         overridingMethod.getGenericSignature());
       LOG.debug("   to: " + targetMethod.getName() +
@@ -293,8 +295,9 @@ public class InstrumentGiraphClasses {
       }
       // 2-c. Remove final marks from them.
       int mod = targetMethod.getModifiers();
-      if ((mod & Modifier.FINAL) == 0)
+      if ((mod & Modifier.FINAL) == 0) {
         continue;
+      }
       mod &= ~Modifier.FINAL;
       targetMethod.setModifiers(mod);
       LOG.debug(" erasing final modifier from " + targetMethod.getName() +

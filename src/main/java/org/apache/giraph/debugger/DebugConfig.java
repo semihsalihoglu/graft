@@ -68,14 +68,10 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
   private static final String SUPERSTEP_DELIMITER = ":";
   private static final String VERTEX_ID_DELIMITER = ":";
 
-  public static final String VERTICES_TO_DEBUG_FLAG =
-    "giraph.debugger.verticesToDebug";
-  public static final String DEBUG_NEIGHBORS_FLAG =
-    "giraph.debugger.debugNeighbors";
-  public static final String SUPERSTEPS_TO_DEBUG_FLAG =
-    "giraph.debugger.superstepsToDebug";
-  public static final String DEBUG_ALL_VERTICES_FLAG =
-    "giraph.debugger.debugAllVertices";
+  public static final String VERTICES_TO_DEBUG_FLAG = "giraph.debugger.verticesToDebug";
+  public static final String DEBUG_NEIGHBORS_FLAG = "giraph.debugger.debugNeighbors";
+  public static final String SUPERSTEPS_TO_DEBUG_FLAG = "giraph.debugger.superstepsToDebug";
+  public static final String DEBUG_ALL_VERTICES_FLAG = "giraph.debugger.debugAllVertices";
 
   protected static final Logger LOG = Logger.getLogger(DebugConfig.class);
 
@@ -93,15 +89,15 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
 
   @SuppressWarnings("unchecked")
   public final void readConfig(GiraphConfiguration config) {
-    this.debugNeighborsOfVerticesToDebug =
-      config.getBoolean(DEBUG_NEIGHBORS_FLAG, false);
+    this.debugNeighborsOfVerticesToDebug = config.getBoolean(
+      DEBUG_NEIGHBORS_FLAG, false);
 
     String superstepsToDebugStr = config.get(SUPERSTEPS_TO_DEBUG_FLAG, null);
     if (superstepsToDebugStr == null) {
       superstepsToDebugSet = null;
     } else {
-      String[] superstepsToDebugArray =
-        superstepsToDebugStr.split(SUPERSTEP_DELIMITER);
+      String[] superstepsToDebugArray = superstepsToDebugStr
+        .split(SUPERSTEP_DELIMITER);
       superstepsToDebugSet = new HashSet<>();
       for (String superstepStr : superstepsToDebugArray) {
         superstepsToDebugSet.add(Long.valueOf(superstepStr));
@@ -111,15 +107,14 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
     debugAllVertices = config.getBoolean(DEBUG_ALL_VERTICES_FLAG, false);
     if (!debugAllVertices) {
       String verticesToDebugStr = config.get(VERTICES_TO_DEBUG_FLAG, null);
-      Class<? extends Computation> userComputationClass =
-        config.getComputationClass();
-      Class<?>[] typeArguments =
-        ReflectionUtils.getTypeArguments(Computation.class,
-          userComputationClass);
+      Class<? extends Computation> userComputationClass = config
+        .getComputationClass();
+      Class<?>[] typeArguments = ReflectionUtils.getTypeArguments(
+        Computation.class, userComputationClass);
       Class<?> idType = typeArguments[0];
       if (verticesToDebugStr != null) {
-        String[] verticesToDebugArray =
-          verticesToDebugStr.split(VERTEX_ID_DELIMITER);
+        String[] verticesToDebugArray = verticesToDebugStr
+          .split(VERTEX_ID_DELIMITER);
         this.verticesToDebugSet = new HashSet<>();
         for (String idString : verticesToDebugArray) {
           if (LongWritable.class.isAssignableFrom(idType)) {
@@ -154,7 +149,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable, E ext
       return false;
     } else {
       return verticesToDebugSet.contains(vertex.getId()) ||
-        (debugNeighborsOfVerticesToDebug && isVertexANeighborOfAVertexToDebug(vertex));
+        debugNeighborsOfVerticesToDebug &&
+        isVertexANeighborOfAVertexToDebug(vertex);
     }
   }
 

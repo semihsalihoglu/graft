@@ -92,8 +92,8 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    CommonVertexMasterContext.Builder commonContextBuilder =
-      CommonVertexMasterContext.newBuilder();
+    CommonVertexMasterContext.Builder commonContextBuilder = CommonVertexMasterContext
+      .newBuilder();
     commonContextBuilder.setConf(toByteString(immutableClassesConfig))
       .setSuperstepNo(getSuperstepNoWrapper())
       .setTotalNumVertices(getTotalNumVerticesWrapper())
@@ -111,12 +111,11 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
   public void loadFromProto(GeneratedMessage generatedMessage)
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    CommonVertexMasterContext commonContext =
-      (CommonVertexMasterContext) generatedMessage;
+    CommonVertexMasterContext commonContext = (CommonVertexMasterContext) generatedMessage;
     GiraphConfiguration config = new GiraphConfiguration();
     fromByteString(commonContext.getConf(), config);
-    ImmutableClassesGiraphConfiguration immutableClassesGiraphConfiguration =
-      new ImmutableClassesGiraphConfiguration(config);
+    ImmutableClassesGiraphConfiguration immutableClassesGiraphConfiguration = new ImmutableClassesGiraphConfiguration(
+      config);
     setConfig(immutableClassesGiraphConfiguration);
 
     setSuperstepNoWrapper(commonContext.getSuperstepNo());
@@ -125,8 +124,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
     for (AggregatedValue previousAggregatedValueProto : commonContext
       .getPreviousAggregatedValueList()) {
-      AggregatedValueWrapper aggregatedValueWrapper =
-        new AggregatedValueWrapper();
+      AggregatedValueWrapper aggregatedValueWrapper = new AggregatedValueWrapper();
       aggregatedValueWrapper.loadFromProto(previousAggregatedValueProto);
       addPreviousAggregatedValue(aggregatedValueWrapper);
     }

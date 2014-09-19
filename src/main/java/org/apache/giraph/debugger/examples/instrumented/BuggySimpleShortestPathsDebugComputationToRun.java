@@ -71,6 +71,7 @@ public class BuggySimpleShortestPathsDebugComputationToRun extends
     interceptPostSuperstepEnd();
   }
 
+  @Override
   public Class getActualTestedClass() {
     return getClass().getSuperclass();
   }

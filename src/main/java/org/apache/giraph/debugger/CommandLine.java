@@ -38,11 +38,10 @@ public class CommandLine {
   public static void main(String[] args) {
     // Validate
     String mode = args[0];
-    if (args.length == 0 ||
-      (!mode.equalsIgnoreCase("list") && !mode.equalsIgnoreCase("dump") &&
-        !mode.equalsIgnoreCase("mktest") &&
-        !mode.equalsIgnoreCase("dump-master") && !mode
-          .equalsIgnoreCase("mktest-master"))) {
+    if (args.length == 0 || !mode.equalsIgnoreCase("list") &&
+      !mode.equalsIgnoreCase("dump") && !mode.equalsIgnoreCase("mktest") &&
+      !mode.equalsIgnoreCase("dump-master") &&
+      !mode.equalsIgnoreCase("mktest-master")) {
       printHelp();
     }
 
@@ -54,10 +53,10 @@ public class CommandLine {
 
     if (mode.equalsIgnoreCase("list")) {
       try {
-        List<Long> superstepsDebuggedMaster =
-          ServerUtils.getSuperstepsMasterDebugged(jobId);
-        Set<Long> superstepsDebugged =
-          Sets.newHashSet(ServerUtils.getSuperstepsDebugged(jobId));
+        List<Long> superstepsDebuggedMaster = ServerUtils
+          .getSuperstepsMasterDebugged(jobId);
+        Set<Long> superstepsDebugged = Sets.newHashSet(ServerUtils
+          .getSuperstepsDebugged(jobId));
         superstepsDebugged.addAll(superstepsDebuggedMaster);
         List<Long> allSupersteps = Lists.newArrayList(superstepsDebugged);
         Collections.sort(allSupersteps);
@@ -78,9 +77,10 @@ public class CommandLine {
           for (DebugTrace debugTrace : debugTraces) {
             for (String vertexId : ServerUtils.getVerticesDebugged(jobId,
               superstepNo, debugTrace)) {
-              System.out.println(String.format("%-15s  %s  %4d %8s  # %s",
-                "dump", jobId, superstepNo, vertexId, (debugTrace.label == null
-                  ? "" : "captured " + debugTrace.label)));
+              System.out
+                .println(String.format("%-15s  %s  %4d %8s  # %s", "dump",
+                  jobId, superstepNo, vertexId, debugTrace.label == null ? ""
+                    : "captured " + debugTrace.label));
               System.out.println(String.format(
                 "%-15s  %s  %4d %8s  Test_%s_S%d_V%s", "mktest", jobId,
                 superstepNo, vertexId, jobId, superstepNo, vertexId));
@@ -91,20 +91,22 @@ public class CommandLine {
         e.printStackTrace();
       }
     } else {
-      if (args.length <= 2)
+      if (args.length <= 2) {
         printHelp();
+      }
 
       Long superstepNo = Long.parseLong(args[2]);
       try {
         if (mode.equalsIgnoreCase("dump") || mode.equalsIgnoreCase("mktest")) {
-          if (args.length <= 3)
+          if (args.length <= 3) {
             printHelp();
+          }
           String vertexId = args[3];
           // Read scenario.
           // TODO: rename ServerUtils to Utils
           @SuppressWarnings("rawtypes")
-          GiraphVertexScenarioWrapper scenarioWrapper =
-            ServerUtils.readScenarioFromTrace(jobId, superstepNo, vertexId,
+          GiraphVertexScenarioWrapper scenarioWrapper = ServerUtils
+            .readScenarioFromTrace(jobId, superstepNo, vertexId,
               DebugTrace.VERTEX_ALL);
           if (scenarioWrapper == null) {
             System.err.println("The trace file does not exist.");
@@ -115,20 +117,20 @@ public class CommandLine {
             System.out.println(scenarioWrapper);
           } else if (mode.equalsIgnoreCase("mktest")) {
             // Read output prefix and test class.
-            if (args.length <= 4)
+            if (args.length <= 4) {
               printHelp();
+            }
             String outputPrefix = args[4].trim();
             String testClassName = new File(outputPrefix).getName();
             // Generate test case.
-            String generatedTestCase =
-              new ComputationComputeTestGenerator().generateTest(
-                scenarioWrapper, null, testClassName);
+            String generatedTestCase = new ComputationComputeTestGenerator()
+              .generateTest(scenarioWrapper, null, testClassName);
             outputTestCase(outputPrefix, generatedTestCase);
           }
         } else if (mode.equalsIgnoreCase("dump-master") ||
           mode.equalsIgnoreCase("mktest-master")) {
-          GiraphMasterScenarioWrapper scenarioWrapper =
-            ServerUtils.readMasterScenarioFromTrace(jobId, superstepNo,
+          GiraphMasterScenarioWrapper scenarioWrapper = ServerUtils
+            .readMasterScenarioFromTrace(jobId, superstepNo,
               DebugTrace.MASTER_ALL);
           if (scenarioWrapper == null) {
             System.err.println("The trace file does not exist.");
@@ -138,20 +140,20 @@ public class CommandLine {
           if (mode.equalsIgnoreCase("dump-master")) {
             System.out.println(scenarioWrapper);
           } else if (mode.equalsIgnoreCase("mktest-master")) {
-            if (args.length <= 3)
+            if (args.length <= 3) {
               printHelp();
+            }
             String outputPrefix = args[3].trim();
             String testClassName = new File(outputPrefix).getName();
-            String generatedTestCase =
-              new MasterComputeTestGenerator().generateTest(scenarioWrapper,
-                null, testClassName);
+            String generatedTestCase = new MasterComputeTestGenerator()
+              .generateTest(scenarioWrapper, null, testClassName);
             outputTestCase(outputPrefix, generatedTestCase);
           }
         } else {
           printHelp();
         }
-      } catch (ClassNotFoundException | InstantiationException
-        | IllegalAccessException | IOException e) {
+      } catch (ClassNotFoundException | InstantiationException |
+        IllegalAccessException | IOException e) {
         e.printStackTrace();
       }
     }
@@ -161,8 +163,8 @@ public class CommandLine {
     String generatedTestCase) throws IOException {
     if (outputPrefix != null) {
       String filename = outputPrefix + ".java";
-      try (PrintWriter writer =
-        new PrintWriter(new FileWriter(new File(filename)))) {
+      try (PrintWriter writer = new PrintWriter(new FileWriter(new File(
+        filename)))) {
         writer.append(generatedTestCase);
       }
       System.err.println("Wrote " + filename);

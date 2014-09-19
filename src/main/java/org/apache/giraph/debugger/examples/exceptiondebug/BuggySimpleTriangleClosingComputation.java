@@ -46,9 +46,10 @@ import com.google.common.collect.Sets;
 public class BuggySimpleTriangleClosingComputation extends
   BasicComputation<IntWritable, IntWritable, NullWritable, IntWritable> {
   /** Vertices to close the triangle, ranked by frequency of in-msgs */
-  private Map<IntWritable, Integer> closeMap = Maps
+  private final Map<IntWritable, Integer> closeMap = Maps
     .<IntWritable, Integer> newHashMap();
 
+  @Override
   public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex,
     Iterable<IntWritable> messages) throws IOException {
     if (getSuperstep() == 0) {

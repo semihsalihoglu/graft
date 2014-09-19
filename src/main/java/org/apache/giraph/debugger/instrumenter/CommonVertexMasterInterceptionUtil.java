@@ -41,7 +41,7 @@ public class CommonVertexMasterInterceptionUtil {
   private static final Logger LOG = Logger
     .getLogger(CommonVertexMasterInterceptionUtil.class);
   private static FileSystem fileSystem = null;
-  private String jobId;
+  private final String jobId;
   private ArrayList<AggregatedValueWrapper> previousAggregatedValueWrappers;
   private CommonVertexMasterContextWrapper commonVertexMasterContextWrapper;
 
@@ -61,9 +61,8 @@ public class CommonVertexMasterInterceptionUtil {
   public void initCommonVertexMasterContextWrapper(
     ImmutableClassesGiraphConfiguration immutableClassesConfig,
     long superstepNo, long totalNumVertices, long totalNumEdges) {
-    this.commonVertexMasterContextWrapper =
-      new CommonVertexMasterContextWrapper(immutableClassesConfig, superstepNo,
-        totalNumVertices, totalNumEdges);
+    this.commonVertexMasterContextWrapper = new CommonVertexMasterContextWrapper(
+      immutableClassesConfig, superstepNo, totalNumVertices, totalNumEdges);
     commonVertexMasterContextWrapper
       .setPreviousAggregatedValues(previousAggregatedValueWrappers);
   }

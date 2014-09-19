@@ -48,28 +48,26 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
       tokens[i] = inputStrs[i].trim().split("\\s+");
       String[] nums = tokens[i][0].split(":");
       WritableType type;
-      idWritableType =
-        ((type = parseWritableType(nums[0])).ordinal() > idWritableType
-          .ordinal() ? type : idWritableType);
-      if (nums.length > 1)
-        valueWritableType =
-          ((type = parseWritableType(nums[1])).ordinal() > valueWritableType
-            .ordinal() ? type : valueWritableType);
+      idWritableType = (type = parseWritableType(nums[0])).ordinal() > idWritableType
+        .ordinal() ? type : idWritableType;
+      if (nums.length > 1) {
+        valueWritableType = (type = parseWritableType(nums[1])).ordinal() > valueWritableType
+          .ordinal() ? type : valueWritableType;
+      }
 
       for (int j = 1; j < tokens[i].length; j++) {
         nums = tokens[i][j].split(":");
-        idWritableType =
-          ((type = parseWritableType(nums[0])).ordinal() > idWritableType
-            .ordinal() ? type : idWritableType);
-        if (nums.length > 1)
-          edgeValueWritableType =
-            ((type = parseWritableType(nums[1])).ordinal() > edgeValueWritableType
-              .ordinal() ? type : edgeValueWritableType);
+        idWritableType = (type = parseWritableType(nums[0])).ordinal() > idWritableType
+          .ordinal() ? type : idWritableType;
+        if (nums.length > 1) {
+          edgeValueWritableType = (type = parseWritableType(nums[1])).ordinal() > edgeValueWritableType
+            .ordinal() ? type : edgeValueWritableType;
+        }
       }
     }
 
-    Map<Object, TemplateVertex> vertexMap =
-      new LinkedHashMap<>(inputStrs.length);
+    Map<Object, TemplateVertex> vertexMap = new LinkedHashMap<>(
+      inputStrs.length);
     String str;
     for (int i = 0; i < inputStrs.length; i++) {
       String[] nums = tokens[i][0].split(":");
@@ -105,9 +103,9 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
   }
 
   private WritableType parseWritableType(String str) {
-    if (str == null)
+    if (str == null) {
       return WritableType.NULL;
-    else {
+    } else {
       try {
         Long.valueOf(str);
         return WritableType.LONG;
@@ -148,9 +146,9 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
   }
 
   public static class TemplateVertex {
-    private Object id;
+    private final Object id;
     private Object value;
-    private ArrayList<TemplateNeighbor> neighbors;
+    private final ArrayList<TemplateNeighbor> neighbors;
 
     public TemplateVertex(Object id) {
       super();
@@ -180,8 +178,8 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
   }
 
   public static class TemplateNeighbor {
-    private Object id;
-    private Object edgeValue;
+    private final Object id;
+    private final Object edgeValue;
 
     public TemplateNeighbor(Object id, Object edgeValue) {
       super();

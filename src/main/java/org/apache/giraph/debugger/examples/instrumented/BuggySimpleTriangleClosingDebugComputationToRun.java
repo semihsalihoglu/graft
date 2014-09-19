@@ -72,6 +72,7 @@ public class BuggySimpleTriangleClosingDebugComputationToRun extends
     interceptPostSuperstepEnd();
   }
 
+  @Override
   public Class getActualTestedClass() {
     return getClass().getSuperclass();
   }

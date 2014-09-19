@@ -22,7 +22,7 @@ import com.google.protobuf.GeneratedMessage;
 public class AggregatorWrapper extends BaseWrapper {
 
   private String key;
-  private Aggregator<Writable> aggregator;
+  private final Aggregator<Writable> aggregator;
 
   @SuppressWarnings("unchecked")
   public AggregatorWrapper(String key, Aggregator aggregator) {
@@ -32,8 +32,8 @@ public class AggregatorWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    Builder aggregatorProtoBuilder =
-      org.apache.giraph.debugger.GiraphAggregator.Aggregator.newBuilder();
+    Builder aggregatorProtoBuilder = org.apache.giraph.debugger.GiraphAggregator.Aggregator
+      .newBuilder();
     aggregatorProtoBuilder.setAggregatorClass(aggregator.getClass().getName());
     aggregatorProtoBuilder
       .setAggregatedValue((AggregatedValue) new AggregatedValueWrapper(key,
@@ -53,16 +53,13 @@ public class AggregatorWrapper extends BaseWrapper {
   public void loadFromProto(GeneratedMessage protoObject)
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    org.apache.giraph.debugger.GiraphAggregator.Aggregator aggregatorProto =
-      (org.apache.giraph.debugger.GiraphAggregator.Aggregator) protoObject;
-    Aggregator<Writable> giraphAggregator =
-      (org.apache.giraph.aggregators.Aggregator<Writable>) Class.forName(
-        aggregatorProto.getAggregatorClass()).newInstance();
+    org.apache.giraph.debugger.GiraphAggregator.Aggregator aggregatorProto = (org.apache.giraph.debugger.GiraphAggregator.Aggregator) protoObject;
+    Aggregator<Writable> giraphAggregator = (org.apache.giraph.aggregators.Aggregator<Writable>) Class
+      .forName(aggregatorProto.getAggregatorClass()).newInstance();
     AggregatedValue aggregatedValueProto = aggregatorProto.getAggregatedValue();
     this.key = aggregatedValueProto.getKey();
-    Writable giraphAggregatedValue =
-      (Writable) Class.forName(aggregatedValueProto.getWritableClass())
-        .newInstance();
+    Writable giraphAggregatedValue = (Writable) Class.forName(
+      aggregatedValueProto.getWritableClass()).newInstance();
     WritableUtils.readFieldsFromByteArray(aggregatedValueProto.getValue()
       .toByteArray(), giraphAggregatedValue);
     giraphAggregator.setAggregatedValue(giraphAggregatedValue);

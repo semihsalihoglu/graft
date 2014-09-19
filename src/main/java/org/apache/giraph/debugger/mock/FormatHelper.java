@@ -59,8 +59,9 @@ public class FormatHelper {
     } else if (writable instanceof Text) {
       return String.format("new Text(%s)", ((Text) writable).toString());
     } else {
-      if (complexWritables != null)
+      if (complexWritables != null) {
         complexWritables.add(writable.getClass());
+      }
       String str = toByteArrayString(WritableUtils.writeToByteArray(writable));
       return String.format("(%s)read%sFromByteArray(new byte[] {%s})", writable
         .getClass().getSimpleName(), writable.getClass().getSimpleName(), str);
@@ -78,11 +79,11 @@ public class FormatHelper {
       return decimalFormat.format(input) + "f";
     } else if (input instanceof Double) {
       double val = ((Double) input).doubleValue();
-      if (val == Double.MAX_VALUE)
+      if (val == Double.MAX_VALUE) {
         return "Double.MAX_VALUE";
-      else if (val == Double.MIN_VALUE)
+      } else if (val == Double.MIN_VALUE) {
         return "Double.MIN_VALUE";
-      else {
+      } else {
         BigDecimal bd = new BigDecimal(val);
         return bd.toEngineeringString() + "d";
       }
@@ -94,8 +95,9 @@ public class FormatHelper {
   private String toByteArrayString(byte[] byteArray) {
     StringBuilder strBuilder = new StringBuilder();
     for (int i = 0; i < byteArray.length; i++) {
-      if (i != 0)
+      if (i != 0) {
         strBuilder.append(',');
+      }
       strBuilder.append(Byte.toString(byteArray[i]));
     }
     return strBuilder.toString();

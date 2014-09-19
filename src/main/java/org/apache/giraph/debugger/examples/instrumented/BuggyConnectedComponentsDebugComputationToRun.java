@@ -71,6 +71,7 @@ public class BuggyConnectedComponentsDebugComputationToRun extends
     interceptPostSuperstepEnd();
   }
 
+  @Override
   public Class getActualTestedClass() {
     return getClass().getSuperclass();
   }

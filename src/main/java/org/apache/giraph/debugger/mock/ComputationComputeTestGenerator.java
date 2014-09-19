@@ -114,8 +114,8 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     context.put("class", className);
 
     try (StringWriter sw = new StringWriter()) {
-      Template template =
-        Velocity.getTemplate("ReadWritableFromStringTemplate.vm");
+      Template template = Velocity
+        .getTemplate("ReadWritableFromStringTemplate.vm");
       template.merge(context, sw);
       return sw.toString();
     }
@@ -132,8 +132,8 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     GiraphVertexScenarioWrapper giraphScenarioWrapper, String testPackage,
     String className) {
     ComputeContextBuilder builder = new ComputeContextBuilder();
-    VertexScenarioClassesWrapper vertexScenarioClassesWrapper =
-      giraphScenarioWrapper.getVertexScenarioClassesWrapper();
+    VertexScenarioClassesWrapper vertexScenarioClassesWrapper = giraphScenarioWrapper
+      .getVertexScenarioClassesWrapper();
     builder.addVertexScenarioClassesWrapper(vertexScenarioClassesWrapper);
     builder.addTestClassInfo(testPackage,
       vertexScenarioClassesWrapper.getClassUnderTest(), className);
@@ -174,18 +174,19 @@ public class ComputationComputeTestGenerator extends TestGenerator {
       HashMap<OutgoingMessageWrapper, OutMsg> outMsgMap = new HashMap<>();
       for (OutgoingMessageWrapper msg : (Collection<OutgoingMessageWrapper>) vertexContextWrapper
         .getOutgoingMessageWrappers()) {
-        if (outMsgMap.containsKey(msg))
+        if (outMsgMap.containsKey(msg)) {
           outMsgMap.get(msg).incrementTimes();
-        else
+        } else {
           outMsgMap.put(msg, new OutMsg(msg));
+        }
       }
       context.put("outMsgs", outMsgMap.values());
     }
   }
 
   public static class Config {
-    private String key;
-    private Object value;
+    private final String key;
+    private final Object value;
 
     public Config(String key, Object value) {
       this.key = key;
@@ -197,30 +198,32 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
 
     public Object getValue() {
-      if (value instanceof String)
+      if (value instanceof String) {
         return "\"" + value + '"';
-      else
+      } else {
         return value;
+      }
     }
 
     public String getClassStr() {
       // TODO(brian):additional cases can be added up to the input
-      if (value instanceof Integer)
+      if (value instanceof Integer) {
         return "Int";
-      else if (value instanceof Long)
+      } else if (value instanceof Long) {
         return "Long";
-      else if (value instanceof Float)
+      } else if (value instanceof Float) {
         return "Float";
-      else if (value instanceof Boolean)
+      } else if (value instanceof Boolean) {
         return "Boolean";
-      else
+      } else {
         return "";
+      }
     }
   }
 
   @SuppressWarnings("rawtypes")
   public static class OutMsg {
-    private OutgoingMessageWrapper msg;
+    private final OutgoingMessageWrapper msg;
     private int times;
 
     public OutMsg(OutgoingMessageWrapper msg) {

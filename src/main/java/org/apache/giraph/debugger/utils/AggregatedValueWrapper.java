@@ -31,8 +31,8 @@ public class AggregatedValueWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    AggregatedValue.Builder aggregatedValueBuilder =
-      AggregatedValue.newBuilder();
+    AggregatedValue.Builder aggregatedValueBuilder = AggregatedValue
+      .newBuilder();
     aggregatedValueBuilder.setWritableClass(value.getClass().getName());
     aggregatedValueBuilder.setKey(key);
     aggregatedValueBuilder.setValue(ByteString.copyFrom(WritableUtils
@@ -51,9 +51,8 @@ public class AggregatedValueWrapper extends BaseWrapper {
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     AggregatedValue aggregatedValueProto = (AggregatedValue) protoObject;
-    this.value =
-      (Writable) Class.forName(aggregatedValueProto.getWritableClass())
-        .newInstance();
+    this.value = (Writable) Class.forName(
+      aggregatedValueProto.getWritableClass()).newInstance();
     WritableUtils.readFieldsFromByteArray(aggregatedValueProto.getValue()
       .toByteArray(), this.value);
     this.key = aggregatedValueProto.getKey();

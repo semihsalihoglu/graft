@@ -2,10 +2,8 @@ package org.apache.giraph.debugger.mock;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator.Config;
@@ -16,7 +14,7 @@ import org.apache.velocity.VelocityContext;
 public abstract class TestGenerator extends VelocityBasedGenerator {
 
   @SuppressWarnings("rawtypes")
-  private Set<Class> complexWritables = new HashSet<>();
+  private final Set<Class> complexWritables = new HashSet<>();
 
   @SuppressWarnings("rawtypes")
   public Set<Class> getComplexWritableList() {
@@ -101,10 +99,8 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
 
       List<Config> configs = new ArrayList<>();
       if (commonVertexMasterContextWrapper.getConfig() != null) {
-        for (Iterator<Entry<String, String>> configIter =
-          commonVertexMasterContextWrapper.getConfig().iterator(); configIter
-          .hasNext();) {
-          Entry<String, String> entry = configIter.next();
+        for (Entry<String, String> entry : commonVertexMasterContextWrapper
+          .getConfig()) {
           configs.add(new Config(entry.getKey(), entry.getValue()));
         }
       }

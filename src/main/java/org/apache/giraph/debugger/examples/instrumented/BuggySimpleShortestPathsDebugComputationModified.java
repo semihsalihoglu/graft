@@ -56,8 +56,7 @@ public abstract class BuggySimpleShortestPathsDebugComputationModified
     // We do a dummy read of the aggregator below because for now we only
     // intercept an aggregator
     // if at least one vertex reads it.
-    LongWritable aggregatedValue =
-      getAggregatedValue(SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
+    LongWritable aggregatedValue = getAggregatedValue(SimpleShortestPathsMaster.NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR);
     if (aggregatedValue != null) {
       System.out.println("NV_DISTANCE_LESS_THAN_THREE_AGGREGATOR: " +
         aggregatedValue.get());
@@ -75,8 +74,8 @@ public abstract class BuggySimpleShortestPathsDebugComputationModified
       LOG.debug("Vertex " + vertex.getId() + " got minDist = " + minDist +
         " vertex value = " + vertex.getValue());
     }
-    if (minDist < vertex.getValue().get() ||
-      (getSuperstep() == 0 && minDist == 0)) {
+    if (minDist < vertex.getValue().get() || getSuperstep() == 0 &&
+      minDist == 0) {
       vertex.setValue(new DoubleWritable(minDist));
       for (Edge<LongWritable, FloatWritable> edge : vertex.getEdges()) {
         double distance = minDist + edge.getValue().get();

@@ -32,12 +32,11 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
    */
   public void interceptComputeBegin() {
     LOG.info(this.getClass().getName() + ".interceptInitializeEnd is called ");
-    giraphMasterScenarioWrapper =
-      new GiraphMasterScenarioWrapper(this.getClass().getName());
+    giraphMasterScenarioWrapper = new GiraphMasterScenarioWrapper(this
+      .getClass().getName());
     if (commonVertexMasterInterceptionUtil == null) {
-      commonVertexMasterInterceptionUtil =
-        new CommonVertexMasterInterceptionUtil(getContext().getJobID()
-          .toString());
+      commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
+        getContext().getJobID().toString());
     }
     commonVertexMasterInterceptionUtil.initCommonVertexMasterContextWrapper(
       getConf(), getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
@@ -65,8 +64,8 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
   final protected void interceptComputeException(Exception e) {
     LOG.info("Caught an exception in user's MasterCompute. message: " +
       e.getMessage() + ". Saving a trace in HDFS.");
-    ExceptionWrapper exceptionWrapper =
-      new ExceptionWrapper(e.getMessage(), ExceptionUtils.getStackTrace(e));
+    ExceptionWrapper exceptionWrapper = new ExceptionWrapper(e.getMessage(),
+      ExceptionUtils.getStackTrace(e));
     giraphMasterScenarioWrapper.setExceptionWrapper(exceptionWrapper);
     commonVertexMasterInterceptionUtil.saveScenarioWrapper(
       giraphMasterScenarioWrapper, DebuggerUtils.getFullMasterTraceFileName(

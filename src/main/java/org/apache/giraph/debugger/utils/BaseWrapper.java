@@ -98,8 +98,9 @@ public abstract class BaseWrapper {
   public void loadFromHDFS(FileSystem fs, String fileName, URL... classPaths)
     throws ClassNotFoundException, InstantiationException,
     IllegalAccessException, IOException {
-    for (URL url : classPaths)
+    for (URL url : classPaths) {
       addPath(url);
+    }
     loadFromHDFS(fs, fileName);
   }
 
@@ -116,13 +117,13 @@ public abstract class BaseWrapper {
       URLClassLoader urlClassLoader = (URLClassLoader) cl;
       Class<URLClassLoader> urlClass = URLClassLoader.class;
       try {
-        Method method =
-          urlClass.getDeclaredMethod("addURL", new Class[] { URL.class });
+        Method method = urlClass.getDeclaredMethod("addURL",
+          new Class[] { URL.class });
         method.setAccessible(true);
         method.invoke(urlClassLoader, new Object[] { u });
-      } catch (NoSuchMethodException | SecurityException
-        | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException e) {
+      } catch (NoSuchMethodException | SecurityException |
+        IllegalAccessException | IllegalArgumentException |
+        InvocationTargetException e) {
         throw new IllegalStateException("Cannot add URL to system ClassLoader",
           e);
       }
