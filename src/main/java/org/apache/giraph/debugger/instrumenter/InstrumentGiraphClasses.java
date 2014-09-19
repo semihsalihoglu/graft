@@ -61,16 +61,41 @@ import com.google.common.collect.Sets;
  */
 public class InstrumentGiraphClasses {
 
+  /**
+   * Logger for this class.
+   */
   private static Logger LOG = Logger.getLogger(InstrumentGiraphClasses.class);
 
+  /**
+   * Suffix to append to the original class names.
+   */
   private static final String ORIGINAL_CLASS_NAME_SUFFIX = System.getProperty(
     "giraph.debugger.classNameSuffix", "Original");
-  private static final String tmpDirNamePrefix = InstrumentGiraphClasses.class
-    .getSimpleName();
+  /**
+   * Path prefix for determining the temporary directory name used for
+   * instrumentation.
+   */
+  private static final String TMP_DIR_NAME_PREFIX =
+    InstrumentGiraphClasses.class.getSimpleName();
 
-  public static void main(String[] args) throws IOException, Exception {
+  /**
+   * Disallowing instantiation.
+   */
+  private InstrumentGiraphClasses() { }
+
+  /**
+   * Main entry point for instrumenting Giraph Computation and MasterCompute
+   * classes with Graft classes.
+   *
+   * @param args Command-line arguments.
+   * @throws IOException
+   * @throws ClassNotFoundException
+   */
+  public static void main(String[] args) throws IOException,
+    ClassNotFoundException {
+    // CHECKSTYLE: stop Regexp
     if (args.length < 1) {
-      System.err.println("Usage: java ... " + tmpDirNamePrefix +
+      System.err.println("Usage: java ... " + TMP_DIR_NAME_PREFIX +
         " GIRAPH_COMPUTATION_CLASS_NAME  [OUTPUT_DIR]");
       System.exit(1);
     }
@@ -95,13 +120,13 @@ public class InstrumentGiraphClasses {
           // Collect all Computation class names referenced in
           // masterComputeClassName
           LOG.info("Analyzing MasterCompute class: " + masterComputeClassName);
-          userComputationClassNames.addAll( //
-            collectComputationClassNames( //
+          userComputationClassNames.addAll(
+            collectComputationClassNames(
               masterComputeClassName, classPool));
         }
         LOG
           .info("Instrumenting MasterCompute class: " + masterComputeClassName);
-        classesModified.addAll( //
+        classesModified.addAll(
           instrumentSandwich(masterComputeClassName,
             AbstractInterceptingMasterCompute.class.getName(),
             UserMasterCompute.class.getName(),
@@ -110,7 +135,7 @@ public class InstrumentGiraphClasses {
       for (String userComputationClassName : userComputationClassNames) {
         LOG
           .info("Instrumenting Computation class: " + userComputationClassName);
-        classesModified.addAll( //
+        classesModified.addAll(
           instrumentSandwich(userComputationClassName,
             AbstractInterceptingComputation.class.getName(),
             UserComputation.class.getCanonicalName(),
@@ -120,7 +145,8 @@ public class InstrumentGiraphClasses {
       // Finally, write the modified classes so that a new jar can be
       // created or an existing one can be updated.
       String jarRoot = outputDir != null ? outputDir : Files
-        .createTempDirectory(tmpDirNamePrefix, new FileAttribute[0]).toString();
+        .createTempDirectory(TMP_DIR_NAME_PREFIX,
+          new FileAttribute[0]).toString();
       LOG.info("Writing " + classesModified.size() +
         " instrumented classes to " + jarRoot);
       for (CtClass c : classesModified) {
@@ -138,25 +164,36 @@ public class InstrumentGiraphClasses {
       System.exit(0);
     } catch (NotFoundException e) {
       System.err
-        .println("Some Giraph Computation or MasterCompute classes were not found");
+        .println("Some Giraph Computation or MasterCompute classes " +
+          "were not found");
       System.exit(1);
     } catch (CannotCompileException e) {
       e.printStackTrace();
       System.err
-        .println("Cannot instrument the given Giraph Computation or MasterCompute classes");
+        .println("Cannot instrument the given Giraph Computation or " +
+          "MasterCompute classes");
       System.exit(2);
     } catch (IOException e) {
       e.printStackTrace();
       System.err
-        .println("Cannot write the instrumented Giraph Computation and/or MasterCompute classes");
+        .println("Cannot write the instrumented Giraph Computation and/or " +
+          "MasterCompute classes");
       System.exit(4);
     }
-
+    // CHECKSTYLE: resume Regexp
   }
 
+  /**
+   * Finds all class names referenced in the master compute class.
+   *
+   * @param masterComputeClassName The name of the master compute class.
+   * @param classPool The Javassist class pool being used.
+   * @return A collection of class names.
+   * @throws NotFoundException
+   */
   protected static Collection<String> collectComputationClassNames(
     String masterComputeClassName, ClassPool classPool)
-    throws NotFoundException {
+      throws NotFoundException {
     Collection<String> classNames = Lists.newArrayList();
     CtClass computationClass = classPool.get(Computation.class.getName());
     CtClass rootMasterComputeClass = classPool.get(MasterCompute.class
@@ -175,16 +212,21 @@ public class InstrumentGiraphClasses {
         case ConstPool.CONST_String:
           classNamesInMasterCompute.add(constPool.getStringInfo(i));
           break;
+        default:
+          break;
         }
       }
       // collect Computation class names
       for (String className : classNamesInMasterCompute) {
+        // CHECKSTYLE: stop IllegalCatch
         try {
           if (classPool.get(className).subtypeOf(computationClass)) {
             classNames.add(className);
           }
         } catch (Exception e) {
+          e.printStackTrace();
         }
+        // CHECKSTYLE: resume IllegalCatch
       }
 
       // repeat above for all superclasses of given masterComputeClass
@@ -193,6 +235,30 @@ public class InstrumentGiraphClasses {
     return classNames;
   }
 
+  /**
+   * Instruments the given class with a bottom and top class (sandwich),
+   * rewiring the inheritance chain and references.
+   *
+   * @param targetClassName
+   *          The class to be placed in the middle of the sandwich
+   *          instrumentation.
+   * @param topClassName
+   *          The class to be placed as a base class (on top) of the target
+   *          class (middle), which intercepts any calls made from the target
+   *          class.
+   * @param mockTargetClassName
+   *          The name of the mock class used to compile the top class.
+   * @param bottomClassName
+   *          The class to be placed as a extending class (beneath) of the
+   *          target class, which will receive any calls to the target class
+   *          first.
+   * @param classPool
+   *          The Javassist class pool being used.
+   * @return A collection of instrumented Javassist CtClasses.
+   * @throws NotFoundException
+   * @throws CannotCompileException
+   * @throws ClassNotFoundException
+   */
   protected static Collection<CtClass> instrumentSandwich(
     String targetClassName, String topClassName, String mockTargetClassName,
     String bottomClassName, ClassPool classPool) throws NotFoundException,
@@ -239,13 +305,11 @@ public class InstrumentGiraphClasses {
       getGenericsName(targetTopClass));
     // 1-b. Mark user's class as abstract and erase any final modifier.
     LOG.debug("Marking targetClass as abstract and non-final...");
-    {
-      int mod = targetClass.getModifiers();
-      mod |= Modifier.ABSTRACT;
-      mod &= ~Modifier.FINAL;
-      targetClass.setModifiers(mod);
-      classesModified.add(targetClass);
-    }
+    int modClass = targetClass.getModifiers();
+    modClass |= Modifier.ABSTRACT;
+    modClass &= ~Modifier.FINAL;
+    targetClass.setModifiers(modClass);
+    classesModified.add(targetClass);
     if (!targetTopClass.equals(topClass)) {
       // 1-c. Inject the top class by setting it as the superclass of
       // user's class that extends its superclass (AbstractComputation).
@@ -254,19 +318,17 @@ public class InstrumentGiraphClasses {
       targetTopClass.replaceClassName(topClass.getSuperclass().getName(),
         topClass.getName());
       classesModified.add(targetTopClass);
-      {
-        // XXX Unless we take care of generic signature as well,
-        // GiraphConfigurationValidator will complain.
-        String jvmNameForTopClassSuperclass = Descriptor.of(
-          topClass.getSuperclass()).replaceAll(";$", "");
-        String jvmNameForTopClass = Descriptor.of(topClass)
-          .replaceAll(";$", "");
-        String genSig = targetTopClass.getGenericSignature();
-        if (genSig != null) {
-          String genSig2 = genSig.replace(jvmNameForTopClassSuperclass,
-            jvmNameForTopClass);
-          targetTopClass.setGenericSignature(genSig2);
-        }
+      // XXX Unless we take care of generic signature as well,
+      // GiraphConfigurationValidator will complain.
+      String jvmNameForTopClassSuperclass = Descriptor.of(
+        topClass.getSuperclass()).replaceAll(";$", "");
+      String jvmNameForTopClass = Descriptor.of(topClass)
+        .replaceAll(";$", "");
+      String genSig = targetTopClass.getGenericSignature();
+      if (genSig != null) {
+        String genSig2 = genSig.replace(jvmNameForTopClassSuperclass,
+          jvmNameForTopClass);
+        targetTopClass.setGenericSignature(genSig2);
       }
     }
     // 1-d. Then, make the bottomClass extend user's computation, taking
@@ -284,9 +346,9 @@ public class InstrumentGiraphClasses {
     // compute(), so we may have to remove the "final" marker on user's
     // compute() method.
     // 2-a. Find all methods that we override in bottomClass.
-    LOG.debug("For each method to intercept,"
-      + " changing Generics signature of bottomClass, and"
-      + " erasing final modifier...");
+    LOG.debug("For each method to intercept," +
+      " changing Generics signature of bottomClass, and" +
+      " erasing final modifier...");
     for (CtMethod overridingMethod : bottomClass.getMethods()) {
       if (!overridingMethod.hasAnnotation(Intercept.class)) {
         continue;
@@ -311,12 +373,12 @@ public class InstrumentGiraphClasses {
         classesModified.add(overridingMethod.getDeclaringClass());
       }
       // 2-c. Remove final marks from them.
-      int mod = targetMethod.getModifiers();
-      if ((mod & Modifier.FINAL) == 0) {
+      int modMethod = targetMethod.getModifiers();
+      if ((modMethod & Modifier.FINAL) == 0) {
         continue;
       }
-      mod &= ~Modifier.FINAL;
-      targetMethod.setModifiers(mod);
+      modMethod &= ~Modifier.FINAL;
+      targetMethod.setModifiers(modMethod);
       LOG.debug(" erasing final modifier from " + targetMethod.getName() +
         "() of " + targetMethod.getDeclaringClass());
       // 2-d. Rename the overriding method if necessary.
@@ -339,6 +401,11 @@ public class InstrumentGiraphClasses {
     return classesModified;
   }
 
+  /**
+   * Format Javassist class name for log messages.
+   * @param clazz The Javassist class.
+   * @return Formatted name of the class including Generic type signature.
+   */
   protected static String getGenericsName(CtClass clazz) {
     return clazz.getName() + " (" + clazz.getGenericSignature() + ")";
   }
