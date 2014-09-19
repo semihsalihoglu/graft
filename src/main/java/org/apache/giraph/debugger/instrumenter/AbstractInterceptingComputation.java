@@ -77,7 +77,7 @@ public abstract class AbstractInterceptingComputation<
       "org.apache.giraph.debugger.examples.SimpleShortestPathsDebugConfig).");
 
   /**
-   * Logger.
+   * Logger for this class.
    */
   protected static final Logger LOG = Logger
     .getLogger(AbstractInterceptingComputation.class);

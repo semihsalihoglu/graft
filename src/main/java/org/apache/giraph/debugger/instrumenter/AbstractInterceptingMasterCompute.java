@@ -33,14 +33,21 @@ import org.apache.log4j.Logger;
 /**
  * Class that intercepts calls to {@link MasterCompute}'s exposed methods for
  * GiraphDebugger.
- * 
- * @author semihsalihoglu
  */
 public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
 
+  /**
+   * Logger for this class.
+   */
   protected static final Logger LOG = Logger
     .getLogger(AbstractInterceptingMasterCompute.class);
+  /**
+   * The master scenario being captured.
+   */
   private GiraphMasterScenarioWrapper giraphMasterScenarioWrapper;
+  /**
+   * The utility for intercepting master computes.
+   */
   private CommonVertexMasterInterceptionUtil commonVertexMasterInterceptionUtil;
 
   /**
@@ -52,8 +59,8 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
     giraphMasterScenarioWrapper = new GiraphMasterScenarioWrapper(this
       .getClass().getName());
     if (commonVertexMasterInterceptionUtil == null) {
-      commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
-        getContext().getJobID().toString());
+      commonVertexMasterInterceptionUtil = new
+        CommonVertexMasterInterceptionUtil(getContext().getJobID().toString());
     }
     commonVertexMasterInterceptionUtil.initCommonVertexMasterContextWrapper(
       getConf(), getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
@@ -62,10 +69,20 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
         .getCommonVertexMasterContextWrapper());
   }
 
+  /**
+   * Intercepts the call to {@link MasterCompute#getAggregatedValue(String)} to
+   * capture aggregator values at each superstep.
+   *
+   * @param <A>
+   *          The type of the aggregator value.
+   * @param name
+   *          The name of the Giraph aggregator.
+   * @return The aggregator value returned by the original
+   *         {@link MasterCompute#getAggregatedValue(String)}.
+   */
   @Intercept(renameTo = "getAggregatedValue")
-  // @Override
   public <A extends Writable> A getAggregatedValueIntercept(String name) {
-    A retVal = super.<A> getAggregatedValue(name);
+    A retVal = super.<A>getAggregatedValue(name);
     commonVertexMasterInterceptionUtil.addAggregatedValueIfNotExists(name,
       retVal);
     return retVal;
@@ -74,11 +91,11 @@ public abstract class AbstractInterceptingMasterCompute extends MasterCompute {
   /**
    * Called when user's {@link MasterCompute#compute()} method throws an
    * exception.
-   * 
+   *
    * @param e
    *          exception thrown.
    */
-  final protected void interceptComputeException(Exception e) {
+  protected final void interceptComputeException(Exception e) {
     LOG.info("Caught an exception in user's MasterCompute. message: " +
       e.getMessage() + ". Saving a trace in HDFS.");
     ExceptionWrapper exceptionWrapper = new ExceptionWrapper(e.getMessage(),
