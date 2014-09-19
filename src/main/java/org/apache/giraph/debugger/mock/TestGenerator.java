@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator.Config;
@@ -99,7 +100,7 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
 
       List<Config> configs = new ArrayList<>();
       if (commonVertexMasterContextWrapper.getConfig() != null) {
-        for (Entry<String, String> entry : commonVertexMasterContextWrapper
+        for (Map.Entry<String, String> entry : commonVertexMasterContextWrapper
           .getConfig()) {
           configs.add(new Config(entry.getKey(), entry.getValue()));
         }
