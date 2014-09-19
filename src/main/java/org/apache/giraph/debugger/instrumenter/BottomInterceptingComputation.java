@@ -28,9 +28,20 @@ import org.apache.giraph.worker.WorkerContext;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
+/**
+ * The Computation class to be instrumented as one that extends user's actual
+ * Computation class, and run by Graft for debugging.
+ *
+ * @param <I> Vertex id type.
+ * @param <V> Vertex value type.
+ * @param <E> Edge value type.
+ * @param <M1> Incoming message type.
+ * @param <M2> Outgoing message type.
+ */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class BottomInterceptingComputation<I extends WritableComparable, V extends Writable, E extends Writable, M1 extends Writable, M2 extends Writable>
-  extends UserComputation<I, V, E, M1, M2> {
+public class BottomInterceptingComputation<I extends WritableComparable,
+  V extends Writable, E extends Writable, M1 extends Writable,
+  M2 extends Writable> extends UserComputation<I, V, E, M1, M2> {
 
   @Intercept
   @Override
@@ -51,15 +62,17 @@ public class BottomInterceptingComputation<I extends WritableComparable, V exten
   @Intercept
   @Override
   public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
-    throws IOException {
+      throws IOException {
     boolean shouldCatchException = interceptComputeBegin(vertex, messages);
     if (shouldCatchException) {
+      // CHECKSTYLE: stop IllegalCatch
       try {
         super.compute(vertex, messages);
       } catch (Exception e) {
         interceptComputeException(vertex, messages, e);
         throw e;
       }
+      // CHECKSTYLE: resume IllegalCatch
     } else {
       super.compute(vertex, messages);
     }
