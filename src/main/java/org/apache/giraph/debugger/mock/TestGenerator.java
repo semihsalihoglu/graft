@@ -29,8 +29,17 @@ import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexScenarioClassesWrapper;
 import org.apache.velocity.VelocityContext;
 
+/**
+ * Base clas for {@link ComputationComputeTestGenerator} and
+ * {@link MasterComputeTestGenerator}.
+ */
 public abstract class TestGenerator extends VelocityBasedGenerator {
 
+  /**
+   * A set of complex writable classes, i.e., (typically) user-defined
+   * writables more complex that the regular {@link IntWritable},
+   * {@link LongWritable}, etc.
+   */
   @SuppressWarnings("rawtypes")
   private final Set<Class> complexWritables = new HashSet<>();
 
@@ -39,14 +48,26 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
     return complexWritables;
   }
 
+  /**
+   * Clears {@link #complexWritables}.
+   */
   protected void resetComplexWritableList() {
     this.complexWritables.clear();
   }
 
+  /**
+   * A wrapper class to populate a {@link VelocityContext} object.
+   */
   protected class ContextBuilder {
 
+    /**
+     * {@link VelocityContext} object being wrapped.
+     */
     protected VelocityContext context;
 
+    /**
+     * Default constructor.
+     */
     public ContextBuilder() {
       context = new VelocityContext();
       addHelper();
@@ -57,23 +78,41 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
       return context;
     }
 
+    /**
+     * Adds a {@link FormatHelper} to the context.
+     */
     private void addHelper() {
       context.put("helper", new FormatHelper(complexWritables));
     }
 
+    /**
+     * Adds the complex writables to the context.
+     */
     private void addWritableReadFromString() {
       context.put("complexWritables", complexWritables);
     }
 
+    /**
+     * Adds the given package name to the context.
+     * @param testPackage name of the package for the unit test file.
+     */
     public void addPackage(String testPackage) {
       context.put("package", testPackage);
     }
 
+    /**
+     * Adds the type of the class that is being tested to the context.
+     * @param classUnderTest the class that is being tested.
+     */
     @SuppressWarnings("rawtypes")
     public void addClassUnderTest(Class classUnderTest) {
       context.put("classUnderTestName", classUnderTest.getSimpleName());
     }
 
+    /**
+     * Adds the string name of the class that is being tested to the context.
+     * @param className name of the class being tested.
+     */
     public void addClassName(String className) {
       if (className == null) {
         context.put("className", context.get("classUnderTestName") + "Test");
@@ -82,6 +121,13 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
       }
     }
 
+    /**
+     * Adds the package, type, and name of the class that is being tested to
+     * the context.
+     * @param testPackage name of the package for the unit test file.
+     * @param classUnderTest the class that is being tested.
+     * @param className name of the class being tested.
+     */
     @SuppressWarnings("rawtypes")
     public void addTestClassInfo(String testPackage, Class classUnderTest,
       String className) {
@@ -90,6 +136,11 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
       addClassName(className);
     }
 
+    /**
+     * Adds data stored in the given vertex scenario wrapper to the context.
+     * @param vertexScenarioClassesWrapper
+     *          {@link VertexScenarioClassesWrapper} object.
+     */
     @SuppressWarnings("rawtypes")
     public void addVertexScenarioClassesWrapper(
       VertexScenarioClassesWrapper vertexScenarioClassesWrapper) {
@@ -103,6 +154,11 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
       context.put("usedTypes", usedTypes);
     }
 
+    /**
+     * Adds data stored in the given master scenario wrapper to the context.
+     * @param commonVertexMasterContextWrapper
+     *          {@link CommonVertexMasterContextWrapper} object.
+     */
     public void addCommonMasterVertexContext(
       CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
       context.put("superstepNo",

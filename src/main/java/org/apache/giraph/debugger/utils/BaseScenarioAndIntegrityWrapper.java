@@ -23,20 +23,29 @@ import org.apache.hadoop.io.WritableComparable;
  * Base wrapper class for {@link GiraphVertexScenarioWrapper},
  * {@link MsgIntegrityViolationWrapper},
  * {@link VertexValueIntegrityViolationWrapper}.
- * 
- * @author semihsalihoglu
- * 
+ *
+ * author: semihsalihoglu
+ *
  * @param <I>
  *          Vertex id
  */
 @SuppressWarnings("rawtypes")
-public abstract class BaseScenarioAndIntegrityWrapper<I extends WritableComparable>
-  extends BaseWrapper {
-  Class<I> vertexIdClass;
+public abstract class BaseScenarioAndIntegrityWrapper<
+  I extends WritableComparable> extends BaseWrapper {
+  /**
+   * Class of the type of the vertex IDs.
+   */
+  protected Class<I> vertexIdClass;
 
-  BaseScenarioAndIntegrityWrapper() {
-  };
+  /**
+   * Default empty constructor.
+   */
+  protected BaseScenarioAndIntegrityWrapper() { };
 
+  /**
+   * Default constructor initializing the vertexIdClass.
+   * @param vertexIdClass vertex id class.
+   */
   public BaseScenarioAndIntegrityWrapper(Class<I> vertexIdClass) {
     initialize(vertexIdClass);
   }
@@ -45,6 +54,10 @@ public abstract class BaseScenarioAndIntegrityWrapper<I extends WritableComparab
     return vertexIdClass;
   }
 
+  /**
+   * Initializes vertex id class.
+   * @param vertexIdClass vertex id class.
+   */
   public void initialize(Class<I> vertexIdClass) {
     this.vertexIdClass = vertexIdClass;
   }

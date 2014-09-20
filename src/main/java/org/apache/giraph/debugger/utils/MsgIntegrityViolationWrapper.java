@@ -190,14 +190,14 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable,
 
     @Override
     public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+        throws IOException {
       return ExtendedOutgoingMessage.parseFrom(inputStream);
     }
 
     @Override
     public void loadFromProto(GeneratedMessage generatedMessage)
-      throws ClassNotFoundException, IOException, InstantiationException,
-      IllegalAccessException {
+        throws ClassNotFoundException, IOException, InstantiationException,
+        IllegalAccessException {
       ExtendedOutgoingMessage extendedOutgoingMessage =
         (ExtendedOutgoingMessage) generatedMessage;
       this.setSrcId(DebuggerUtils.newInstance(vertexIdClass));
@@ -281,8 +281,8 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable,
   @Override
   @SuppressWarnings("unchecked")
   public void loadFromProto(GeneratedMessage generatedMessage)
-    throws ClassNotFoundException, IOException, InstantiationException,
-    IllegalAccessException {
+      throws ClassNotFoundException, IOException, InstantiationException,
+      IllegalAccessException {
     MessageIntegrityViolation msgIntegrityViolation =
       (MessageIntegrityViolation) generatedMessage;
     Class<I> vertexIdClass = (Class<I>) castClassToUpperBound(
@@ -307,7 +307,7 @@ public class MsgIntegrityViolationWrapper<I extends WritableComparable,
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return MessageIntegrityViolation.parseFrom(inputStream);
   }
 }

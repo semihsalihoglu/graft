@@ -26,15 +26,25 @@ import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.log4j.Logger;
 
+/**
+ * TODO(semih, jaeho): What's this class used for?
+ */
 public class DerivedComputation extends BaseComputation {
 
-  /** Class logger */
-  private static final Logger LOG = Logger.getLogger(BasicComputation.class);
-
-  /** The shortest paths id */
+  /**
+   * The shortest paths id.
+   */
   public static final LongConfOption SOURCE_ID = new LongConfOption(
     "SimpleShortestPathsVertex.sourceId", 1, "The shortest paths id");
 
+  /**
+   * Class logger.
+   */
+  private static final Logger LOG = Logger.getLogger(BasicComputation.class);
+
+  /**
+   * Minimum distance found so far. Kept as a global variable for efficiency.
+   */
   private double minDist;
 
   @Override
@@ -78,7 +88,7 @@ public class DerivedComputation extends BaseComputation {
 
   /**
    * Is this vertex the source id?
-   * 
+   *
    * @param vertex
    *          Vertex
    * @return True if the source id

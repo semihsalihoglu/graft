@@ -37,12 +37,41 @@ import com.google.protobuf.GeneratedMessage;
  */
 @SuppressWarnings("rawtypes")
 public class CommonVertexMasterContextWrapper extends BaseWrapper {
+  /**
+   * Wraps the {@link ImmutableClassesGiraphConfiguration} which
+   * {@link org.apache.giraph.debugger.Scenario.CommonVertexMasterContext}
+   * exposes.
+   */
   private ImmutableClassesGiraphConfiguration immutableClassesConfig = null;
+  /**
+   * Wraps the superstep number which
+   * {@link org.apache.giraph.debugger.Scenario.CommonVertexMasterContext}
+   * exposes.
+   */
   private long superstepNo;
+  /**
+   * Wraps the totalNumVertices which
+   * {@link org.apache.giraph.debugger.Scenario.CommonVertexMasterContext}
+   * exposes.
+   */
   private long totalNumVertices;
+  /**
+   * Wraps the totalNumEdges which
+   * {@link org.apache.giraph.debugger.Scenario.CommonVertexMasterContext}
+   * exposes.
+   */
   private long totalNumEdges;
+  /**
+   * Wraps the aggregated values from the previous superstep which
+   * {@link org.apache.giraph.debugger.Scenario.CommonVertexMasterContext}
+   * exposes.
+   */
   private List<AggregatedValueWrapper> previousAggregatedValueWrappers;
 
+  /**
+   * Default constructor. Initializes superstepNo, totalNumVertices, and
+   * totalNumEdges to -1. Initializes an empty aggregated values.
+   */
   public CommonVertexMasterContextWrapper() {
     this.superstepNo = -1;
     this.totalNumVertices = -1;
@@ -50,6 +79,15 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
     this.previousAggregatedValueWrappers = new ArrayList<>();
   }
 
+  /**
+   * Constructor with immutableClassesConfig, superstepNo, totalNumVertices,
+   * and totalNumEdges. Does not initialize previousAggregatedValueWrappers.
+   * @param immutableClassesConfig the
+   *        {@link ImmutableClassesGiraphConfiguration} to initialize.
+   * @param superstepNo superstep number to initialize.
+   * @param totalNumVertices total number of vertices number to initialize.
+   * @param totalNumEdges total number of edges to initialize.
+   */
   public CommonVertexMasterContextWrapper(
     ImmutableClassesGiraphConfiguration immutableClassesConfig,
     long superstepNo, long totalNumVertices, long totalNumEdges) {
@@ -83,6 +121,11 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
     this.totalNumEdges = totalNumEdges;
   }
 
+  /**
+   * Adds an aggregated value from the previous superstep.
+   * @param previousAggregatedValueWrapper an {@link AggregatedValueWrapper}
+   *        object wrapping the aggregated value.
+   */
   public void addPreviousAggregatedValue(
     AggregatedValueWrapper previousAggregatedValueWrapper) {
     this.previousAggregatedValueWrappers.add(previousAggregatedValueWrapper);
@@ -126,7 +169,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
   @Override
   public void loadFromProto(GeneratedMessage generatedMessage)
-    throws ClassNotFoundException, IOException, InstantiationException,
+      throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     CommonVertexMasterContext commonContext = (CommonVertexMasterContext)
       generatedMessage;

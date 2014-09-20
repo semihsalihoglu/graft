@@ -32,15 +32,26 @@ import com.google.protobuf.GeneratedMessage;
  * Wrapper class around
  * {@link org.apache.giraph.debugger.GiraphAggregator.Aggregator} protocol
  * buffer.
- * 
- * @author semihsalihoglu
+ *
+ * author: semihsalihoglu
  */
 @SuppressWarnings("rawtypes")
 public class AggregatorWrapper extends BaseWrapper {
 
+  /**
+   * Key of the aggregator.
+   */
   private String key;
+  /**
+   * The aggregator object.
+   */
   private final Aggregator<Writable> aggregator;
 
+  /**
+   * Constructor.
+   * @param key key of the aggregator.
+   * @param aggregator the aggregator object.
+   */
   @SuppressWarnings("unchecked")
   public AggregatorWrapper(String key, Aggregator aggregator) {
     this.key = key;
@@ -49,8 +60,8 @@ public class AggregatorWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage buildProtoObject() {
-    Builder aggregatorProtoBuilder = org.apache.giraph.debugger.GiraphAggregator.Aggregator
-      .newBuilder();
+    Builder aggregatorProtoBuilder =
+      org.apache.giraph.debugger.GiraphAggregator.Aggregator.newBuilder();
     aggregatorProtoBuilder.setAggregatorClass(aggregator.getClass().getName());
     aggregatorProtoBuilder
       .setAggregatedValue((AggregatedValue) new AggregatedValueWrapper(key,
@@ -60,7 +71,7 @@ public class AggregatorWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return org.apache.giraph.debugger.GiraphAggregator.Aggregator
       .parseFrom(inputStream);
   }
@@ -68,10 +79,12 @@ public class AggregatorWrapper extends BaseWrapper {
   @SuppressWarnings("unchecked")
   @Override
   public void loadFromProto(GeneratedMessage protoObject)
-    throws ClassNotFoundException, IOException, InstantiationException,
+      throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    org.apache.giraph.debugger.GiraphAggregator.Aggregator aggregatorProto = (org.apache.giraph.debugger.GiraphAggregator.Aggregator) protoObject;
-    Aggregator<Writable> giraphAggregator = (org.apache.giraph.aggregators.Aggregator<Writable>) Class
+    org.apache.giraph.debugger.GiraphAggregator.Aggregator aggregatorProto =
+      (org.apache.giraph.debugger.GiraphAggregator.Aggregator) protoObject;
+    Aggregator<Writable> giraphAggregator =
+      (org.apache.giraph.aggregators.Aggregator<Writable>) Class
       .forName(aggregatorProto.getAggregatorClass()).newInstance();
     AggregatedValue aggregatedValueProto = aggregatorProto.getAggregatedValue();
     this.key = aggregatedValueProto.getKey();

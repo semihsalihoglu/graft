@@ -32,26 +32,54 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
+/**
+ * Utility class to help format some of the strings used in the generated unit
+ * test. E.g., if an a float is initialized to 1.3 and we read that from
+ * a protocolbuffer and write it again, it will be written as 1.299999....
+ * So we need to truncate it when we generate the unittest and this class
+ * contains such methods.
+ */
 public class FormatHelper {
 
+  /**
+   * {@link DecimalFormat} to use when formatting decimals.
+   */
   private final DecimalFormat decimalFormat = new DecimalFormat("#.#####");
 
+  /**
+   * A set of complex writable object, i.e., user-defined ones that are not like
+   * IntWritable, FloatWritable, etc..used by this compute function.
+   */
   @SuppressWarnings("rawtypes")
   private Set<Class> complexWritables;
 
+  /**
+   * Default constructor.
+   */
   public FormatHelper() {
   }
 
+  /**
+   * @param complexWritables complex writable objects to register.
+   */
   @SuppressWarnings("rawtypes")
   public FormatHelper(Set<Class> complexWritables) {
     registerComplexWritableClassList(complexWritables);
   }
 
+  /**
+   * @param complexWritables complex writable objects to register.
+   */
   @SuppressWarnings("rawtypes")
   public void registerComplexWritableClassList(Set<Class> complexWritables) {
     this.complexWritables = complexWritables;
   }
 
+  /**
+   * Generates the line that constructs the given writable.
+   * @param writable writable object to construct in the unit test.
+   * @return string generating the line that constructs the given writable.
+   */
   public String formatWritable(Writable writable) {
     if (writable instanceof NullWritable) {
       return "NullWritable.get()";
@@ -85,6 +113,12 @@ public class FormatHelper {
     }
   }
 
+  /**
+   * Generates the line that constructs the given object, which can be
+   * an int, boolean, char, byte, short, etc.
+   * @param input object to construct in the unit test.
+   * @return string generating the line that constructs the given object.
+   */
   public String format(Object input) {
     if (input instanceof Boolean || input instanceof Byte ||
       input instanceof Character || input instanceof Short ||
@@ -109,6 +143,11 @@ public class FormatHelper {
     }
   }
 
+  /**
+   * Generates a line constructing a byte array.
+   * @param byteArray byte array to construct in the unit test.
+   * @return string generating the line that constructs the given byte array.
+   */
   private String toByteArrayString(byte[] byteArray) {
     StringBuilder strBuilder = new StringBuilder();
     for (int i = 0; i < byteArray.length; i++) {

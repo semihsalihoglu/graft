@@ -33,15 +33,35 @@ import org.apache.velocity.app.Velocity;
 
 /**
  * The code generator to generate the end-to-end test case.
- * 
- * @author Brian Truong Ba Quan
+ *
+ * author Brian Truong Ba Quan
  */
 public class TestGraphGenerator extends VelocityBasedGenerator {
 
+  /**
+   * Currently supported writables on vertices and edges or ids of vertices.
+   */
   private enum WritableType {
-    NULL, LONG, DOUBLE
+    /**
+     * {@link NullWritable}.
+     */
+    NULL,
+    /**
+     * {@link LongWritable}.
+     */
+    LONG,
+    /**
+     * {@link DoubleWritable}.
+     */
+    DOUBLE
   };
 
+  /**
+   * Generates an end-to-end unit test.
+   * @param inputStrs a set of strings storing edge and vertex values and
+   * ids of vertices.
+   * @return an end-to-end unit test stored as a string (to be saved in a file.)
+   */
   public String generate(String[] inputStrs) throws IOException {
     VelocityContext context = buildContext(inputStrs);
 
@@ -52,6 +72,12 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     }
   }
 
+  /**
+   * Builds the velocity context from the given input strings storing edge,
+   * vertex values and ids of vertices.
+   * @param inputStrs an array of strings storing edge and vertex values.
+   * @return {@link VelocityContext} object.
+   */
   private VelocityContext buildContext(String[] inputStrs) {
     VelocityContext context = new VelocityContext();
     context.put("helper", new FormatHelper());
@@ -64,20 +90,23 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     for (int i = 0; i < inputStrs.length; i++) {
       tokens[i] = inputStrs[i].trim().split("\\s+");
       String[] nums = tokens[i][0].split(":");
-      WritableType type;
-      idWritableType = (type = parseWritableType(nums[0])).ordinal() > idWritableType
-        .ordinal() ? type : idWritableType;
+      WritableType type = parseWritableType(nums[0]);
+      idWritableType = type.ordinal() > idWritableType.ordinal() ? type :
+        idWritableType;
       if (nums.length > 1) {
-        valueWritableType = (type = parseWritableType(nums[1])).ordinal() > valueWritableType
-          .ordinal() ? type : valueWritableType;
+        type = parseWritableType(nums[1]);
+        valueWritableType = type.ordinal() > valueWritableType.ordinal() ?
+          type : valueWritableType;
       }
 
       for (int j = 1; j < tokens[i].length; j++) {
         nums = tokens[i][j].split(":");
-        idWritableType = (type = parseWritableType(nums[0])).ordinal() > idWritableType
+        type = parseWritableType(nums[0]);
+        idWritableType = type.ordinal() > idWritableType
           .ordinal() ? type : idWritableType;
         if (nums.length > 1) {
-          edgeValueWritableType = (type = parseWritableType(nums[1])).ordinal() > edgeValueWritableType
+          type = parseWritableType(nums[1]);
+          edgeValueWritableType = type.ordinal() > edgeValueWritableType
             .ordinal() ? type : edgeValueWritableType;
         }
       }
@@ -119,6 +148,13 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     return context;
   }
 
+  /**
+   * Returns the {@link Writable} type of the given string value. Tries to
+   * parse into different types, Long, double, and if one succeeds returns that
+   * type. Otherwise returns null type.
+   * @param str string containing a value.
+   * @return {@link Writable} type of the given value of the string.
+   */
   private WritableType parseWritableType(String str) {
     if (str == null) {
       return WritableType.NULL;
@@ -132,6 +168,15 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     }
   }
 
+  /**
+   * Puts the a given type of a value of an edge or a vertex or id
+   * of a vertex into the context.
+   * @param context {@link VelocityContext} to populate.
+   * @param contextKey currently one of vertexIdClass, vertexValueClass, or
+   * edgeValueClass.
+   * @param type currently one of {@link NullWritable}, {@link LongWritable},
+   * {@link DoubleWritable}.
+   */
   private void updateContextByWritableType(VelocityContext context,
     String contextKey, WritableType type) {
     switch (type) {
@@ -149,24 +194,51 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
     }
   }
 
-  private Writable convertToSuitableType(String token, WritableType type) {
+  /**
+   * Constructs a {@link Writable} object with the appropriate type that
+   * contains the specified content. For example, type can be LongWritable,
+   * and content can be 100L, and this method would return a new
+   * {@link LongWritable} that has value 100.
+   * @param contents contetns of the writable.
+   * @param type type of the writable.
+   * @return a {@link Writable} object of appropriate type, whose value contains
+   * the given contents.
+   */
+  private Writable convertToSuitableType(String contents, WritableType type) {
     switch (type) {
     case NULL:
       return NullWritable.get();
     case LONG:
-      return new LongWritable(Long.valueOf(token));
+      return new LongWritable(Long.valueOf(contents));
     case DOUBLE:
-      return new DoubleWritable(Double.valueOf(token));
+      return new DoubleWritable(Double.valueOf(contents));
     default:
       throw new IllegalStateException("Unknown type!");
     }
   }
 
+  /**
+   * A wrapper around a simple in-memory representation of a vertex to use
+   * during test generation.
+   */
   public static class TemplateVertex {
+    /**
+     * Id of the vertex.
+     */
     private final Object id;
+    /**
+     * Value of the vertex.
+     */
     private Object value;
+    /**
+     * Neighbors of the vertex.
+     */
     private final ArrayList<TemplateNeighbor> neighbors;
 
+    /**
+     * Constructor.
+     * @param id if the vertex.
+     */
     public TemplateVertex(Object id) {
       super();
       this.id = id;
@@ -189,15 +261,36 @@ public class TestGraphGenerator extends VelocityBasedGenerator {
       return neighbors;
     }
 
+    /**
+     * Adds a neighbor to the vertex's adjacency list.
+     * @param nbrId id of the neighbor.
+     * @param edgeValue value on the edge to the neighbor.
+     */
     public void addNeighbor(Object nbrId, Object edgeValue) {
       neighbors.add(new TemplateNeighbor(nbrId, edgeValue));
     }
   }
 
+  /**
+   * A wrapper around a simple in-memory representation of a neighbor of a
+   * vertex to use during test generation.
+   */
+
   public static class TemplateNeighbor {
+    /**
+     * Id of the neighbor.
+     */
     private final Object id;
+    /**
+     * Value on the edge from vertex to the neighbor.
+     */
     private final Object edgeValue;
 
+    /**
+     * Constructor.
+     * @param id id of the neighbor.
+     * @param edgeValue value on the edge from vertex to the neighbor.
+     */
     public TemplateNeighbor(Object id, Object edgeValue) {
       super();
       this.id = id;

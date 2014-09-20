@@ -37,11 +37,18 @@ import com.google.protobuf.GeneratedMessage;
 
 /**
  * Base class for all wrapper classes that wrap a protobuf.
- * 
- * @author semihsalihoglu
+ *
+ * author: semihsalihoglu
  */
 public abstract class BaseWrapper {
 
+  /**
+   * @param <U> type of the upperBound class.
+   * @param clazz a {@link Class} object that will be cast.
+   * @param upperBound another {@link Class} object that clazz will be cast
+   *        into.
+   * @return clazz cast to upperBound.
+   */
   @SuppressWarnings("unchecked")
   protected <U> Class<U> castClassToUpperBound(Class<?> clazz,
     Class<U> upperBound) {
@@ -52,16 +59,31 @@ public abstract class BaseWrapper {
     return (Class<U>) clazz;
   }
 
+  /**
+   * Utility method to read the contents of a {@link ByteString} to the given
+   * {@link Writable}.
+   * @param byteString a {@link ByteString} object.
+   * @param writable a {@link Writable} object.
+   */
   void fromByteString(ByteString byteString, Writable writable) {
     if (writable != null) {
       WritableUtils.readFieldsFromByteArray(byteString.toByteArray(), writable);
     }
   }
 
+  /**
+   * @param writable a {@link Writable} object.
+   * @return the contents of writable as {@link ByteString}.
+   */
   ByteString toByteString(Writable writable) {
     return ByteString.copyFrom(WritableUtils.writeToByteArray(writable));
   }
 
+  /**
+   * Saves this wrapper object to a file.
+   * @param fileName the full path of the file to save this wrapper object.
+   * @throws IOException thrown when there is an exception during the writing.
+   */
   public void save(String fileName) throws IOException {
     try (FileOutputStream output = new FileOutputStream(fileName)) {
       buildProtoObject().writeTo(output);
@@ -69,6 +91,12 @@ public abstract class BaseWrapper {
     }
   }
 
+  /**
+   * Saves this wrapper object to a file in HDFS.
+   * @param fs {@link FileSystem} to use for saving to HDFS.
+   * @param fileName the full path of the file to save this wrapper object.
+   * @throws IOException thrown when there is an exception during the writing.
+   */
   public void saveToHDFS(FileSystem fs, String fileName) throws IOException {
     Path pt = new Path(fileName);
     OutputStream wrappedStream = fs.create(pt, true).getWrappedStream();
@@ -76,45 +104,67 @@ public abstract class BaseWrapper {
     wrappedStream.close();
   }
 
+  /**
+   * @return the protobuf representing this wrapper object.
+   */
   public abstract GeneratedMessage buildProtoObject();
 
+  /**
+   * Loads a protocol buffer stored in a file into this wrapper object.
+   * @param fileName the full path of the file where the protocol buffer is
+   * stored.
+   */
   public void load(String fileName) throws ClassNotFoundException, IOException,
     InstantiationException, IllegalAccessException {
     loadFromProto(parseProtoFromInputStream(new FileInputStream(fileName)));
   }
 
+  /**
+   * Loads a protocol buffer stored in a file in HDFS into this wrapper object.
+   * @param fs {@link FileSystem} to use for reading from HDFS.
+   * @param fileName the full path of the file where the protocol buffer is
+   * stored.
+   */
   public void loadFromHDFS(FileSystem fs, String fileName)
-    throws ClassNotFoundException, IOException, InstantiationException,
-    IllegalAccessException {
+      throws ClassNotFoundException, IOException, InstantiationException,
+      IllegalAccessException {
     loadFromProto(parseProtoFromInputStream(fs.open(new Path(fileName))));
   }
 
+  /**
+   * Constructs a protobuf representing this wrapper object from an
+   * {@link InputStream}.
+   * @param inputStream {@link InputStream} containing the contents of this
+   * wrapper object.
+   * @return the protobuf version of this wrapper object.
+   */
   public abstract GeneratedMessage parseProtoFromInputStream(
     InputStream inputStream) throws IOException;
 
+  /**
+   * Constructs this wrapper object from a protobuf.
+   * @param protoObject protobuf to read when constructing this wrapper object.
+   */
   public abstract void loadFromProto(GeneratedMessage protoObject)
-    throws ClassNotFoundException, IOException, InstantiationException,
-    IllegalAccessException;
+      throws ClassNotFoundException, IOException, InstantiationException,
+      IllegalAccessException;
 
   /**
    * Add given URLs to the CLASSPATH before loading from HDFS. To do so, we hack
    * the system class loader, assuming it is an URLClassLoader.
-   * 
+   *
    * XXX Setting the currentThread's context class loader has no effect on
    * Class#forName().
-   * 
+   *
    * @see http://stackoverflow.com/a/12963811/390044
-   * @param fs
-   * @param fileName
-   * @param classPaths
-   * @throws ClassNotFoundException
-   * @throws InstantiationException
-   * @throws IllegalAccessException
-   * @throws IOException
+   * @param fs {@link FileSystem} to use for reading from HDFS.
+   * @param fileName the name of the file in HDFS.
+   * @param classPaths a possible list of class paths that may contain the
+   *        directories containing the file.
    */
   public void loadFromHDFS(FileSystem fs, String fileName, URL... classPaths)
-    throws ClassNotFoundException, InstantiationException,
-    IllegalAccessException, IOException {
+      throws ClassNotFoundException, InstantiationException,
+      IllegalAccessException, IOException {
     for (URL url : classPaths) {
       addPath(url);
     }

@@ -31,16 +31,31 @@ import com.google.protobuf.GeneratedMessage;
  * Wrapper class around
  * {@link org.apache.giraph.debugger.GiraphAggregator.AggregatedValue} protocol
  * buffer.
- * 
- * @author semihsalihoglu
+ *
+ * author: semihsalihoglu
  */
 public class AggregatedValueWrapper extends BaseWrapper {
+  /**
+   * Key of the aggregator.
+   */
   private String key;
+  /**
+   * Value of the aggregator.
+   */
   private Writable value;
 
-  public AggregatedValueWrapper() {
-  }
+  /**
+   * Public constructor, initializing an empty aggregator. Intended to be used
+   * when reading an aggregator from a protobuf.
+   */
+  public AggregatedValueWrapper() { }
 
+  /**
+   * Constructor. Intended to be used by Graft when it's intercepting
+   * computations during debugging.
+   * @param key key of the aggregator.
+   * @param value value of the aggregator.
+   */
   public AggregatedValueWrapper(String key, Writable value) {
     this.key = key;
     this.value = value;
@@ -59,13 +74,13 @@ public class AggregatedValueWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return AggregatedValue.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage protoObject)
-    throws ClassNotFoundException, IOException, InstantiationException,
+      throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     AggregatedValue aggregatedValueProto = (AggregatedValue) protoObject;
     this.value = (Writable) Class.forName(

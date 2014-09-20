@@ -25,8 +25,11 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.LongWritable;
 
-public abstract class BaseComputation extends
-  BasicComputation<LongWritable, DoubleWritable, FloatWritable, DoubleWritable> {
+/**
+ * TODO(semih, jaeho): What's this class used for?
+ */
+public abstract class BaseComputation extends BasicComputation<LongWritable,
+  DoubleWritable, FloatWritable, DoubleWritable> {
 
   @Override
   public final void compute(
@@ -37,10 +40,20 @@ public abstract class BaseComputation extends
     vertex.voteToHalt();
   }
 
+  /**
+   * TODO(semih, jaeho): Fill in.
+   * @param vertex
+   * @param messages
+   */
   protected abstract void signal(
     Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages);
 
+  /**
+   * TODO(semih, jaeho): Fill in.
+   * @param vertex
+   * @param messages
+   */
   protected abstract void collect(
     Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
     Iterable<DoubleWritable> messages);

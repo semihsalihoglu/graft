@@ -29,29 +29,48 @@ import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexScenar
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.VelocityException;
 
 /**
  * This is a code generator which can generate the JUnit test cases for a
  * Giraph.
- * 
- * @author Brian Truong Ba Quan
  */
 public class ComputationComputeTestGenerator extends TestGenerator {
 
+  /**
+   * Public constructor.
+   */
   public ComputationComputeTestGenerator() {
     super();
   }
 
+  /**
+   * Generates a unit test file as a string from the given
+   * {@link GiraphVertexScenarioWrapper} object.
+   * @param input {@link GiraphVertexScenarioWrapper} object to generate a test
+   * file from.
+   * @param testPackage package name for the unit test.
+   * @return a unit test file as a string from the given
+   * {@link GiraphVertexScenarioWrapper} object
+   */
   @SuppressWarnings("rawtypes")
   public String generateTest(GiraphVertexScenarioWrapper input,
-    String testPackage) throws VelocityException, IOException {
+    String testPackage) throws IOException {
     return generateTest(input, testPackage, null);
   }
 
+  /**
+   * Generates a unit test file as a string from the given
+   * {@link GiraphVertexScenarioWrapper} object.
+   * @param input {@link GiraphVertexScenarioWrapper} object to generate a test
+   * file from.
+   * @param testPackage package name for the unit test.
+   * @param className name of the test class.
+   * @return a unit test file as a string from the given
+   * {@link GiraphVertexScenarioWrapper} object
+   */
   @SuppressWarnings("rawtypes")
   public String generateTest(GiraphVertexScenarioWrapper input,
-    String testPackage, String className) throws VelocityException, IOException {
+    String testPackage, String className) throws IOException {
     VelocityContext context = buildContext(input, testPackage, className);
 
     try (StringWriter sw = new StringWriter()) {
@@ -61,13 +80,25 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * @param scenario scenario object from which a unit test file is being
+   * generated.
+   * @return the classUnderTest field inside the unit test.
+   */
   @SuppressWarnings("rawtypes")
-  public String generateClassUnderTestField(GiraphVertexScenarioWrapper scenario) {
+  public String generateClassUnderTestField(
+    GiraphVertexScenarioWrapper scenario) {
     return "private " +
       scenario.getVertexScenarioClassesWrapper().getClassUnderTest()
         .getSimpleName() + " classUnderTest;";
   }
 
+  /**
+   * @param scenario scenario object from which a unit test file is being
+   * generated.
+   * @return the line declaring the ImmutableClassesGiraphConfiguration field
+   *         inside the unit test.
+   */
   @SuppressWarnings("rawtypes")
   public String generateConfField(GiraphVertexScenarioWrapper scenario) {
     return String.format(
@@ -78,6 +109,12 @@ public class ComputationComputeTestGenerator extends TestGenerator {
         .getEdgeValueClass().getSimpleName());
   }
 
+  /**
+   * @param scenario scenario object from which a unit test file is being
+   * generated.
+   * @return the line declaring the MockedEnvironment field
+   *         inside the unit test.
+   */
   @SuppressWarnings("rawtypes")
   public String generateMockEnvField(GiraphVertexScenarioWrapper scenario) {
     return String.format("private MockedEnvironment<%s, %s, %s, %s> mockEnv;",
@@ -89,6 +126,12 @@ public class ComputationComputeTestGenerator extends TestGenerator {
         .getSimpleName());
   }
 
+  /**
+   * @param scenario scenario object from which a unit test file is being
+   * generated.
+   * @return the line declaring the WorkerClientRequestProcessor field
+   *         inside the unit test.
+   */
   @SuppressWarnings("rawtypes")
   public String generateProcessorField(GiraphVertexScenarioWrapper scenario) {
     return String.format(
@@ -99,10 +142,15 @@ public class ComputationComputeTestGenerator extends TestGenerator {
         .getEdgeValueClass().getSimpleName());
   }
 
+  /**
+   * @param scenario scenario object from which a unit test file is being
+   * generated.
+   * @return the line declaring the setup method field inside the unit test.
+   */
   @SuppressWarnings("rawtypes")
-  public String generateSetUp(GiraphVertexScenarioWrapper input)
-    throws VelocityException, IOException {
-    VelocityContext context = buildContext(input);
+  public String generateSetUp(GiraphVertexScenarioWrapper scenario)
+      throws IOException {
+    VelocityContext context = buildContext(scenario);
 
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("ComputeSetUpFuncTemplate.vm");
@@ -111,12 +159,18 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * @param scenario scenario object from which a unit test file is being
+   * generated.
+   * @return the line declaring the testCompute method field inside the unit
+   *         test.
+   */
   @SuppressWarnings({ "rawtypes" })
-  public String generateTestCompute(GiraphVertexScenarioWrapper input)
-    throws VelocityException, IOException {
+  public String generateTestCompute(GiraphVertexScenarioWrapper scenario)
+      throws IOException {
     resetComplexWritableList();
 
-    VelocityContext context = buildContext(input);
+    VelocityContext context = buildContext(scenario);
 
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("ComputeTestFuncTemplate.vm");
@@ -125,8 +179,14 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * Generates the lines that construct {@link Writable} objects that are
+   * used in the unittest.
+   * @param className writable object's class name.
+   * @return lines for constructing the {@link Writable} object.
+   */
   public String generateReadWritableFromString(String className)
-    throws VelocityException, IOException {
+      throws IOException {
     VelocityContext context = new VelocityContext();
     context.put("class", className);
 
@@ -138,18 +198,31 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * @see #buildContext(GiraphVertexScenarioWrapper, String, String)
+   * @param giraphScenarioWrapper {@link GiraphVertexScenarioWrapper} object.
+   * @return {@link VelocityContext} to be used in generating the unittest file.
+   */
   @SuppressWarnings("rawtypes")
   private VelocityContext buildContext(
     GiraphVertexScenarioWrapper giraphScenarioWrapper) {
     return buildContext(giraphScenarioWrapper, null, null);
   }
 
+  /**
+   * @param giraphScenarioWrapper {@link GiraphVertexScenarioWrapper} object.
+   * @param testPackage name of the package for the unit test.
+   * @param className name of the unit test class.
+   * @return {@link VelocityContext} that will be used to generate the unit
+   *         test.
+   */
   @SuppressWarnings("rawtypes")
   private VelocityContext buildContext(
     GiraphVertexScenarioWrapper giraphScenarioWrapper, String testPackage,
     String className) {
     ComputeContextBuilder builder = new ComputeContextBuilder();
-    VertexScenarioClassesWrapper vertexScenarioClassesWrapper = giraphScenarioWrapper
+    VertexScenarioClassesWrapper vertexScenarioClassesWrapper
+      = giraphScenarioWrapper
       .getVertexScenarioClassesWrapper();
     builder.addVertexScenarioClassesWrapper(vertexScenarioClassesWrapper);
     builder.addTestClassInfo(testPackage,
@@ -161,8 +234,17 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     return builder.getContext();
   }
 
+  /**
+   * Wrapper to store information about the "context" of the compute method
+   * being tested. Stores the vertex id type, vertex value types, message
+   * types, etc. In addition stores the actual id, vertex values, etc..
+   */
   protected class ComputeContextBuilder extends ContextBuilder {
 
+    /**
+     * @param vertexScenarioClassesWrapper
+     *          {@link VertexScenarioClassesWrapper} object.
+     */
     @SuppressWarnings("rawtypes")
     public void addVertexTypes(
       VertexScenarioClassesWrapper vertexScenarioClassesWrapper) {
@@ -178,6 +260,10 @@ public class ComputationComputeTestGenerator extends TestGenerator {
         .getOutgoingMessageClass().getSimpleName());
     }
 
+    /**
+     * @param vertexContextWrapper {@link VertexContextWrapper} object to read
+     *        vertex data from.
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addVertexData(VertexContextWrapper vertexContextWrapper) {
       context.put("vertexId", vertexContextWrapper.getVertexIdWrapper());
@@ -189,8 +275,9 @@ public class ComputationComputeTestGenerator extends TestGenerator {
       context.put("neighbors", vertexContextWrapper.getNeighborWrappers());
 
       HashMap<OutgoingMessageWrapper, OutMsg> outMsgMap = new HashMap<>();
-      for (OutgoingMessageWrapper msg : (Collection<OutgoingMessageWrapper>) vertexContextWrapper
-        .getOutgoingMessageWrappers()) {
+      for (OutgoingMessageWrapper msg :
+        (Collection<OutgoingMessageWrapper>)
+          vertexContextWrapper.getOutgoingMessageWrappers()) {
         if (outMsgMap.containsKey(msg)) {
           outMsgMap.get(msg).incrementTimes();
         } else {
@@ -201,10 +288,24 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * In-memory representation of the hadoop config values.
+   */
   public static class Config {
+    /**
+     * Key of the configuration flag.
+     */
     private final String key;
+    /**
+     * Value of the configuration flag.
+     */
     private final Object value;
 
+    /**
+     * Constructor.
+     * @param key key of the configuration flag.
+     * @param value value of the configuration flag.
+     */
     public Config(String key, Object value) {
       this.key = key;
       this.value = value;
@@ -214,6 +315,9 @@ public class ComputationComputeTestGenerator extends TestGenerator {
       return key;
     }
 
+    /**
+     * @return value of the configuration flag.
+     */
     public Object getValue() {
       if (value instanceof String) {
         return "\"" + value + '"';
@@ -222,6 +326,9 @@ public class ComputationComputeTestGenerator extends TestGenerator {
       }
     }
 
+    /**
+     * @return returns type of the configuration's flag, e.g., Int, Float, ... .
+     */
     public String getClassStr() {
       // TODO(brian):additional cases can be added up to the input
       if (value instanceof Integer) {
@@ -238,11 +345,27 @@ public class ComputationComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * A wrapper around the {@link OutgoingMessageWrapper} that stores the
+   * outgoing messages from a vertex and the number of times the message has
+   * been sent.
+   */
   @SuppressWarnings("rawtypes")
   public static class OutMsg {
+    /**
+     * {@link OutgoingMessageWrapper} object.
+     */
     private final OutgoingMessageWrapper msg;
+    /**
+     * How many times the message has been sent.
+     */
     private int times;
 
+    /**
+     * Constructor that initializes the outgoing message wrapper to msg and
+     * the number of times the message has been sent.
+     * @param msg outgoing message.
+     */
     public OutMsg(OutgoingMessageWrapper msg) {
       this.msg = msg;
       this.times = 1;
@@ -256,6 +379,9 @@ public class ComputationComputeTestGenerator extends TestGenerator {
       return times;
     }
 
+    /**
+     * Increments the number of times this message has been sent by 1.
+     */
     public void incrementTimes() {
       this.times++;
     }

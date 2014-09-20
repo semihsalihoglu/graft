@@ -381,14 +381,14 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
       @Override
       public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-        throws IOException {
+          throws IOException {
         return Neighbor.parseFrom(inputStream);
       }
 
       @Override
       public void loadFromProto(GeneratedMessage protoObject)
-        throws ClassNotFoundException, IOException, InstantiationException,
-        IllegalAccessException {
+          throws ClassNotFoundException, IOException, InstantiationException,
+          IllegalAccessException {
         Neighbor neighbor = (Neighbor) protoObject;
         this.nbrId = DebuggerUtils
           .newInstance(vertexScenarioClassesWrapper.vertexIdClass);
@@ -501,14 +501,14 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
       @Override
       public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-        throws IOException {
+          throws IOException {
         return OutgoingMessage.parseFrom(inputStream);
       }
 
       @Override
       public void loadFromProto(GeneratedMessage generatedMessage)
-        throws ClassNotFoundException, IOException, InstantiationException,
-        IllegalAccessException {
+          throws ClassNotFoundException, IOException, InstantiationException,
+          IllegalAccessException {
         OutgoingMessage outgoingMessageProto = (OutgoingMessage)
           generatedMessage;
         this.setDestinationId(DebuggerUtils
@@ -571,14 +571,14 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
     @Override
     public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+        throws IOException {
       return VertexContext.parseFrom(inputStream);
     }
 
     @Override
     public void loadFromProto(GeneratedMessage generatedMessage)
-      throws ClassNotFoundException, IOException, InstantiationException,
-      IllegalAccessException {
+        throws ClassNotFoundException, IOException, InstantiationException,
+        IllegalAccessException {
       VertexContext context = (VertexContext) generatedMessage;
 
       CommonVertexMasterContextWrapper vertexMasterContextWrapper = new
@@ -720,15 +720,15 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
     @Override
     public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+        throws IOException {
       return VertexScenarioClasses.parseFrom(inputStream);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void loadFromProto(GeneratedMessage generatedMessage)
-      throws ClassNotFoundException, IOException, InstantiationException,
-      IllegalAccessException {
+        throws ClassNotFoundException, IOException, InstantiationException,
+        IllegalAccessException {
       VertexScenarioClasses vertexScenarioClass = (VertexScenarioClasses)
         generatedMessage;
       Class<?> clazz = Class.forName(vertexScenarioClass.getClassUnderTest());
@@ -768,8 +768,8 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
   @Override
   public void loadFromProto(GeneratedMessage generatedMessage)
-    throws ClassNotFoundException, IOException, InstantiationException,
-    IllegalAccessException {
+      throws ClassNotFoundException, IOException, InstantiationException,
+      IllegalAccessException {
     GiraphVertexScenario giraphScenario = (GiraphVertexScenario)
       generatedMessage;
     this.vertexScenarioClassesWrapper = new VertexScenarioClassesWrapper();
@@ -804,7 +804,7 @@ public class GiraphVertexScenarioWrapper<I extends WritableComparable, V extends
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     return GiraphVertexScenario.parseFrom(inputStream);
   }
 

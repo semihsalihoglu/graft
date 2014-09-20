@@ -20,8 +20,14 @@ package org.apache.giraph.debugger.mock;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeConstants;
 
+/**
+ * Base class for {@link TestGenerator} and {@link TestGraphGenerator}.
+ */
 class VelocityBasedGenerator {
 
+  /**
+   * Default constructor.
+   */
   protected VelocityBasedGenerator() {
     Velocity.setProperty(RuntimeConstants.RESOURCE_LOADER, "class");
     Velocity.setProperty(

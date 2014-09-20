@@ -21,33 +21,51 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.giraph.debugger.utils.GiraphMasterScenarioWrapper;
-import org.apache.giraph.master.MasterCompute;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.VelocityException;
 
 /**
  * A code generator to generate test cases to test {@link MasterCompute}
- * 
- * @author Brian Truong Ba Quan
+ *
+ * author: Brian Truong Ba Quan
  */
 public class MasterComputeTestGenerator extends TestGenerator {
 
+  /**
+   * Default constructor.
+   */
   public MasterComputeTestGenerator() {
     super();
   }
 
-  public String generateTest(GiraphMasterScenarioWrapper input,
-    String testPackage) throws VelocityException, IOException,
+  /**
+   * Generates a unit test for the scenario stored in the
+   * {@link GiraphMasterScenarioWrapper}.
+   * @param scenario {@link GiraphMasterScenarioWrapper} object to generate a
+   *        unit test from.
+   * @param testPackage package of the unit test file.
+   * @return unit test file's contents stored inside a string.
+   */
+  public String generateTest(GiraphMasterScenarioWrapper scenario,
+    String testPackage) throws IOException,
     ClassNotFoundException {
-    return generateTest(input, testPackage, null);
+    return generateTest(scenario, testPackage, null);
   }
 
-  public String generateTest(GiraphMasterScenarioWrapper input,
-    String testPackage, String className) throws VelocityException,
-    IOException, ClassNotFoundException {
-    VelocityContext context = buildContext(input, testPackage, className);
+  /**
+   * Generates a unit test for the scenario stored in the
+   * {@link GiraphMasterScenarioWrapper}.
+   * @param scenario {@link GiraphMasterScenarioWrapper} object to generate a
+   *        unit test from.
+   * @param testPackage package of the unit test file.
+   * @param className name of the unit test class.
+   * @return unit test file's contents stored inside a string.
+   */
+  public String generateTest(GiraphMasterScenarioWrapper scenario,
+    String testPackage, String className) throws IOException,
+    ClassNotFoundException {
+    VelocityContext context = buildContext(scenario, testPackage, className);
 
     try (StringWriter sw = new StringWriter()) {
       Template template = Velocity.getTemplate("MasterComputeTestTemplate.vm");
@@ -56,18 +74,32 @@ public class MasterComputeTestGenerator extends TestGenerator {
     }
   }
 
+  /**
+   * Builds the {@link VelocityContext}, which stores data about the context of
+   * the unit test, e.g. class types, that will be generated for the scenario
+   * stored in the given {@link GiraphMasterScenarioWrapper}.
+   *
+   * @param scenario
+   *          {@link GiraphMasterScenarioWrapper} object to generate a unit test
+   *          from.
+   * @param testPackage
+   *          package of the unit test file.
+   * @param className
+   *          name of the unit test class.
+   * @return {@link VelocityContext} object storing data about the generated
+   *         unit test.
+   */
   private VelocityContext buildContext(
-    GiraphMasterScenarioWrapper giraphScenarioWrapper, String testPackage,
+    GiraphMasterScenarioWrapper scenario, String testPackage,
     String className) throws ClassNotFoundException {
     ContextBuilder builder = new ContextBuilder();
 
-    Class<?> classUnderTest = Class.forName(giraphScenarioWrapper
+    Class<?> classUnderTest = Class.forName(scenario
       .getMasterClassUnderTest());
     builder.addTestClassInfo(testPackage, classUnderTest, className);
-    builder.addCommonMasterVertexContext(giraphScenarioWrapper
+    builder.addCommonMasterVertexContext(scenario
       .getCommonVertexMasterContextWrapper());
 
     return builder.getContext();
   }
-
 }

@@ -20,7 +20,6 @@ package org.apache.giraph.debugger.mock;
 import java.io.InputStream;
 
 import org.apache.commons.collections.ExtendedProperties;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 /**
@@ -37,9 +36,7 @@ public class PrefixedClasspathResourceLoader extends ClasspathResourceLoader {
   }
 
   @Override
-  public InputStream getResourceStream(String name)
-    throws ResourceNotFoundException {
+  public InputStream getResourceStream(String name) {
     return super.getResourceStream(prefix + name);
   }
-
 }
