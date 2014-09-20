@@ -169,7 +169,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
   @Override
   public void loadFromProto(GeneratedMessage generatedMessage)
-      throws ClassNotFoundException, IOException, InstantiationException,
+    throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     CommonVertexMasterContext commonContext = (CommonVertexMasterContext)
       generatedMessage;
@@ -194,7 +194,7 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+    throws IOException {
     return CommonVertexMasterContext.parseFrom(inputStream);
   }
 

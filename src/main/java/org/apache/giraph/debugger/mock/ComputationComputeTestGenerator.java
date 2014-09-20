@@ -149,7 +149,7 @@ public class ComputationComputeTestGenerator extends TestGenerator {
    */
   @SuppressWarnings("rawtypes")
   public String generateSetUp(GiraphVertexScenarioWrapper scenario)
-      throws IOException {
+    throws IOException {
     VelocityContext context = buildContext(scenario);
 
     try (StringWriter sw = new StringWriter()) {
@@ -167,7 +167,7 @@ public class ComputationComputeTestGenerator extends TestGenerator {
    */
   @SuppressWarnings({ "rawtypes" })
   public String generateTestCompute(GiraphVertexScenarioWrapper scenario)
-      throws IOException {
+    throws IOException {
     resetComplexWritableList();
 
     VelocityContext context = buildContext(scenario);
@@ -186,7 +186,7 @@ public class ComputationComputeTestGenerator extends TestGenerator {
    * @return lines for constructing the {@link Writable} object.
    */
   public String generateReadWritableFromString(String className)
-      throws IOException {
+    throws IOException {
     VelocityContext context = new VelocityContext();
     context.put("class", className);
 

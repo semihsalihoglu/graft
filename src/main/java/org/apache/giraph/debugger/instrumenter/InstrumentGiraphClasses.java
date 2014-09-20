@@ -193,7 +193,7 @@ public class InstrumentGiraphClasses {
    */
   protected static Collection<String> collectComputationClassNames(
     String masterComputeClassName, ClassPool classPool)
-      throws NotFoundException {
+    throws NotFoundException {
     Collection<String> classNames = Lists.newArrayList();
     CtClass computationClass = classPool.get(Computation.class.getName());
     CtClass rootMasterComputeClass = classPool.get(MasterCompute.class

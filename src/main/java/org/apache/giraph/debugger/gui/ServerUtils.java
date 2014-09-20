@@ -108,7 +108,7 @@ public class ServerUtils {
    * @return the parameters on the url.
    */
   public static Map<String, String> getUrlParams(String rawUrl)
-      throws UnsupportedEncodingException {
+    throws UnsupportedEncodingException {
     HashMap<String, String> paramMap = Maps.newHashMap();
 
     if (rawUrl != null) {
@@ -231,7 +231,7 @@ public class ServerUtils {
    */
   public static GiraphVertexScenarioWrapper readScenarioFromTrace(String jobId,
     long superstepNo, String vertexId, DebugTrace debugTrace)
-      throws IOException, ClassNotFoundException, InstantiationException,
+    throws IOException, ClassNotFoundException, InstantiationException,
     IllegalAccessException {
     FileSystem fs = ServerUtils.getFileSystem();
     GiraphVertexScenarioWrapper giraphScenarioWrapper =
@@ -430,7 +430,7 @@ public class ServerUtils {
    */
   public static JSONObject msgIntegrityToJson(
     MsgIntegrityViolationWrapper msgIntegrityViolationWrapper)
-      throws JSONException {
+    throws JSONException {
     JSONObject scenarioObj = new JSONObject();
     ArrayList<JSONObject> violationsList = new ArrayList<JSONObject>();
     scenarioObj.put("superstepId",
@@ -459,7 +459,7 @@ public class ServerUtils {
    */
   public static JSONObject vertexIntegrityToJson(
     GiraphVertexScenarioWrapper giraphVertexScenarioWrapper)
-      throws JSONException {
+    throws JSONException {
     JSONObject scenarioObj = new JSONObject();
     VertexContextWrapper vertexContextWrapper = giraphVertexScenarioWrapper
       .getContextWrapper();
@@ -551,7 +551,7 @@ public class ServerUtils {
    * trace.
    */
   public static List<Long> getSuperstepsDebugged(String jobId)
-      throws IOException {
+    throws IOException {
     Set<Long> superstepIds = Sets.newHashSet();
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
@@ -578,7 +578,7 @@ public class ServerUtils {
    * trace.
    */
   public static List<Long> getSuperstepsMasterDebugged(String jobId)
-      throws IOException {
+    throws IOException {
     Set<Long> superstepIds = Sets.newHashSet();
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);

@@ -74,13 +74,13 @@ public class AggregatedValueWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+    throws IOException {
     return AggregatedValue.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage protoObject)
-      throws ClassNotFoundException, IOException, InstantiationException,
+    throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     AggregatedValue aggregatedValueProto = (AggregatedValue) protoObject;
     this.value = (Writable) Class.forName(

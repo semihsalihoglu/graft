@@ -126,8 +126,8 @@ public abstract class BaseWrapper {
    * stored.
    */
   public void loadFromHDFS(FileSystem fs, String fileName)
-      throws ClassNotFoundException, IOException, InstantiationException,
-      IllegalAccessException {
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException {
     loadFromProto(parseProtoFromInputStream(fs.open(new Path(fileName))));
   }
 
@@ -146,8 +146,8 @@ public abstract class BaseWrapper {
    * @param protoObject protobuf to read when constructing this wrapper object.
    */
   public abstract void loadFromProto(GeneratedMessage protoObject)
-      throws ClassNotFoundException, IOException, InstantiationException,
-      IllegalAccessException;
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException;
 
   /**
    * Add given URLs to the CLASSPATH before loading from HDFS. To do so, we hack
@@ -163,8 +163,8 @@ public abstract class BaseWrapper {
    *        directories containing the file.
    */
   public void loadFromHDFS(FileSystem fs, String fileName, URL... classPaths)
-      throws ClassNotFoundException, InstantiationException,
-      IllegalAccessException, IOException {
+    throws ClassNotFoundException, InstantiationException,
+    IllegalAccessException, IOException {
     for (URL url : classPaths) {
       addPath(url);
     }

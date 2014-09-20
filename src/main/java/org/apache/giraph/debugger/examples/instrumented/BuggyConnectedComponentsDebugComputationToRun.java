@@ -56,7 +56,7 @@ public class BuggyConnectedComponentsDebugComputationToRun extends
 
   @Override
   public final void compute(Vertex vertex, Iterable messages)
-      throws IOException {
+    throws IOException {
     boolean shouldCatchException = interceptComputeBegin(vertex, messages);
     try {
       if (shouldCatchException) {

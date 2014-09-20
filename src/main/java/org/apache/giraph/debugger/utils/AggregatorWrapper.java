@@ -71,7 +71,7 @@ public class AggregatorWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+    throws IOException {
     return org.apache.giraph.debugger.GiraphAggregator.Aggregator
       .parseFrom(inputStream);
   }
@@ -79,7 +79,7 @@ public class AggregatorWrapper extends BaseWrapper {
   @SuppressWarnings("unchecked")
   @Override
   public void loadFromProto(GeneratedMessage protoObject)
-      throws ClassNotFoundException, IOException, InstantiationException,
+    throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     org.apache.giraph.debugger.GiraphAggregator.Aggregator aggregatorProto =
       (org.apache.giraph.debugger.GiraphAggregator.Aggregator) protoObject;

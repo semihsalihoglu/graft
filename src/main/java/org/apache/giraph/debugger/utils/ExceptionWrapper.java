@@ -88,13 +88,13 @@ public class ExceptionWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+    throws IOException {
     return Exception.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage generatedMessage)
-      throws ClassNotFoundException, IOException, InstantiationException,
+    throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
     Exception exceptionProto = (Exception) generatedMessage;
     this.errorMessage = exceptionProto.getMessage();

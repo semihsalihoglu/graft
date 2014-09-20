@@ -113,14 +113,14 @@ public class GiraphMasterScenarioWrapper extends BaseWrapper {
 
   @Override
   public GeneratedMessage parseProtoFromInputStream(InputStream inputStream)
-      throws IOException {
+    throws IOException {
     return GiraphMasterScenario.parseFrom(inputStream);
   }
 
   @Override
   public void loadFromProto(GeneratedMessage protoObject)
-      throws ClassNotFoundException, IOException, InstantiationException,
-      IllegalAccessException {
+    throws ClassNotFoundException, IOException, InstantiationException,
+    IllegalAccessException {
     GiraphMasterScenario giraphMasterScenario = (GiraphMasterScenario)
       protoObject;
     this.masterClassUnderTest = giraphMasterScenario.getMasterClassUnderTest();
