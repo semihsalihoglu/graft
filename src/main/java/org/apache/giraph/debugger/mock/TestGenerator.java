@@ -173,8 +173,8 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
 
       List<Config> configs = new ArrayList<>();
       if (commonVertexMasterContextWrapper.getConfig() != null) {
-        for (Map.Entry<String, String> entry : commonVertexMasterContextWrapper
-          .getConfig()) {
+        for (Map.Entry<String, String> entry : (Iterable<Map.Entry<
+          String, String>>) commonVertexMasterContextWrapper.getConfig()) {
           configs.add(new Config(entry.getKey(), entry.getValue()));
         }
       }
