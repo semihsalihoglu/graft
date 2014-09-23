@@ -223,6 +223,8 @@ public class InstrumentGiraphClasses {
           if (classPool.get(className).subtypeOf(computationClass)) {
             classNames.add(className);
           }
+        } catch (NotFoundException e) {
+          // ignored
         } catch (Exception e) {
           e.printStackTrace();
         }
