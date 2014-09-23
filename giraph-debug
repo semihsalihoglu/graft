@@ -273,7 +273,8 @@ jarFileSig=$( (sha1sum || shasum) <"$jarFile" 2>/dev/null)
 jarFileSig=${jarFileSig%%[[:space:]]*}
 instrumentedClassName="$origClassName"
 instrumentedJarFileCached="$JARCACHE_LOCAL/$jarFileSig-instrumented.jar"
-if $UseCachedJars && [ "$instrumentedJarFileCached" -nt "$jarFile" ]; then
+if $UseCachedJars && [ "$instrumentedJarFileCached" -nt "$jarFile" ] &&
+    [ "$instrumentedJarFileCached" -nt "${cps[0]}" ]; then
     # pick up the previously instrumented jar
     instrumentedJarFile=$instrumentedJarFileCached
     msg "Using previously instrumented jar: $instrumentedJarFile"

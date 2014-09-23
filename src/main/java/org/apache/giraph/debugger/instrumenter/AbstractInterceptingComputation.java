@@ -95,11 +95,11 @@ public abstract class AbstractInterceptingComputation<
   /**
    * A constant to limit the number of vertices to log.
    */
-  private static int NUM_VERTICES_TO_LOG = 10;
+  private static int NUM_VERTICES_TO_LOG = 20;
   /**
    * A counter for number of vertices already logged.
    */
-  private static int NUM_VERTICES_LOGGED = -1;
+  private static int NUM_VERTICES_LOGGED = 0;
   /**
    * A counter for number of vertex violations already logged.
    */
@@ -322,6 +322,10 @@ public abstract class AbstractInterceptingComputation<
   protected final void interceptComputeEnd(Vertex<I, V, E> vertex,
     Iterable<M1> messages) throws IOException {
     if (shouldDebugVertex) {
+      // Reflect changes made by compute to scenario.
+      giraphVertexScenarioWrapperForRegularTraces.getContextWrapper()
+        .setVertexValueAfterWrapper(vertex.getValue());
+      // Save vertex scenario.
       commonVertexMasterInterceptionUtil.saveScenarioWrapper(
         giraphVertexScenarioWrapperForRegularTraces, DebuggerUtils
           .getFullTraceFileName(DebugTrace.VERTEX_REGULAR,

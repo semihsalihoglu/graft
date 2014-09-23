@@ -27,11 +27,11 @@ import $type.Name;
 public class $className {
 
   private ImmutableClassesGiraphConfiguration<$vertexIdType, $vertexValueType, $edgeValueType> conf;
-  	
-#parse("ComputeSetUpFuncTemplate.vm")
-  
-  
+
 #parse("ComputeTestFuncTemplate.vm")
+
+
+#parse("ComputeSetUpFuncTemplate.vm")
 
 
 #parse("ReadWritableFromByteArrayTemplate.vm")
