@@ -18,6 +18,8 @@ import org.apache.giraph.utils.WritableUtils;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.junit.Before;
 import org.junit.Test;
+
+import $classUnderTestFullName;
 #if ($usedTypes)
 #foreach ($type in $usedTypes)
 import $type.Name;

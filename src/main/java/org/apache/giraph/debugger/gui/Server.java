@@ -353,19 +353,19 @@ public class Server {
             debugTrace);
         ComputationComputeTestGenerator testGenerator =
           new ComputationComputeTestGenerator();
+        String testClassName = String.format("%sTest_%s_S%s_V%s",
+          giraphScenarioWrapper.getVertexScenarioClassesWrapper()
+          .getClassUnderTest().getSimpleName(), jobId, superstepId, vertexId);
         // Set the content-disposition header to force a download with the
         // given filename.
-        String filename = String.format("%sTest.java", giraphScenarioWrapper
-          .getVertexScenarioClassesWrapper().getClassUnderTest()
-          .getSimpleName());
+        String filename = String.format("%s.java", testClassName);
         this.setResponseHeader("Content-Disposition",
           String.format("attachment; filename=\"%s\"", filename));
         this.statusCode = HttpURLConnection.HTTP_OK;
         this.responseContentType = MediaType.TEXT_PLAIN;
         this.response = testGenerator
-          .generateTest(giraphScenarioWrapper, null /*
-                                                     * testPackage is optional
-                                                     */);
+          .generateTest(giraphScenarioWrapper,
+            null /* testPackage is optional */, testClassName);
       } catch (Exception e) {
         this.handleException(e, String.format(
           "Invalid parameters. %s, %s and %s are mandatory parameter.",
@@ -407,16 +407,16 @@ public class Server {
           new MasterComputeTestGenerator();
         // Set the content-disposition header to force a download with the
         // given filename.
-        String filename = String.format("%sTest.java",
-          giraphScenarioWrapper.getMasterClassUnderTest());
+        String testClassName = String.format("%sTest_%s_S%s",
+          giraphScenarioWrapper.getMasterClassUnderTest()
+          .replaceFirst(".*\\.", ""), jobId, superstepId);
+        String filename = String.format("%s.java", testClassName);
         this.setResponseHeader("Content-Disposition",
           String.format("attachment; filename=\"%s\"", filename));
         this.statusCode = HttpURLConnection.HTTP_OK;
         this.responseContentType = MediaType.TEXT_PLAIN;
         this.response = masterTestGenerator.generateTest(giraphScenarioWrapper,
-          null /*
-                * testPackage is optional
-                */);
+          null /* testPackage is optional */, testClassName);
       } catch (Exception e) {
         this.handleException(e, String.format(
           "Invalid parameters. %s and %s are mandatory parameter.",

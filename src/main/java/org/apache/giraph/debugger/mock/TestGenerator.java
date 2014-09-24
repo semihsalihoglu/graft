@@ -18,6 +18,7 @@
 package org.apache.giraph.debugger.mock;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.giraph.debugger.mock.ComputationComputeTestGenerator.Config;
+import org.apache.giraph.debugger.utils.AggregatedValueWrapper;
 import org.apache.giraph.debugger.utils.CommonVertexMasterContextWrapper;
 import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexScenarioClassesWrapper;
 import org.apache.velocity.VelocityContext;
@@ -106,7 +108,10 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
      */
     @SuppressWarnings("rawtypes")
     public void addClassUnderTest(Class classUnderTest) {
+      context.put("classUnderTestFullName", classUnderTest.getName());
       context.put("classUnderTestName", classUnderTest.getSimpleName());
+      context.put("classUnderTestPackage", classUnderTest.getPackage()
+        .getName());
     }
 
     /**
@@ -159,6 +164,7 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
      * @param commonVertexMasterContextWrapper
      *          {@link CommonVertexMasterContextWrapper} object.
      */
+    @SuppressWarnings("rawtypes")
     public void addCommonMasterVertexContext(
       CommonVertexMasterContextWrapper commonVertexMasterContextWrapper) {
       context.put("superstepNo",
@@ -170,6 +176,13 @@ public abstract class TestGenerator extends VelocityBasedGenerator {
 
       context.put("aggregators",
         commonVertexMasterContextWrapper.getPreviousAggregatedValues());
+      Set<Class> usedTypes = new LinkedHashSet<>();
+      Collection<AggregatedValueWrapper> aggregatedValues =
+        commonVertexMasterContextWrapper.getPreviousAggregatedValues();
+      for (AggregatedValueWrapper aggregatedValueWrapper : aggregatedValues) {
+        usedTypes.add(aggregatedValueWrapper.getValue().getClass());
+      }
+      context.put("usedTypesByAggregators", usedTypes);
 
       List<Config> configs = new ArrayList<>();
       if (commonVertexMasterContextWrapper.getConfig() != null) {
