@@ -225,6 +225,7 @@ public class InstrumentGiraphClasses {
           }
         } catch (NotFoundException e) {
           // ignored
+          assert true;
         } catch (Exception e) {
           e.printStackTrace();
         }
