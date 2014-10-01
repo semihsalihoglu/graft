@@ -29,7 +29,6 @@ import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.join.TupleWritable;
 
 /**
  * Randomized maximal bipartite graph matching algorithm implementation. It
@@ -52,11 +51,11 @@ public class RandomizedMaximalMatchingComputation extends
         sendMessageToAllEdges(vertex, createRequestMessage(vertex));
         // "and then unconditionally votes to halt."
         vertex.voteToHalt();
-        // "If it sent no messages (because it is already matched, or has no
-        // outgoing edges), or if all the message recipients are already
-        // matched, it will never be reactivated. Otherwise, it will receive a
-        // response in two supersteps and reactivate."
       }
+      // "If it sent no messages (because it is already matched, or has no
+      // outgoing edges), or if all the message recipients are already
+      // matched, it will never be reactivated. Otherwise, it will receive a
+      // response in two supersteps and reactivate."
       break;
 
     case 1: // "In phase 1 of a cycle,"
@@ -73,6 +72,7 @@ public class RandomizedMaximalMatchingComputation extends
           sendMessage(msg.senderVertex, reply);
           ++i;
         }
+        // "Then it unconditionally votes to halt."
         vertex.voteToHalt();
       }
       break;
@@ -92,6 +92,7 @@ public class RandomizedMaximalMatchingComputation extends
             break;
           }
         }
+        //vertex.voteToHalt();
         // "Left vertices that are already matched will never execute this
         // phase, since they will not have sent a message in phase 0."
       }
@@ -118,7 +119,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex The vertex to test
+   * @param vertex
+   *          The vertex to test
    * @return Whether the vertex belongs to the left part
    */
   boolean isLeft(Vertex<LongWritable, VertexValue, NullWritable> vertex) {
@@ -126,7 +128,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex The vertex to test
+   * @param vertex
+   *          The vertex to test
    * @return Whether the vertex has a match
    */
   private boolean hasNotMatchedYet(
@@ -135,7 +138,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex The vertex to test
+   * @param vertex
+   *          The vertex to test
    * @return Whether the vertex is an unmatched left one
    */
   protected boolean isUnmatchedLeft(
@@ -144,7 +148,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex The vertex to test
+   * @param vertex
+   *          The vertex to test
    * @return Whether the vertex is an unmatched right one
    */
   protected boolean isUnmatchedRight(
@@ -153,7 +158,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex Sending vertex
+   * @param vertex
+   *          Sending vertex
    * @return A message requesting a match
    */
   private Message createRequestMessage(
@@ -162,7 +168,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex Sending vertex
+   * @param vertex
+   *          Sending vertex
    * @return A message granting the match request
    */
   private Message createGrantingMessage(
@@ -171,7 +178,8 @@ public class RandomizedMaximalMatchingComputation extends
   }
 
   /**
-   * @param vertex Sending vertex
+   * @param vertex
+   *          Sending vertex
    * @return A message denying the match request
    */
   private Message createDenyingMessage(
@@ -199,20 +207,25 @@ public class RandomizedMaximalMatchingComputation extends
 
     @Override
     public void readFields(DataInput in) throws IOException {
-      // Use TupleWritable to read.
-      TupleWritable tuple = new TupleWritable();
-      tuple.readFields(in);
-      int i = 0;
-      matchedVertex = (LongWritable) tuple.get(i++);
+      if (in.readBoolean()) {
+        matchedVertex = new LongWritable();
+        matchedVertex.readFields(in);
+      }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-      // Use TupleWritable to write.
-      TupleWritable tuple = new TupleWritable(new Writable[] {
-        matchedVertex,
-      });
-      tuple.write(out);
+      out.writeBoolean(matchedVertex != null);
+      if (matchedVertex != null) {
+        matchedVertex.write(out);
+      }
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append(matchedVertex != null ? matchedVertex.get() : "null");
+      return sb.toString();
     }
 
   }
@@ -233,8 +246,16 @@ public class RandomizedMaximalMatchingComputation extends
     private BooleanWritable isGranting;
 
     /**
+     * Default constructor.
+     */
+    public Message() {
+    }
+
+    /**
      * Constructs a match request message.
-     * @param vertex Sending vertex
+     *
+     * @param vertex
+     *          Sending vertex
      */
     public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex) {
       senderVertex = vertex.getId();
@@ -242,8 +263,11 @@ public class RandomizedMaximalMatchingComputation extends
 
     /**
      * Constructs a match granting or denying message.
-     * @param vertex Sending vertex
-     * @param isGranting True iff it is a granting message
+     *
+     * @param vertex
+     *          Sending vertex
+     * @param isGranting
+     *          True iff it is a granting message
      */
     public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex,
       BooleanWritable isGranting) {
@@ -253,8 +277,11 @@ public class RandomizedMaximalMatchingComputation extends
 
     /**
      * Constructs a match granting or denying message.
-     * @param vertex Sending vertex
-     * @param isGranting True iff it is a granting message
+     *
+     * @param vertex
+     *          Sending vertex
+     * @param isGranting
+     *          True iff it is a granting message
      */
     public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex,
       boolean isGranting) {
@@ -274,15 +301,42 @@ public class RandomizedMaximalMatchingComputation extends
     }
 
     @Override
+    public String toString() {
+      if (isGranting == null) {
+        return "MATCH_REQUEST from " + senderVertex;
+      } else if (isGranting.get()) {
+        return "MATCH_GRANTED from " + senderVertex;
+      } else {
+        return "MATCH_DENIED from " + senderVertex;
+      }
+    }
+
+    @Override
     public void readFields(DataInput in) throws IOException {
-      senderVertex.readFields(in);
-      isGranting.readFields(in);
+      if (in.readBoolean()) {
+        senderVertex = new LongWritable();
+        senderVertex.readFields(in);
+      } else {
+        senderVertex = null;
+      }
+      if (in.readBoolean()) {
+        isGranting = new BooleanWritable();
+        isGranting.readFields(in);
+      } else {
+        isGranting = null;
+      }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-      senderVertex.write(out);
-      isGranting.write(out);
+      out.writeBoolean(senderVertex != null);
+      if (senderVertex != null) {
+        senderVertex.write(out);
+      }
+      out.writeBoolean(isGranting != null);
+      if (isGranting != null) {
+        isGranting.write(out);
+      }
     }
 
   }
