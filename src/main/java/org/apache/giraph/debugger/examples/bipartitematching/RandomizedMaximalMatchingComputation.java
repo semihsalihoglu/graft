@@ -69,7 +69,7 @@ public class RandomizedMaximalMatchingComputation extends
             createGrantingMessage(vertex) :
             // "sends messages to other requestors denying it."
             createDenyingMessage(vertex);
-          sendMessage(msg.senderVertex, reply);
+          sendMessage(msg.getSenderVertex(), reply);
           ++i;
         }
         // "Then it unconditionally votes to halt."
@@ -82,17 +82,15 @@ public class RandomizedMaximalMatchingComputation extends
       if (isUnmatchedLeft(vertex)) {
         // "chooses one of the grants it receives"
         for (Message msg : messages) {
-          if (msg.isGranting.get()) {
+          if (msg.isGranting().get()) {
             // (by simply picking the first one)
             // "and sends an acceptance message."
-            sendMessage(msg.senderVertex, createGrantingMessage(vertex));
-            // TODO(netj) is the following correct?
-            // (and also records which vertex was matched)
+            sendMessage(msg.getSenderVertex(), createGrantingMessage(vertex));
+            // (and also record which vertex was matched)
             vertex.getValue().setMatchedVertex(msg.getSenderVertex());
             break;
           }
         }
-        //vertex.voteToHalt();
         // "Left vertices that are already matched will never execute this
         // phase, since they will not have sent a message in phase 0."
       }
@@ -124,7 +122,7 @@ public class RandomizedMaximalMatchingComputation extends
    * @return Whether the vertex belongs to the left part
    */
   boolean isLeft(Vertex<LongWritable, VertexValue, NullWritable> vertex) {
-    return vertex.getId().get() % 2 == 0;
+    return vertex.getId().get() % 2 == 1;
   }
 
   /**
@@ -296,7 +294,7 @@ public class RandomizedMaximalMatchingComputation extends
       this.senderVertex = senderVertex;
     }
 
-    public BooleanWritable getIsGranting() {
+    public BooleanWritable isGranting() {
       return isGranting;
     }
 
