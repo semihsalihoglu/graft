@@ -25,7 +25,6 @@ import org.apache.giraph.debugger.examples.bipartitematching.RandomizedMaximalMa
 import org.apache.giraph.debugger.examples.bipartitematching.RandomizedMaximalMatchingComputation.VertexValue;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
-import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
@@ -69,7 +68,7 @@ public class RandomizedMaximalMatchingComputation extends
             createGrantingMessage(vertex) :
             // "sends messages to other requestors denying it."
             createDenyingMessage(vertex);
-          sendMessage(msg.getSenderVertex(), reply);
+          sendMessage(new LongWritable(msg.getSenderVertex()), reply);
           ++i;
         }
         // "Then it unconditionally votes to halt."
@@ -82,10 +81,11 @@ public class RandomizedMaximalMatchingComputation extends
       if (isUnmatchedLeft(vertex)) {
         // "chooses one of the grants it receives"
         for (Message msg : messages) {
-          if (msg.isGranting().get()) {
+          if (msg.isGranting()) {
             // (by simply picking the first one)
             // "and sends an acceptance message."
-            sendMessage(msg.getSenderVertex(), createGrantingMessage(vertex));
+            sendMessage(new LongWritable(msg.getSenderVertex()),
+              createGrantingMessage(vertex));
             // (and also record which vertex was matched)
             vertex.getValue().setMatchedVertex(msg.getSenderVertex());
             break;
@@ -132,7 +132,7 @@ public class RandomizedMaximalMatchingComputation extends
    */
   private boolean hasNotMatchedYet(
     Vertex<LongWritable, VertexValue, NullWritable> vertex) {
-    return vertex.getValue().matchedVertex == null;
+    return !vertex.getValue().isMatched();
   }
 
   /**
@@ -191,38 +191,48 @@ public class RandomizedMaximalMatchingComputation extends
   public static class VertexValue implements Writable {
 
     /**
+     * Whether this vertex has been matched already.
+     */
+    private boolean matched = false;
+    /**
      * The id of the matching vertex on the other side.
      */
-    private LongWritable matchedVertex;
+    private long matchedVertex = -1;
 
-    public LongWritable getMatchedVertex() {
+    public boolean isMatched() {
+      return matched;
+    }
+
+    public long getMatchedVertex() {
       return matchedVertex;
     }
 
-    public void setMatchedVertex(LongWritable matchedVertex) {
+    /**
+     * Sets matched vertex.
+     *
+     * @param matchedVertex Matched vertex id
+     */
+    public void setMatchedVertex(long matchedVertex) {
+      this.matched = true;
       this.matchedVertex = matchedVertex;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-      if (in.readBoolean()) {
-        matchedVertex = new LongWritable();
-        matchedVertex.readFields(in);
-      }
+      this.matched = in.readBoolean();
+      this.matchedVertex = in.readLong();
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-      out.writeBoolean(matchedVertex != null);
-      if (matchedVertex != null) {
-        matchedVertex.write(out);
-      }
+      out.writeBoolean(matched);
+      out.writeLong(matchedVertex);
     }
 
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
-      sb.append(matchedVertex != null ? matchedVertex.get() : "null");
+      sb.append(matched ? matchedVertex : "null");
       return sb.toString();
     }
 
@@ -236,12 +246,31 @@ public class RandomizedMaximalMatchingComputation extends
     /**
      * Id of the vertex sending this message.
      */
-    private LongWritable senderVertex;
+    private long senderVertex;
+
+    /**
+     * Type of the message.
+     */
+    private enum Type {
+      /**
+       * Match request message sent by left vertices.
+       */
+      MATCH_REQUEST,
+      /**
+       * Grant reply message sent by right and left vertices.
+       */
+      REQUEST_GRANTED,
+      /**
+       * Denial reply message sent by right vertices.
+       */
+      REQUEST_DENIED
+    }
+
     /**
      * Whether this message is a match request (null), or a message that grants
      * (true) or denies (false) another one.
      */
-    private BooleanWritable isGranting;
+    private Type type = Type.MATCH_REQUEST;
 
     /**
      * Default constructor.
@@ -256,21 +285,8 @@ public class RandomizedMaximalMatchingComputation extends
      *          Sending vertex
      */
     public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex) {
-      senderVertex = vertex.getId();
-    }
-
-    /**
-     * Constructs a match granting or denying message.
-     *
-     * @param vertex
-     *          Sending vertex
-     * @param isGranting
-     *          True iff it is a granting message
-     */
-    public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex,
-      BooleanWritable isGranting) {
-      this(vertex);
-      this.isGranting = isGranting;
+      senderVertex = vertex.getId().get();
+      type = Type.MATCH_REQUEST;
     }
 
     /**
@@ -283,58 +299,33 @@ public class RandomizedMaximalMatchingComputation extends
      */
     public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex,
       boolean isGranting) {
-      this(vertex, new BooleanWritable(isGranting));
+      this(vertex);
+      type = isGranting ? Type.REQUEST_GRANTED : Type.REQUEST_DENIED;
     }
 
-    public LongWritable getSenderVertex() {
+    public long getSenderVertex() {
       return senderVertex;
     }
 
-    public void setSenderVertex(LongWritable senderVertex) {
-      this.senderVertex = senderVertex;
-    }
-
-    public BooleanWritable isGranting() {
-      return isGranting;
+    public boolean isGranting() {
+      return type.equals(Type.REQUEST_GRANTED);
     }
 
     @Override
     public String toString() {
-      if (isGranting == null) {
-        return "MATCH_REQUEST from " + senderVertex;
-      } else if (isGranting.get()) {
-        return "MATCH_GRANTED from " + senderVertex;
-      } else {
-        return "MATCH_DENIED from " + senderVertex;
-      }
+      return type + " from " + senderVertex;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-      if (in.readBoolean()) {
-        senderVertex = new LongWritable();
-        senderVertex.readFields(in);
-      } else {
-        senderVertex = null;
-      }
-      if (in.readBoolean()) {
-        isGranting = new BooleanWritable();
-        isGranting.readFields(in);
-      } else {
-        isGranting = null;
-      }
+      senderVertex = in.readLong();
+      type = Type.values()[in.readInt()];
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-      out.writeBoolean(senderVertex != null);
-      if (senderVertex != null) {
-        senderVertex.write(out);
-      }
-      out.writeBoolean(isGranting != null);
-      if (isGranting != null) {
-        isGranting.write(out);
-      }
+      out.writeLong(senderVertex);
+      out.writeInt(type.ordinal());
     }
 
   }
