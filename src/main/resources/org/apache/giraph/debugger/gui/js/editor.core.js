@@ -214,7 +214,7 @@ Editor.prototype.getMessagesReceivedByNode = function(id) {
 
     for (var i = 0; i < this.messages.length; i++) {
         var messageObj = this.messages[i];
-        if (messageObj.receiver.id === id && messageObj.incoming === true) {
+        if (messageObj.incoming === true && messageObj.receiver.id === id) {
             messagesReceived[dummyPrefix + i] = messageObj.message;
         }
     }
