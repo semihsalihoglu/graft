@@ -45,11 +45,13 @@ public class RandomizedMaximalMatchingComputation extends
     switch (phase) {
     case 0: // "In phase 0 of a cycle,"
       // "each left vertex not yet matched"
-      if (isUnmatchedLeft(vertex)) {
-        // "sends a message to each of its neighbors to request a match,"
-        sendMessageToAllEdges(vertex, createRequestMessage(vertex));
-        // "and then unconditionally votes to halt."
-        vertex.voteToHalt();
+      if (isLeft(vertex)) {
+        if (isNotMatchedYet(vertex)) {
+          // "sends a message to each of its neighbors to request a match,"
+          sendMessageToAllEdges(vertex, createRequestMessage(vertex));
+          // "and then unconditionally votes to halt."
+          vertex.voteToHalt();
+        }
       }
       // "If it sent no messages (because it is already matched, or has no
       // outgoing edges), or if all the message recipients are already
@@ -59,55 +61,68 @@ public class RandomizedMaximalMatchingComputation extends
 
     case 1: // "In phase 1 of a cycle,"
       // "each right vertex not yet matched"
-      if (isUnmatchedRight(vertex)) {
-        int i = 0;
-        for (Message msg : messages) {
-          // "randomly chooses one of the messages it receives,"
-          Message reply = (i == 0) ? // (by simply granting the first one)
-            // "sends a message granting that request, and"
-            createGrantingMessage(vertex) :
-            // "sends messages to other requestors denying it."
-            createDenyingMessage(vertex);
-          sendMessage(new LongWritable(msg.getSenderVertex()), reply);
-          ++i;
+      if (isRight(vertex)) {
+        if (isNotMatchedYet(vertex)) {
+          int i = 0;
+          for (Message msg : messages) {
+            // "randomly chooses one of the messages it receives,"
+            Message reply = (i == 0) ? // (by simply granting the first one)
+              // "sends a message granting that request, and"
+              createGrantingMessage(vertex) :
+              // "sends messages to other requestors denying it."
+              createDenyingMessage(vertex);
+            sendMessage(new LongWritable(msg.getSenderVertex()), reply);
+            ++i;
+          }
+          // "Then it unconditionally votes to halt."
+          vertex.voteToHalt(); // XXX It is ambiguous if only unmatched right
+                               // vertices must halt, or all right ones must.
         }
-        // "Then it unconditionally votes to halt."
-        vertex.voteToHalt();
+        // vertex.voteToHalt();  // XXX (Not clear from the original text)
+                                 // Unless all right vertices halt, program
+                                 // enters an infinite loop.
       }
       break;
 
     case 2: // "In phase 2 of a cycle,"
       // "each left vertex not yet matched"
-      if (isUnmatchedLeft(vertex)) {
-        // "chooses one of the grants it receives"
-        for (Message msg : messages) {
-          if (msg.isGranting()) {
-            // (by simply picking the first one)
-            // "and sends an acceptance message."
-            sendMessage(new LongWritable(msg.getSenderVertex()),
-              createGrantingMessage(vertex));
-            // (and also record which vertex was matched)
-            vertex.getValue().setMatchedVertex(msg.getSenderVertex());
-            break;
+      if (isLeft(vertex)) {
+        if (isNotMatchedYet(vertex)) {
+          // "chooses one of the grants it receives"
+          for (Message msg : messages) {
+            if (msg.isGranting()) {
+              // (by simply picking the first one)
+              // "and sends an acceptance message."
+              sendMessage(new LongWritable(msg.getSenderVertex()),
+                createGrantingMessage(vertex));
+              // (and also record which vertex was matched)
+              vertex.getValue().setMatchedVertex(msg.getSenderVertex());
+              // vertex.voteToHalt(); // XXX (Not in the original text)
+                                      // Unless matched left vertices halt,
+                                      // program enters an infinite loop.
+              break;
+            }
           }
+          // "Left vertices that are already matched will never execute this
+          // phase, since they will not have sent a message in phase 0."
         }
-        // "Left vertices that are already matched will never execute this
-        // phase, since they will not have sent a message in phase 0."
       }
       break;
 
     case 3: // "Finally, in phase 3,"
       // "an unmatched right vertex"
-      if (isUnmatchedRight(vertex)) {
-        // "receives at most one acceptance message."
-        for (Message msg : messages) {
-          // "It notes the matched node"
-          vertex.getValue().setMatchedVertex(msg.getSenderVertex());
-          break;
+      if (isRight(vertex)) {
+        if (isNotMatchedYet(vertex)) {
+          // "receives at most one acceptance message."
+          for (Message msg : messages) {
+            // "It notes the matched node"
+            vertex.getValue().setMatchedVertex(msg.getSenderVertex());
+            break;
+          }
+          // "and unconditionally votes to halt"
+          vertex.voteToHalt();
+          // "it has nothing further to do."
         }
-        // "and unconditionally votes to halt"
-        vertex.voteToHalt();
-        // "it has nothing further to do."
       }
       break;
 
@@ -128,31 +143,20 @@ public class RandomizedMaximalMatchingComputation extends
   /**
    * @param vertex
    *          The vertex to test
+   * @return Whether the vertex belongs to the right part
+   */
+  boolean isRight(Vertex<LongWritable, VertexValue, NullWritable> vertex) {
+    return !isLeft(vertex);
+  }
+
+  /**
+   * @param vertex
+   *          The vertex to test
    * @return Whether the vertex has a match
    */
-  private boolean hasNotMatchedYet(
+  private boolean isNotMatchedYet(
     Vertex<LongWritable, VertexValue, NullWritable> vertex) {
     return !vertex.getValue().isMatched();
-  }
-
-  /**
-   * @param vertex
-   *          The vertex to test
-   * @return Whether the vertex is an unmatched left one
-   */
-  protected boolean isUnmatchedLeft(
-    Vertex<LongWritable, VertexValue, NullWritable> vertex) {
-    return isLeft(vertex) && hasNotMatchedYet(vertex);
-  }
-
-  /**
-   * @param vertex
-   *          The vertex to test
-   * @return Whether the vertex is an unmatched right one
-   */
-  protected boolean isUnmatchedRight(
-    Vertex<LongWritable, VertexValue, NullWritable> vertex) {
-    return !isLeft(vertex) && hasNotMatchedYet(vertex);
   }
 
   /**
