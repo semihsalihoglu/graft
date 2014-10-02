@@ -45,6 +45,7 @@ import org.apache.giraph.debugger.utils.GiraphVertexScenarioWrapper.VertexContex
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper;
 import org.apache.giraph.debugger.utils.MsgIntegrityViolationWrapper.ExtendedOutgoingMessageWrapper;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -97,6 +98,11 @@ public class ServerUtils {
   private static final Logger LOG = Logger.getLogger(ServerUtils.class);
 
   /**
+   * Cached FileSystem opened by {@link #getFileSystem()}.
+   */
+  private static FileSystem FILE_SYSTEM_CACHED;
+
+  /**
    * Private constructor to disallow construction.
    */
   private ServerUtils() { }
@@ -130,8 +136,11 @@ public class ServerUtils {
    * @return a {@link FileSystem} object to be used to read from HDFS.
    */
   public static FileSystem getFileSystem() throws IOException {
-    Configuration configuration = new Configuration();
-    return FileSystem.get(configuration);
+    if (FILE_SYSTEM_CACHED == null) {
+      Configuration configuration = new Configuration();
+      FILE_SYSTEM_CACHED = FileSystem.get(configuration);
+    }
+    return FILE_SYSTEM_CACHED;
   }
 
   /**
@@ -144,22 +153,24 @@ public class ServerUtils {
       "/" + "jar.signature");
     try {
       FileSystem fs = getFileSystem();
-      List<String> lines = IOUtils.readLines(fs.open(jarSignaturePath));
-      if (lines.size() > 0) {
-        String jarSignature = lines.get(0);
-        // check if jar is already in JARCACHE_LOCAL
-        File localFile = new File(DebuggerUtils.JARCACHE_LOCAL + "/" +
-          jarSignature + ".jar");
-        if (!localFile.exists()) {
-          // otherwise, download from HDFS
-          Path hdfsPath = new Path(fs.getUri().resolve(
-            DebuggerUtils.JARCACHE_HDFS + "/" + jarSignature + ".jar"));
-          Logger.getLogger(ServerUtils.class).info(
-            "Copying from HDFS: " + hdfsPath + " to " + localFile);
-          localFile.getParentFile().mkdirs();
-          fs.copyToLocalFile(hdfsPath, new Path(localFile.toURI()));
+      try (FSDataInputStream jarSignatureInput = fs.open(jarSignaturePath)) {
+        List<String> lines = IOUtils.readLines(jarSignatureInput);
+        if (lines.size() > 0) {
+          String jarSignature = lines.get(0);
+          // check if jar is already in JARCACHE_LOCAL
+          File localFile = new File(DebuggerUtils.JARCACHE_LOCAL + "/" +
+            jarSignature + ".jar");
+          if (!localFile.exists()) {
+            // otherwise, download from HDFS
+            Path hdfsPath = new Path(fs.getUri().resolve(
+              DebuggerUtils.JARCACHE_HDFS + "/" + jarSignature + ".jar"));
+            Logger.getLogger(ServerUtils.class).info(
+              "Copying from HDFS: " + hdfsPath + " to " + localFile);
+            localFile.getParentFile().mkdirs();
+            fs.copyToLocalFile(hdfsPath, new Path(localFile.toURI()));
+          }
+          return new URL[] { localFile.toURI().toURL() };
         }
-        return new URL[] { localFile.toURI().toURL() };
       }
     } catch (IOException e) {
       // gracefully ignore if we failed to read the jar.signature

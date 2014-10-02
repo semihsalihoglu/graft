@@ -28,6 +28,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import org.apache.giraph.utils.WritableUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
@@ -116,7 +117,9 @@ public abstract class BaseWrapper {
    */
   public void load(String fileName) throws ClassNotFoundException, IOException,
     InstantiationException, IllegalAccessException {
-    loadFromProto(parseProtoFromInputStream(new FileInputStream(fileName)));
+    try (FileInputStream inputStream = new FileInputStream(fileName)) {
+      loadFromProto(parseProtoFromInputStream(inputStream));
+    }
   }
 
   /**
@@ -128,7 +131,9 @@ public abstract class BaseWrapper {
   public void loadFromHDFS(FileSystem fs, String fileName)
     throws ClassNotFoundException, IOException, InstantiationException,
     IllegalAccessException {
-    loadFromProto(parseProtoFromInputStream(fs.open(new Path(fileName))));
+    try (FSDataInputStream inputStream = fs.open(new Path(fileName))) {
+      loadFromProto(parseProtoFromInputStream(inputStream));
+    }
   }
 
   /**
