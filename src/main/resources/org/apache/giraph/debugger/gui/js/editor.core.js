@@ -478,7 +478,8 @@ Editor.prototype.updateGraphData = function(scenario) {
         }
 
         if (incomingMessages) {
-            incomingMessages.forEach(function(incomingMessage, i, arr) {
+            for (var i=0; i<incomingMessages.length; i++) {
+              var incomingMessage = incomingMessages[i];
               this.messages.push({ 
                   // TODO: sender is not supplied by the server as of now.
                   sender : null, 
@@ -486,7 +487,7 @@ Editor.prototype.updateGraphData = function(scenario) {
                   message: incomingMessage,
                   incoming : true
               });
-            });
+            }
           }
 
         // Update aggregators
