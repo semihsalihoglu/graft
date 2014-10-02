@@ -180,7 +180,7 @@ Editor.prototype.getMessagesSentByNode = function(id) {
     var messagesSent = {};
     for (var i = 0; i < this.messages.length; i++) {
         var messageObj = this.messages[i];
-        if (messageObj.sender.id === id) {
+        if (messageObj.outgoing === true && messageObj.sender.id === id) {
             messagesSent[messageObj.receiver.id] = messageObj.message;
         }
     }
@@ -209,10 +209,13 @@ Editor.prototype.getEdgeValuesForNode = function(id) {
  */
 Editor.prototype.getMessagesReceivedByNode = function(id) {
     var messagesReceived = {};
+    // Note: This is required because incoming messages do not have a sender as of now.
+    var dummyPrefix = 'v';
+
     for (var i = 0; i < this.messages.length; i++) {
         var messageObj = this.messages[i];
-        if (messageObj.receiver.id === id) {
-            messagesReceived[messageObj.sender.id] = messageObj.message;
+        if (messageObj.incoming === true && messageObj.receiver.id === id) {
+            messagesReceived[dummyPrefix + i] = messageObj.message;
         }
     }
     return messagesReceived;
@@ -408,7 +411,8 @@ Editor.prototype.keyup = function() {
  *                    receiverId1: "message1",
  *                    receiverId2: "message2",
  *                    ...
- *                  }
+ *                  },
+ *            incomingMessages : [ "message1", "message2" ]
  *            enabled : true/false
  *          }
  * }
@@ -458,16 +462,33 @@ Editor.prototype.updateGraphData = function(scenario) {
         if (scenario[nodeId].enabled != undefined) {
             node.enabled = scenario[nodeId].enabled;
         }
-        var msgs = scenario[nodeId]['outgoingMessages'];
+        var outgoingMessages = scenario[nodeId]['outgoingMessages'];
+        var incomingMessages = scenario[nodeId]['incomingMessages'];
+
         // Build this.messages
-        if (msgs) {
-            for(var receiverId in msgs) {
-                this.messages.push({ sender: node,
+        if (outgoingMessages) {
+            for(var receiverId in outgoingMessages) {
+                this.messages.push({ 
+                    sender: node,
                     receiver: this.getNodeWithId(receiverId),
-                    message: msgs[receiverId]
+                    message: outgoingMessages[receiverId],
+                    outgoing : true
                 });
             }
         }
+
+        if (incomingMessages) {
+            incomingMessages.forEach(function(incomingMessage, i, arr) {
+              this.messages.push({ 
+                  // TODO: sender is not supplied by the server as of now.
+                  sender : null, 
+                  receiver: node,
+                  message: incomingMessage,
+                  incoming : true
+              });
+            });
+          }
+
         // Update aggregators
         // NOTE: Later vertices ovewrite value for a given key
         var aggregators = scenario[nodeId]['aggregators'];
@@ -536,7 +557,7 @@ Editor.prototype.disableNode = function(nodeId) {
     this.getNodeWithId(nodeId).enabled = false;
     // Remove the outgoing Messages for this node.
     var toSplice = this.messages.filter(function(message) {
-        return (message.sender.id === nodeId);
+        return (message.outgoing === true && message.sender.id === nodeId);
     });
 
     toSplice.map((function(message) {
