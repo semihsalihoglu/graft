@@ -115,6 +115,16 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    */
   private static final String DEBUG_ALL_VERTICES_FLAG =
     "giraph.debugger.debugAllVertices";
+  /**
+   * String constant for specifying the maximum number of vertices to capture.
+   */
+  private static final String NUM_VERTICES_TO_LOG =
+    "giraph.debugger.numVerticesToLog";
+  /**
+   * String constant for specifying the maximum number of violations to capture.
+   */
+  private static final String NUM_VIOLATIONS_TO_LOG =
+    "giraph.debugger.numViolationsToLog";
 
   /**
    * Logger for this class.
@@ -142,6 +152,14 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * DEBUG_ALL_VERTICES_FLAG is set to true.
    */
   private boolean debugAllVertices = false;
+  /**
+   * Maximum number of vertices to capture by each thread of every worker.
+   */
+  private int numVerticesToLog;
+  /**
+   * Maximum number of violations to capture by each thread of every worker.
+   */
+  private int numViolationsToLog;
 
   /**
    * Default public constructor. Configures not to debug any vertex in
@@ -153,6 +171,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     debugAllVertices = false;
     debugNeighborsOfVerticesToDebug = false;
     superstepsToDebugSet = null;
+    numVerticesToLog = 3;
+    numViolationsToLog = 3;
   }
 
   /**
@@ -205,6 +225,10 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
         }
       }
     }
+
+    numVerticesToLog = config.getInt(NUM_VERTICES_TO_LOG, 3);
+    numViolationsToLog = config.getInt(NUM_VIOLATIONS_TO_LOG, 3);
+
     LOG.debug("DebugConfig" + this);
   }
 
@@ -224,6 +248,11 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * @return whether the vertex should be debugged.
    */
   public boolean shouldDebugVertex(Vertex<I, V, E> vertex) {
+    if (vertex.isHalted()) {
+      // If vertex has already halted before a superstep, we probably won't
+      // want to debug it.
+      return false;
+    }
     if (debugAllVertices) {
       return true;
     }
@@ -300,6 +329,22 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     return true;
   }
 
+  /**
+   * @return Maximum number of vertices to capture by each thread of every
+   *         worker
+   */
+  public int getNumberOfVerticesToLog() {
+    return numVerticesToLog;
+  }
+
+  /**
+   * @return Maximum number of violations to capture by each thread of every
+   *         worker
+   */
+  public int getNumberOfViolationsToLog() {
+    return numViolationsToLog;
+  }
+
   @Override
   public String toString() {
     StringBuilder stringBuilder = new StringBuilder();
@@ -318,4 +363,5 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
       shouldCheckVertexValueIntegrity());
     return stringBuilder.toString();
   }
+
 }

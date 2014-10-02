@@ -17,6 +17,8 @@
 #     -S SUPERSTEP_NO   To debug only the given supersteps
 #     -V VERTEX_ID      To debug only the given vertices
 #     -N                To also debug the neighbors of the given vertices
+#     -m #              To limit the maximum number of captured vertices
+#     -M #              To limit the maximum number of captured violations
 #     -C CLASS          Name of Computation classes to debug
 #                       (if MasterCompute uses many)
 #     -f                Force instrumentation, don't use cached one
@@ -179,13 +181,17 @@ VerticesToDebug=()
 ComputationClasses=()
 NoDebugNeighbors=true
 UseCachedJars=true
-while getopts "S:V:C:Nf" o; do
+NumVerticesToLog=
+NumViolationsToLog=
+while getopts "S:V:C:Nm:M:f" o; do
     case $o in
         S) SuperstepsToDebug+=("$OPTARG") ;;
         V) VerticesToDebug+=("$OPTARG") ;;
         C) ComputationClasses+=("$OPTARG") ;;
         N) NoDebugNeighbors=false ;;
         f) UseCachedJars=false ;;
+        m) NumVerticesToLog=$OPTARG ;;
+        M) NumViolationsToLog=$OPTARG ;;
         *)
             error "$o: Unrecognized option"
     esac
@@ -264,6 +270,11 @@ fi
 #  debugNeighbors
 $NoDebugNeighbors ||
     set -- "$@" -ca "giraph.debugger.debugNeighbors=true"
+#  limit number of captures
+[ -z "$NumVerticesToLog" ] ||
+    set -- "$@" -ca "giraph.debugger.numVerticesToLog=$NumVerticesToLog"
+[ -z "$NumViolationsToLog" ] ||
+    set -- "$@" -ca "giraph.debugger.numViolationsToLog=$NumViolationsToLog"
 
 # set up environment
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"

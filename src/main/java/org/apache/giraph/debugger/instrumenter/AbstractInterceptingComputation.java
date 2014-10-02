@@ -91,11 +91,11 @@ public abstract class AbstractInterceptingComputation<
   /**
    * A constant to limit the number of violations to log.
    */
-  private static int NUM_VIOLATIONS_TO_LOG = 10;
+  private static int NUM_VIOLATIONS_TO_LOG = 5;
   /**
    * A constant to limit the number of vertices to log.
    */
-  private static int NUM_VERTICES_TO_LOG = 20;
+  private static int NUM_VERTICES_TO_LOG = 5;
   /**
    * A counter for number of vertices already logged.
    */
@@ -207,6 +207,13 @@ public abstract class AbstractInterceptingComputation<
       EDGE_VALUE_CLASS = getConf().getEdgeValueClass();
       INCOMING_MESSAGE_CLASS = getConf().getIncomingMessageValueClass();
       OUTGOING_MESSAGE_CLASS = getConf().getOutgoingMessageValueClass();
+      // Set limits from DebugConfig
+      NUM_VERTICES_TO_LOG = DEBUG_CONFIG.getNumberOfVerticesToLog();
+      NUM_VIOLATIONS_TO_LOG = DEBUG_CONFIG.getNumberOfViolationsToLog();
+      // Reset counters
+      NUM_MESSAGE_VIOLATIONS_LOGGED = 0;
+      NUM_VERTEX_VIOLATIONS_LOGGED = 0;
+      NUM_VERTICES_LOGGED = 0;
     } catch (InstantiationException | ClassNotFoundException |
       IllegalAccessException e) {
       LOG.error("Could not create a new DebugConfig instance of " +
@@ -263,7 +270,7 @@ public abstract class AbstractInterceptingComputation<
     hasViolatedMsgValueConstraint = false;
     // A vertex should be debugged if:
     // 1) the user configures the superstep to be debugged;
-    // 2) the user configues the vertex to be debugged; and
+    // 2) the user configures the vertex to be debugged; and
     // 3) we have already debugged less than a threshold of vertices in this
     // superstep.
     shouldDebugVertex = DEBUG_CONFIG.shouldDebugSuperstep(getSuperstep()) &&
