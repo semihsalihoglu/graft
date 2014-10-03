@@ -29,7 +29,7 @@ import org.apache.hadoop.io.NullWritable;
  * assumes all vertices whose ids are even are in the left part, and odd in the
  * right.
  */
-public class RandomizedMaximalMatchingComputation extends
+public class RandomizedMaximalMatchingComputation3FixedRight extends
   BasicComputation<LongWritable, VertexValue, NullWritable, Message> {
 
   @Override
@@ -69,10 +69,11 @@ public class RandomizedMaximalMatchingComputation extends
             sendMessage(new LongWritable(msg.getSenderVertex()), reply);
             ++i;
           }
-          // "Then it unconditionally votes to halt."
-          vertex.voteToHalt(); // XXX It is ambiguous if only unmatched right
-                               // vertices must halt, or all right ones must.
         }
+        // "Then it unconditionally votes to halt."
+        vertex.voteToHalt();     // XXX (Not clear from the original text)
+                                 // Unless all right vertices halt, program
+                                 // enters an infinite loop.
       }
       break;
 
@@ -89,12 +90,12 @@ public class RandomizedMaximalMatchingComputation extends
                 createGrantingMessage(vertex));
               // (and also record which vertex was matched)
               vertex.getValue().setMatchedVertex(msg.getSenderVertex());
+              vertex.voteToHalt();    // XXX (Not in the original text)
+                                      // Unless matched left vertices halt,
+                                      // program enters prematurely.
               break;
             }
           }
-          vertex.voteToHalt();    // XXX (Not in the original text)
-                                  // In fact, program may end prematurely
-                                  // unless only matched left vertices halt.
           // "Left vertices that are already matched will never execute this
           // phase, since they will not have sent a message in phase 0."
         }
@@ -111,12 +112,12 @@ public class RandomizedMaximalMatchingComputation extends
             vertex.getValue().setMatchedVertex(msg.getSenderVertex());
             break;
           }
-          // "and unconditionally votes to halt"
-          vertex.voteToHalt(); // XXX Again, it's ambiguous if only unmatched
-                               // right vertices must halt, or all right ones
-                               // must.
-          // "it has nothing further to do."
         }
+        // "and unconditionally votes to halt"
+        vertex.voteToHalt();     // XXX (Not clear from the original text)
+                                 // Unless all right vertices halt, program
+                                 // enters an infinite loop.
+        // "it has nothing further to do."
       }
       break;
 

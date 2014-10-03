@@ -20,7 +20,6 @@ package org.apache.giraph.debugger.examples.bipartitematching;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.giraph.debugger.examples.bipartitematching.RandomizedMaximalMatchingComputation.VertexValue;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
@@ -42,7 +41,7 @@ import com.google.common.collect.Lists;
 public class BipartiteGraphInputFormat
   extends
   TextVertexInputFormat<LongWritable,
-  RandomizedMaximalMatchingComputation.VertexValue, NullWritable> {
+  VertexValue, NullWritable> {
 
   @Override
   public TextVertexReader createVertexReader(InputSplit split,

@@ -36,7 +36,7 @@ import org.json.JSONArray;
 public class BipartiteGraphOutputFormat
   extends
   TextVertexOutputFormat<LongWritable,
-  RandomizedMaximalMatchingComputation.VertexValue, NullWritable> {
+  VertexValue, NullWritable> {
 
   @Override
   public TextVertexWriter createVertexWriter(TaskAttemptContext context) {
@@ -49,7 +49,7 @@ public class BipartiteGraphOutputFormat
   private class BipartiteVertexWriter extends TextVertexWriterToEachLine {
     @Override
     public Text convertVertexToLine(
-      Vertex<LongWritable, RandomizedMaximalMatchingComputation.VertexValue,
+      Vertex<LongWritable, VertexValue,
       NullWritable> vertex)
       throws IOException {
       JSONArray jsonVertex = new JSONArray();

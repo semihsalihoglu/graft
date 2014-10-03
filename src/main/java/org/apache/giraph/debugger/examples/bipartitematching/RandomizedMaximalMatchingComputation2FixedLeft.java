@@ -29,7 +29,7 @@ import org.apache.hadoop.io.NullWritable;
  * assumes all vertices whose ids are even are in the left part, and odd in the
  * right.
  */
-public class RandomizedMaximalMatchingComputation extends
+public class RandomizedMaximalMatchingComputation2FixedLeft extends
   BasicComputation<LongWritable, VertexValue, NullWritable, Message> {
 
   @Override
@@ -89,12 +89,12 @@ public class RandomizedMaximalMatchingComputation extends
                 createGrantingMessage(vertex));
               // (and also record which vertex was matched)
               vertex.getValue().setMatchedVertex(msg.getSenderVertex());
+              vertex.voteToHalt();    // XXX (Not in the original text)
+                                      // Unless matched left vertices halt,
+                                      // program ends prematurely.
               break;
             }
           }
-          vertex.voteToHalt();    // XXX (Not in the original text)
-                                  // In fact, program may end prematurely
-                                  // unless only matched left vertices halt.
           // "Left vertices that are already matched will never execute this
           // phase, since they will not have sent a message in phase 0."
         }
