@@ -238,8 +238,8 @@ GiraphDebugger.prototype.initMessageElements = function(nodeAttrForm) {
 
     var messageTabs = $('<ul />')
         .addClass('nav nav-tabs')
-        .html('<li class="active"><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>' +
-            '<li><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>' + 
+        .html('<li class="active"><a id="node-attr-received" class="nav-msg" href="#!">Received</a></li>' + 
+            '<li><a id="node-attr-sent" class="nav-msg" href="#!">Sent</a></li>' +
             '<li><a id="node-attr-edgevals" class="nav-msg" href="#!">Edge Values</a></li>')
         .appendTo(messageContainer);
 
@@ -763,9 +763,9 @@ GiraphDebugger.prototype.openNodeAttrs = function(data) {
         $(this.nodeAttrModal).dialog('close');
     }).bind(this));
 
-    // Set the 'Sent' tab as the active tab and show messages.
-    this.toggleMessageTabs('node-attr-sent');
-    this.showMessages(data.editor.getMessagesSentByNode(this.selectedNodeId));
+    // Set the 'Received' tab as the active tab and show messages.
+    this.toggleMessageTabs('node-attr-received');
+    this.showMessages(data.editor.getMessagesReceivedByNode(this.selectedNodeId));
 }
 
 /*

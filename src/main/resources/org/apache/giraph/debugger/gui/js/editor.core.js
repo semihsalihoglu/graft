@@ -209,13 +209,13 @@ Editor.prototype.getEdgeValuesForNode = function(id) {
  */
 Editor.prototype.getMessagesReceivedByNode = function(id) {
     var messagesReceived = {};
-    // Note: This is required because incoming messages do not have a sender as of now.
-    var dummyPrefix = 'v';
 
     for (var i = 0; i < this.messages.length; i++) {
         var messageObj = this.messages[i];
         if (messageObj.incoming === true && messageObj.receiver.id === id) {
-            messagesReceived[dummyPrefix + i] = messageObj.message;
+            // Note: This is required because incoming messages do not have a sender as of now.
+            var senderId = '<i data-id="' + i + '"></i>';
+            messagesReceived[senderId] = messageObj.message;
         }
     }
     return messagesReceived;
@@ -482,7 +482,7 @@ Editor.prototype.updateGraphData = function(scenario) {
         }
 
         if (incomingMessages) {
-            for (var i=0; i<incomingMessages.length; i++) {
+            for (var i = 0; i < incomingMessages.length; i++) {
               var incomingMessage = incomingMessages[i];
               this.messages.push({ 
                   // TODO: sender is not supplied by the server as of now.
