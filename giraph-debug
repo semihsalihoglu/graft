@@ -280,7 +280,13 @@ $NoDebugNeighbors ||
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH:+$HADOOP_CLASSPATH:}$jarFile"
 
 # first, instrument the given class
-jarFileSig=$( (sha1sum || shasum) <"$jarFile" 2>/dev/null)
+jarFileSig=$(
+    {
+        echo "$origClassName"
+        echo "$masterComputeClassName"
+        cat "$jarFile"
+    } | (sha1sum || shasum) 2>/dev/null
+)
 jarFileSig=${jarFileSig%%[[:space:]]*}
 instrumentedClassName="$origClassName"
 instrumentedJarFileCached="$JARCACHE_LOCAL/$jarFileSig-instrumented.jar"
