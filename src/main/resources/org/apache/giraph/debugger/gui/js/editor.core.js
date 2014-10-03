@@ -453,6 +453,9 @@ Editor.prototype.buildGraphFromAdjList = function(adjList) {
 Editor.prototype.updateGraphData = function(scenario) {
     // Cache the scenario object. Used by tabular view.
     this.currentScenario = scenario;
+    // Clear the messages array. Unlike other fields, messages is cleared and reloaded for every scenario.
+    this.messages.length = 0;
+
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in scenario) {
         var node = this.getNodeWithId(nodeId);
@@ -462,6 +465,7 @@ Editor.prototype.updateGraphData = function(scenario) {
         if (scenario[nodeId].enabled != undefined) {
             node.enabled = scenario[nodeId].enabled;
         }
+
         var outgoingMessages = scenario[nodeId]['outgoingMessages'];
         var incomingMessages = scenario[nodeId]['incomingMessages'];
 
