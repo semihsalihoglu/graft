@@ -462,8 +462,12 @@ Editor.prototype.updateGraphData = function(scenario) {
         if (scenario[nodeId].enabled != undefined) {
             node.enabled = scenario[nodeId].enabled;
         }
+
         var outgoingMessages = scenario[nodeId]['outgoingMessages'];
         var incomingMessages = scenario[nodeId]['incomingMessages'];
+
+        // Clear the messages array. Unlike other fields, message is cleared and reloaded for every scenario.
+        this.messages.length = 0;
 
         // Build this.messages
         if (outgoingMessages) {
