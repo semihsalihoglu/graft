@@ -533,7 +533,6 @@ Editor.prototype.addToGraph = function(scenario) {
  * Shows the preloader and hides all other elements.
  */
 Editor.prototype.showPreloader = function() {
-    this.zoomSvg([0,0], 1);
     this.svg.selectAll('g').transition().style('opacity', 0);
     this.preloader.transition().style('opacity', 1);
 }

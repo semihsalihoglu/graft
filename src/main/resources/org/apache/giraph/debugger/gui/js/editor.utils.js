@@ -93,8 +93,9 @@ Editor.prototype.initElements = function() {
     this.initTable();
     // Creates the main SVG element and appends it to the container as the first child.
     // Set the SVG class to 'editor'.
-    this.zoomHolder = d3.select(this.container)
+    this.svgRoot = d3.select(this.container)
                      .insert('svg')
+    this.zoomHolder = this.svgRoot
                          .attr('class','editor')
                          .attr('pointer-events', 'all')
                          .append('svg:g');
@@ -116,7 +117,7 @@ Editor.prototype.initElements = function() {
                          .attr('fill', '#000');
 
     // Defines start arrow marker for graph links.
-    this.svg.append('svg:defs')
+    this.svgRoot.append('svg:defs')
                 .append('svg:marker')
                     .attr('id', 'start-arrow')
                     .attr('viewBox', '0 -5 10 10')
@@ -131,7 +132,7 @@ Editor.prototype.initElements = function() {
     // Dimensions of the image are 128x128
     var preloaderX = this.width / 2 - 64;
     var preloaderY = this.height / 2 - 64;
-    this.preloader = this.svg.append('svg:g')
+    this.preloader = this.svgRoot.append('svg:g')
                                  .attr('transform', 'translate(' + preloaderX + ',' + preloaderY + ')')
                                  .attr('opacity', 0);
 
