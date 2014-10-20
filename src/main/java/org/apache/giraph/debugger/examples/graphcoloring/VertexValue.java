@@ -33,7 +33,17 @@ public class VertexValue implements Writable {
   private int color = NO_COLOR;
 
   public enum State {
-    UNKNOWN, TENTATIVELY_IN_SET, NOT_IN_SET, IN_SET,
+    UNKNOWN("U"), TENTATIVELY_IN_SET("T"), NOT_IN_SET("N"), IN_SET("I"), ;
+
+    private final String abbreviation;
+
+    public String getAbbreviation() {
+      return abbreviation;
+    }
+
+    private State(String abbreviation) {
+      this.abbreviation = abbreviation;
+    }
   }
 
   private State state = State.UNKNOWN;
@@ -49,7 +59,7 @@ public class VertexValue implements Writable {
   public void setColor(int color) {
     this.color = color;
   }
-  
+
   public boolean isColored() {
     return state == State.IN_SET && color != NO_COLOR;
   }
@@ -69,9 +79,11 @@ public class VertexValue implements Writable {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
+    sb.append("color=");
     sb.append(color == NO_COLOR ? "?" : color);
-    sb.append(":");
-    sb.append(state);
+    sb.append(" (");
+    sb.append(state.getAbbreviation());
+    sb.append(")");
     return sb.toString();
   }
 

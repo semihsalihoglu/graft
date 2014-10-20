@@ -40,6 +40,9 @@ public class GraphColoringComputation extends
       .get()];
     colorToAssign = ((IntWritable) getAggregatedValue(GraphColoringMaster.COLOR_TO_ASSIGN))
       .get();
+
+    System.out.println(getSuperstep() + ": " + phase + ", color " +
+      colorToAssign);
   }
 
   @Override
@@ -54,7 +57,7 @@ public class GraphColoringComputation extends
     State state = vertex.getValue().getState();
     // Nothing's left to do if this vertex has been placed in an independent set
     // already.
-    if (state == State.IN_SET) {
+    if (state == State.IN_SET && phase != Phase.COLOR_ASSIGNMENT) {
       return;
     }
 
@@ -65,8 +68,9 @@ public class GraphColoringComputation extends
         // Unknown vertices will go through a lottery, and be put in
         // "potentially in set" state with probability 1/2d where d is its
         // degree.
-        if (Math.random() * 2 * vertex.getNumEdges() < 1) {
-          vertex.getValue().setState(State.TENTATIVELY_IN_SET);
+        if (vertex.getNumEdges() == 0 ||
+          Math.random() * 2 * vertex.getNumEdges() <= 1.0) {
+          setVertexState(vertex, State.TENTATIVELY_IN_SET);
           sendMessageToAllEdges(vertex, new Message(vertex,
             Message.Type.WANTS_TO_BE_IN_SET));
         }
@@ -95,12 +99,13 @@ public class GraphColoringComputation extends
         }
         if (minId == myId) {
           // Put this vertex in the independent set if it has the minimum id.
-          vertex.getValue().setState(State.IN_SET);
+          setVertexState(vertex, State.IN_SET);
           sendMessageToAllEdges(vertex, new Message(vertex,
             Message.Type.IS_IN_SET));
         } else {
           // Otherwise, it's unknown whether this vertex will be in the final
           // independent set.
+          setVertexState(vertex, State.UNKNOWN);
         }
         break;
 
@@ -120,12 +125,10 @@ public class GraphColoringComputation extends
       if (numNeighborsMovedIntoSet > 0) {
         // At this phase, we know any vertex that received a notification from
         // its neighbor cannot belong to the set.
-        vertex.getValue().setState(State.NOT_IN_SET);
+        setVertexState(vertex, State.NOT_IN_SET);
       } else {
         // Otherwise, we put the vertex back into unknown state, so they can go
         // through another lottery.
-        vertex.getValue().setState(State.UNKNOWN);
-        aggregate(GraphColoringMaster.NUM_VERTICES_UNKNOWN, ONE);
         // XXX INTENTIONAL BUG: NOT_IN_SET vertices that did not receive any
         // IS_IN_SET message will also go back to UNKNOWN state, which is
         // undesired.
@@ -135,19 +138,38 @@ public class GraphColoringComputation extends
     case COLOR_ASSIGNMENT:
       if (state == State.IN_SET) {
         // Assign current cycle's color to all IN_SET vertices.
-        vertex.getValue().setColor(colorToAssign);
+        setVertexColor(vertex, colorToAssign);
         // Aggregate number of colored vertices.
         aggregate(GraphColoringMaster.NUM_VERTICES_COLORED, ONE);
       } else {
         // For all other vertices, move their state back to UNKNOWN, so they can
         // go through another round of maximal independent set finding.
-        vertex.getValue().setState(State.UNKNOWN);
+        setVertexState(vertex, State.UNKNOWN);
       }
       break;
 
     default:
       throw new IllegalStateException();
     }
+
+    // Count the number of remaining unknown vertices.
+    if (vertex.getValue().getState() == State.UNKNOWN) {
+      aggregate(GraphColoringMaster.NUM_VERTICES_UNKNOWN, ONE);
+    }
+  }
+
+  protected void setVertexColor(
+    Vertex<LongWritable, VertexValue, NullWritable> vertex, int colorToAssign) {
+    VertexValue value = vertex.getValue();
+    value.setColor(colorToAssign);
+    vertex.setValue(value);
+  }
+
+  protected void setVertexState(
+    Vertex<LongWritable, VertexValue, NullWritable> vertex, State newState) {
+    VertexValue value = vertex.getValue();
+    value.setState(newState);
+    vertex.setValue(value);
   }
 
 }
