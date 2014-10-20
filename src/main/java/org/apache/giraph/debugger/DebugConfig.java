@@ -277,6 +277,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   private boolean isVertexANeighborOfAVertexToDebug(Vertex<I, V, E> vertex) {
     for (Edge<I, E> edge : vertex.getEdges()) {
       if (verticesToDebugSet.contains(edge.getTargetVertexId())) {
+        // Add the vertex to the set to avoid scanning all edges multiple times.
+//        verticesToDebugSet.add(vertex.getId());
         return true;
       }
     }

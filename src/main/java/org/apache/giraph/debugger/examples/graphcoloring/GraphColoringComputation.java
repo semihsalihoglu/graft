@@ -48,6 +48,15 @@ public class GraphColoringComputation extends
   @Override
   public void compute(Vertex<LongWritable, VertexValue, NullWritable> vertex,
     Iterable<Message> messages) throws IOException {
+    // XXX presentation purpose
+    getAggregatedValue(GraphColoringMaster.TOTAL_NUM_EDGES);
+    getAggregatedValue(GraphColoringMaster.TOTAL_NUM_VERTICES);
+    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_COLORED);
+    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_UNKNOWN);
+    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_TENTATIVELY_IN_SET);
+    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_IN_SET);
+    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_NOT_IN_SET);
+
     // Treat already colored vertices as if it didn't exist in the graph.
     if (vertex.getValue().isColored()) {
       vertex.voteToHalt();
@@ -58,8 +67,15 @@ public class GraphColoringComputation extends
     // Nothing's left to do if this vertex has been placed in an independent set
     // already.
     if (state == State.IN_SET && phase != Phase.COLOR_ASSIGNMENT) {
+      aggregate(GraphColoringMaster.NUM_VERTICES_IN_SET, ONE);
       return;
     }
+
+    // if (state == State.NOT_IN_SET && vertex.getNumEdges() == 0 && (phase ==
+    // Phase.EDGE_CLEANING || phase == Phase.CONFLICT_RESOLUTION)) {
+    // aggregate(GraphColoringMaster.NUM_VERTICES_NOT_IN_SET, ONE);
+    // return;
+    // }
 
     switch (phase) {
     case LOTTERY:
@@ -68,8 +84,9 @@ public class GraphColoringComputation extends
         // Unknown vertices will go through a lottery, and be put in
         // "potentially in set" state with probability 1/2d where d is its
         // degree.
-        if (vertex.getNumEdges() == 0 ||
-          Math.random() * 2 * vertex.getNumEdges() <= 1.0) {
+        if (vertex.getNumEdges() == 0) {
+          setVertexState(vertex, State.IN_SET);
+        } else if (Math.random() * vertex.getNumEdges() <= 1.0) {
           setVertexState(vertex, State.TENTATIVELY_IN_SET);
           sendMessageToAllEdges(vertex, new Message(vertex,
             Message.Type.WANTS_TO_BE_IN_SET));
@@ -88,24 +105,35 @@ public class GraphColoringComputation extends
         // When a vertex potentially in set receives a message from its
         // neighbor, it must resolve conflicts by deciding to put the vertex
         // that has the minimum vertex id.
-        long myId = vertex.getId().get();
-        long minId = myId;
-        for (Message message : messages) {
-          assert message.getType() == Message.Type.WANTS_TO_BE_IN_SET;
-          long neighborId = message.getSenderVertex();
-          if (neighborId < minId) {
-            minId = neighborId;
+        if (messages.iterator().hasNext()) {
+          long myId = vertex.getId().get();
+          long minId = myId;
+          if (messages.iterator().hasNext()) {
+            for (Message message : messages) {
+              assert message.getType() == Message.Type.WANTS_TO_BE_IN_SET;
+              long neighborId = message.getSenderVertex();
+              if (neighborId < minId) {
+                minId = neighborId;
+              }
+            }
+            if (minId == myId) {
+              // Otherwise, it's unknown whether this vertex will be in the
+              // final
+              // independent set.
+              setVertexState(vertex, State.UNKNOWN);
+            } else {
+              // Put this vertex in the independent set if it has the minimum
+              // id.
+              setVertexState(vertex, State.IN_SET);
+              sendMessageToAllEdges(vertex, new Message(vertex,
+                Message.Type.IS_IN_SET));
+            }
+
           }
-        }
-        if (minId == myId) {
-          // Put this vertex in the independent set if it has the minimum id.
+        } else {
           setVertexState(vertex, State.IN_SET);
           sendMessageToAllEdges(vertex, new Message(vertex,
             Message.Type.IS_IN_SET));
-        } else {
-          // Otherwise, it's unknown whether this vertex will be in the final
-          // independent set.
-          setVertexState(vertex, State.UNKNOWN);
         }
         break;
 
@@ -113,6 +141,7 @@ public class GraphColoringComputation extends
         // Nothing to do for others.
         break;
       }
+      break;
 
     case EDGE_CLEANING:
       // Count the number of messages received.
@@ -129,9 +158,10 @@ public class GraphColoringComputation extends
       } else {
         // Otherwise, we put the vertex back into unknown state, so they can go
         // through another lottery.
-        // XXX INTENTIONAL BUG: NOT_IN_SET vertices that did not receive any
-        // IS_IN_SET message will also go back to UNKNOWN state, which is
-        // undesired.
+//        setVertexState(vertex, State.UNKNOWN);
+//        // XXX INTENTIONAL BUG: NOT_IN_SET vertices that did not receive any
+//        // IS_IN_SET message will also go back to UNKNOWN state, which is
+//        // undesired.
       }
       break;
 
@@ -153,8 +183,23 @@ public class GraphColoringComputation extends
     }
 
     // Count the number of remaining unknown vertices.
-    if (vertex.getValue().getState() == State.UNKNOWN) {
+    switch (vertex.getValue().getState()) {
+    case UNKNOWN:
       aggregate(GraphColoringMaster.NUM_VERTICES_UNKNOWN, ONE);
+      break;
+
+    case TENTATIVELY_IN_SET:
+      aggregate(GraphColoringMaster.NUM_VERTICES_TENTATIVELY_IN_SET, ONE);
+      break;
+
+    case NOT_IN_SET:
+      aggregate(GraphColoringMaster.NUM_VERTICES_NOT_IN_SET, ONE);
+      break;
+
+    case IN_SET:
+      aggregate(GraphColoringMaster.NUM_VERTICES_IN_SET, ONE);
+      break;
+
     }
   }
 

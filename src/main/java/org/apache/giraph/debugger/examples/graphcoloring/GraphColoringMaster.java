@@ -1,6 +1,7 @@
 package org.apache.giraph.debugger.examples.graphcoloring;
 
 import org.apache.giraph.aggregators.IntMaxAggregator;
+import org.apache.giraph.aggregators.IntSumAggregator;
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
 import org.apache.hadoop.io.IntWritable;
@@ -8,10 +9,15 @@ import org.apache.hadoop.io.LongWritable;
 
 public class GraphColoringMaster extends DefaultMasterCompute {
 
+  public static final String TOTAL_NUM_VERTICES = "totalNumVertices";
+  public static final String TOTAL_NUM_EDGES = "totalNumEdges";
   public static final String PHASE = "phase";
   public static final String COLOR_TO_ASSIGN = "colorToAssign";
   public static final String NUM_VERTICES_COLORED = "numVerticesColored";
   public static final String NUM_VERTICES_UNKNOWN = "numVerticesUnknown";
+  public static final String NUM_VERTICES_IN_SET = "numVerticesInSet";
+  public static final String NUM_VERTICES_NOT_IN_SET = "numVerticesNotInSet";
+  public static final String NUM_VERTICES_TENTATIVELY_IN_SET = "numVerticesTentativelyInSet";
 
   public static enum Phase {
     LOTTERY, CONFLICT_RESOLUTION, EDGE_CLEANING, COLOR_ASSIGNMENT,
@@ -30,10 +36,21 @@ public class GraphColoringMaster extends DefaultMasterCompute {
 
     registerPersistentAggregator(NUM_VERTICES_COLORED, LongSumAggregator.class);
     registerAggregator(NUM_VERTICES_UNKNOWN, LongSumAggregator.class);
+    registerAggregator(NUM_VERTICES_TENTATIVELY_IN_SET, LongSumAggregator.class);
+    registerAggregator(NUM_VERTICES_NOT_IN_SET, LongSumAggregator.class);
+    registerAggregator(NUM_VERTICES_IN_SET, LongSumAggregator.class);
+
+    // XXX presentation purpose
+    registerPersistentAggregator(TOTAL_NUM_EDGES, IntSumAggregator.class);
+    registerPersistentAggregator(TOTAL_NUM_VERTICES, IntSumAggregator.class);
   }
 
   @Override
   public void compute() {
+    // XXX presentation purpose
+    setAggregatedValue(TOTAL_NUM_EDGES, new IntWritable((int)getTotalNumEdges()));
+    setAggregatedValue(TOTAL_NUM_VERTICES, new IntWritable((int)getTotalNumVertices()));
+
     if (phase != null) {
       switch (phase) {
       case LOTTERY:
@@ -63,6 +80,8 @@ public class GraphColoringMaster extends DefaultMasterCompute {
         break;
 
       case COLOR_ASSIGNMENT:
+        System.out.println(getSuperstep() + ": MASTER phase: " + phase +
+          ", color " + colorToAssign);
         long numColored = ((LongWritable) getAggregatedValue(NUM_VERTICES_COLORED))
           .get();
         if (numColored == getTotalNumVertices()) {
@@ -85,7 +104,5 @@ public class GraphColoringMaster extends DefaultMasterCompute {
 
     // Set an aggregator to communicate what phase we're in to all vertices.
     setAggregatedValue(PHASE, new IntWritable(phase.ordinal()));
-    System.out.println(getSuperstep() + ": MASTER phase: " + phase +
-      ", color " + colorToAssign);
   }
 }
