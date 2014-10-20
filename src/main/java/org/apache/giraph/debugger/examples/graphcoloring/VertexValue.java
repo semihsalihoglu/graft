@@ -28,17 +28,15 @@ import org.apache.hadoop.io.Writable;
  */
 public class VertexValue implements Writable {
 
-  public final long NO_COLOR = -1;
+  public final static int NO_COLOR = -1;
 
-  private long color = NO_COLOR;
+  private int color = NO_COLOR;
 
   public enum State {
-    UNKNOWN, POTTENTIALLY_IN_SET, NOT_IN_SET, IN_SET,
+    UNKNOWN, TENTATIVELY_IN_SET, NOT_IN_SET, IN_SET,
   }
 
   private State state = State.UNKNOWN;
-
-  private int remainingNumNeighbors = 0;
 
   public State getState() {
     return state;
@@ -48,40 +46,31 @@ public class VertexValue implements Writable {
     this.state = state;
   }
 
+  public void setColor(int color) {
+    this.color = color;
+  }
+  
   public boolean isColored() {
     return state == State.IN_SET && color != NO_COLOR;
-  }
-
-  public int getRemainingNumNeighbors() {
-    return remainingNumNeighbors;
-  }
-
-  public void setRemainingNumNeighbors(int numNeighbors) {
-    remainingNumNeighbors = numNeighbors;
-  }
-
-  public void decrementRemainingNumNeighbors(int howMany) {
-    remainingNumNeighbors -= howMany;
   }
 
   @Override
   public void readFields(DataInput in) throws IOException {
     state = State.values()[in.readInt()];
-    color = in.readLong();
-    remainingNumNeighbors = in.readInt();
+    color = in.readInt();
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(state.ordinal());
-    out.writeLong(color);
-    out.writeInt(remainingNumNeighbors);
+    out.writeInt(color);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append(color);
+    sb.append(color == NO_COLOR ? "?" : color);
+    sb.append(":");
     sb.append(state);
     return sb.toString();
   }
