@@ -177,7 +177,7 @@ public abstract class AbstractInterceptingComputation<
    * to capture all aggregators we need to change Giraph code to be get access
    * to them.
    */
-  private CommonVertexMasterInterceptionUtil commonVertexMasterInterceptionUtil;
+  private static CommonVertexMasterInterceptionUtil commonVertexMasterInterceptionUtil;
 
   /**
    * Called after user's initialize() ends.
@@ -190,11 +190,12 @@ public abstract class AbstractInterceptingComputation<
    * Initializes this class to start debugging.
    */
   private void initializeAbstractInterceptingComputation() {
+    if (commonVertexMasterInterceptionUtil == null) {
     commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
       getContext().getJobID().toString());
-
     String debugConfigClassName = DEBUG_CONFIG_CLASS.get(getConf());
     LOG.info("debugConfigClass: " + debugConfigClassName);
+    // TODO initialize once
     Class<?> clazz;
     try {
       clazz = Class.forName(debugConfigClassName);
@@ -241,6 +242,7 @@ public abstract class AbstractInterceptingComputation<
         e.printStackTrace();
       }
     }
+    }
   }
 
   /**
@@ -273,9 +275,9 @@ public abstract class AbstractInterceptingComputation<
     // 2) the user configures the vertex to be debugged; and
     // 3) we have already debugged less than a threshold of vertices in this
     // superstep.
-    shouldDebugVertex = DEBUG_CONFIG.shouldDebugSuperstep(getSuperstep()) &&
-      DEBUG_CONFIG.shouldDebugVertex(vertex) &&
-      NUM_VERTICES_LOGGED < NUM_VERTICES_TO_LOG;
+    shouldDebugVertex = NUM_VERTICES_LOGGED < NUM_VERTICES_TO_LOG &&
+      DEBUG_CONFIG.shouldDebugSuperstep(getSuperstep()) &&
+      DEBUG_CONFIG.shouldDebugVertex(vertex);
     if (shouldDebugVertex) {
       giraphVertexScenarioWrapperForRegularTraces = getGiraphVertexScenario(
         vertex, vertex.getValue(), messages);
