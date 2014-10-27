@@ -200,15 +200,12 @@ public abstract class AbstractInterceptingComputation<
       commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
         getContext().getJobID().toString());
       String debugConfigClassName = DEBUG_CONFIG_CLASS.get(getConf());
-      LOG.info("debugConfigClass: " + debugConfigClassName);
-      // TODO initialize once
+      LOG.info("initializing debugConfigClass: " + debugConfigClassName);
       Class<?> clazz;
       try {
         clazz = Class.forName(debugConfigClassName);
         DEBUG_CONFIG = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
         DEBUG_CONFIG.readConfig(getConf());
-        LOG.debug("Successfully created a DebugConfig file from: " +
-          debugConfigClassName);
         VERTEX_ID_CLASS = getConf().getVertexIdClass();
         VERTEX_VALUE_CLASS = getConf().getVertexValueClass();
         EDGE_VALUE_CLASS = getConf().getEdgeValueClass();
@@ -232,26 +229,32 @@ public abstract class AbstractInterceptingComputation<
         e.printStackTrace();
         throw new RuntimeException(e);
       }
-      // record jar signature if necessary
-      String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
-      if (jarSignature != null) {
-        FileSystem fs = commonVertexMasterInterceptionUtil.getFileSystem();
-        Path jarSignaturePath = new Path(
-          DebuggerUtils.getTraceFileRoot(commonVertexMasterInterceptionUtil
-            .getJobId()) + "/" + "jar.signature");
-        try {
-          if (!fs.exists(jarSignaturePath)) {
-            OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
-            IOUtils.write(jarSignature, f);
-            f.close();
+      if (getWorkerContext().getMyWorkerIndex() == getWorkerContext()
+        .getWorkerCount() - 1) {
+        // last worker records jar signature if necessary
+        String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
+        if (jarSignature != null) {
+          Path jarSignaturePath = new Path(
+            DebuggerUtils.getTraceFileRoot(commonVertexMasterInterceptionUtil
+              .getJobId()) + "/" + "jar.signature");
+          LOG.info("Recording jar signature (" + jarSignature + ") at " +
+            jarSignaturePath);
+          FileSystem fs = commonVertexMasterInterceptionUtil.getFileSystem();
+          try {
+            if (!fs.exists(jarSignaturePath)) {
+              OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
+              IOUtils.write(jarSignature, f);
+              f.close();
+            }
+          } catch (IOException e) {
+            // When multiple workers try to write the jar.signature, some of them
+            // may cause
+            // AlreadyBeingCreatedException to be thrown, which we ignore.
+            e.printStackTrace();
           }
-        } catch (IOException e) {
-          // When multiple workers try to write the jar.signature, some of them
-          // may cause
-          // AlreadyBeingCreatedException to be thrown, which we ignore.
-          e.printStackTrace();
         }
       }
+      LOG.info("done initializing debugConfigClass: " + debugConfigClassName);
     }
   }
 
@@ -267,7 +270,6 @@ public abstract class AbstractInterceptingComputation<
    */
   protected final boolean interceptComputeBegin(Vertex<I, V, E> vertex,
     Iterable<M1> messages) throws IOException {
-    LOG.debug("compute " + vertex + " " + messages);
     if (DEBUG_CONFIG == null) {
       // TODO: Sometimes Giraph doesn't call initialize() and directly calls
       // compute(). Here we
@@ -278,8 +280,6 @@ public abstract class AbstractInterceptingComputation<
         " Initializing AbstractInterceptingComputation again...");
       initializeAbstractInterceptingComputation();
     }
-    currentVertexUnderCompute = vertex;
-    hasViolatedMsgValueConstraint = false;
     // A vertex should be debugged if:
     // 1) the user configures the superstep to be debugged;
     // 2) the user configures the vertex to be debugged; and
@@ -292,8 +292,13 @@ public abstract class AbstractInterceptingComputation<
       giraphVertexScenarioWrapperForRegularTraces = getGiraphVertexScenario(
         vertex, vertex.getValue(), messages);
     }
-
-    // Keep the previous value when necessary.
+    // Keep a reference to the current vertex only when necessary.
+    if (SHOULD_CHECK_MESSAGE_INTEGRITY &&
+      NUM_MESSAGE_VIOLATIONS_LOGGED < NUM_VIOLATIONS_TO_LOG) {
+      currentVertexUnderCompute = vertex;
+      hasViolatedMsgValueConstraint = false;
+    }
+    // Keep the previous value only when necessary.
     if (SHOULD_CATCH_EXCEPTIONS ||
       SHOULD_CHECK_VERTEX_VALUE_INTEGRITY &&
       NUM_VERTEX_VIOLATIONS_LOGGED < NUM_VIOLATIONS_TO_LOG ||
@@ -421,12 +426,6 @@ public abstract class AbstractInterceptingComputation<
       vertex.getId());
     Iterable<Edge<I, E>> returnVal = vertex.getEdges();
     for (Edge<I, E> edge : returnVal) {
-      if (edge.getTargetVertexId() == null) {
-        LOG.debug("the targetVertexId is null!!!");
-      } else if (edge.getValue() == null) {
-        LOG.debug("edge value is null!!! targetVertexId: " +
-          edge.getTargetVertexId());
-      }
       giraphVertexScenarioWrapper.getContextWrapper().addNeighborWrapper(
         edge.getTargetVertexId(), edge.getValue());
     }
@@ -454,13 +453,15 @@ public abstract class AbstractInterceptingComputation<
       giraphVertexScenarioWrapperForRegularTraces.getContextWrapper()
         .addOutgoingMessageWrapper(id, message);
     }
-    I senderId = currentVertexUnderCompute.getId();
     if (SHOULD_CHECK_MESSAGE_INTEGRITY &&
-      NUM_MESSAGE_VIOLATIONS_LOGGED < NUM_VIOLATIONS_TO_LOG &&
-      !DEBUG_CONFIG.isMessageCorrect(senderId, id, message)) {
-      msgIntegrityViolationWrapper.addMsgWrapper(senderId, id, message);
-      NUM_MESSAGE_VIOLATIONS_LOGGED++;
-      hasViolatedMsgValueConstraint = true;
+      NUM_MESSAGE_VIOLATIONS_LOGGED < NUM_VIOLATIONS_TO_LOG) {
+      I senderId = currentVertexUnderCompute.getId();
+      if (!DEBUG_CONFIG.isMessageCorrect(senderId, id, message)) {
+        msgIntegrityViolationWrapper.addMsgWrapper(
+          currentVertexUnderCompute.getId(), id, message);
+        NUM_MESSAGE_VIOLATIONS_LOGGED++;
+        hasViolatedMsgValueConstraint = true;
+      }
     }
     super.sendMessage(id, message);
   }
@@ -505,6 +506,7 @@ public abstract class AbstractInterceptingComputation<
    * integrity violation wrapper.
    */
   protected final void interceptPreSuperstepBegin() {
+    // LOG.info("before preSuperstep");
     NUM_VERTICES_LOGGED = 0;
     NUM_VERTEX_VIOLATIONS_LOGGED = 0;
     NUM_MESSAGE_VIOLATIONS_LOGGED = 0;
@@ -519,6 +521,7 @@ public abstract class AbstractInterceptingComputation<
       LOG.info("creating a vertexValueViolationWrapper. superstepNo: " +
         getSuperstep());
     }
+    // LOG.info("before preSuperstep done");
   }
 
   /**
@@ -526,6 +529,7 @@ public abstract class AbstractInterceptingComputation<
    * scenario.
    */
   protected final void interceptPostSuperstepEnd() {
+    // LOG.info("after postSuperstep");
     if (SHOULD_CHECK_MESSAGE_INTEGRITY &&
       msgIntegrityViolationWrapper.numMsgWrappers() > 0) {
       commonVertexMasterInterceptionUtil.saveScenarioWrapper(
@@ -534,6 +538,7 @@ public abstract class AbstractInterceptingComputation<
             commonVertexMasterInterceptionUtil.getJobId(), UUID.randomUUID()
               .toString()));
     }
+    // LOG.info("after postSuperstep done");
   }
 
   /**

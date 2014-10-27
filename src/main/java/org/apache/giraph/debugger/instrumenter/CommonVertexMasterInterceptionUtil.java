@@ -154,6 +154,7 @@ public class CommonVertexMasterInterceptionUtil {
     LOG.info("saving trace at: " + fullFileName);
     try {
       masterOrVertexScenarioWrapper.saveToHDFS(FILE_SYSTEM, fullFileName);
+      LOG.info("done saving trace at: " + fullFileName);
     } catch (IOException e) {
       LOG.error("Could not save the " +
         masterOrVertexScenarioWrapper.getClass().getName() +
