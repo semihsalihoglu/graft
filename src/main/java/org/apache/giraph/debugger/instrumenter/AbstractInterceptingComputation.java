@@ -110,6 +110,11 @@ public abstract class AbstractInterceptingComputation<
   private static int NUM_MESSAGE_VIOLATIONS_LOGGED = -1;
 
   /**
+   * A flag to indicate whether this Computation class was already initialized. 
+   */
+  private static boolean isInitialized;
+  
+  /**
    * DebugConfig instance to be used for debugging.
    */
   private static DebugConfig DEBUG_CONFIG;
@@ -189,73 +194,77 @@ public abstract class AbstractInterceptingComputation<
    * Called after user's initialize() ends.
    */
   protected final void interceptInitializeEnd() {
-    initializeAbstractInterceptingComputation();
+    if (!isInitialized) { // short circuit
+      initializeAbstractInterceptingComputation();
+    }
   }
 
   /**
    * Initializes this class to start debugging.
    */
-  private void initializeAbstractInterceptingComputation() {
-    if (commonVertexMasterInterceptionUtil == null) {
-      commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
-        getContext().getJobID().toString());
-      String debugConfigClassName = DEBUG_CONFIG_CLASS.get(getConf());
-      LOG.info("initializing debugConfigClass: " + debugConfigClassName);
-      Class<?> clazz;
-      try {
-        clazz = Class.forName(debugConfigClassName);
-        DEBUG_CONFIG = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
-        DEBUG_CONFIG.readConfig(getConf());
-        VERTEX_ID_CLASS = getConf().getVertexIdClass();
-        VERTEX_VALUE_CLASS = getConf().getVertexValueClass();
-        EDGE_VALUE_CLASS = getConf().getEdgeValueClass();
-        INCOMING_MESSAGE_CLASS = getConf().getIncomingMessageValueClass();
-        OUTGOING_MESSAGE_CLASS = getConf().getOutgoingMessageValueClass();
-        // Set limits from DebugConfig
-        NUM_VERTICES_TO_LOG = DEBUG_CONFIG.getNumberOfVerticesToLog();
-        NUM_VIOLATIONS_TO_LOG = DEBUG_CONFIG.getNumberOfViolationsToLog();
-        // Reset counters
-        NUM_MESSAGE_VIOLATIONS_LOGGED = 0;
-        NUM_VERTEX_VIOLATIONS_LOGGED = 0;
-        NUM_VERTICES_LOGGED = 0;
-        // Cache DebugConfig flags
-        SHOULD_CATCH_EXCEPTIONS = DEBUG_CONFIG.shouldCatchExceptions();
-        SHOULD_CHECK_VERTEX_VALUE_INTEGRITY = DEBUG_CONFIG.shouldCheckVertexValueIntegrity();
-        SHOULD_CHECK_MESSAGE_INTEGRITY = DEBUG_CONFIG.shouldCheckMessageIntegrity();
-      } catch (InstantiationException | ClassNotFoundException |
-        IllegalAccessException e) {
-        LOG.error("Could not create a new DebugConfig instance of " +
-          debugConfigClassName);
-        e.printStackTrace();
-        throw new RuntimeException(e);
-      }
-      if (getWorkerContext().getMyWorkerIndex() == getWorkerContext()
-        .getWorkerCount() - 1) {
-        // last worker records jar signature if necessary
-        String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
-        if (jarSignature != null) {
-          Path jarSignaturePath = new Path(
-            DebuggerUtils.getTraceFileRoot(commonVertexMasterInterceptionUtil
-              .getJobId()) + "/" + "jar.signature");
-          LOG.info("Recording jar signature (" + jarSignature + ") at " +
-            jarSignaturePath);
-          FileSystem fs = commonVertexMasterInterceptionUtil.getFileSystem();
-          try {
-            if (!fs.exists(jarSignaturePath)) {
-              OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
-              IOUtils.write(jarSignature, f);
-              f.close();
-            }
-          } catch (IOException e) {
-            // When multiple workers try to write the jar.signature, some of them
-            // may cause
-            // AlreadyBeingCreatedException to be thrown, which we ignore.
-            e.printStackTrace();
+  private synchronized void initializeAbstractInterceptingComputation() {
+    if (isInitialized) {
+      return; // don't initialize twice
+    }
+    isInitialized = true;
+    commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
+      getContext().getJobID().toString());
+    String debugConfigClassName = DEBUG_CONFIG_CLASS.get(getConf());
+    LOG.info("initializing debugConfigClass: " + debugConfigClassName);
+    Class<?> clazz;
+    try {
+      clazz = Class.forName(debugConfigClassName);
+      DEBUG_CONFIG = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
+      DEBUG_CONFIG.readConfig(getConf());
+      VERTEX_ID_CLASS = getConf().getVertexIdClass();
+      VERTEX_VALUE_CLASS = getConf().getVertexValueClass();
+      EDGE_VALUE_CLASS = getConf().getEdgeValueClass();
+      INCOMING_MESSAGE_CLASS = getConf().getIncomingMessageValueClass();
+      OUTGOING_MESSAGE_CLASS = getConf().getOutgoingMessageValueClass();
+      // Set limits from DebugConfig
+      NUM_VERTICES_TO_LOG = DEBUG_CONFIG.getNumberOfVerticesToLog();
+      NUM_VIOLATIONS_TO_LOG = DEBUG_CONFIG.getNumberOfViolationsToLog();
+      // Reset counters
+      NUM_MESSAGE_VIOLATIONS_LOGGED = 0;
+      NUM_VERTEX_VIOLATIONS_LOGGED = 0;
+      NUM_VERTICES_LOGGED = 0;
+      // Cache DebugConfig flags
+      SHOULD_CATCH_EXCEPTIONS = DEBUG_CONFIG.shouldCatchExceptions();
+      SHOULD_CHECK_VERTEX_VALUE_INTEGRITY = DEBUG_CONFIG.shouldCheckVertexValueIntegrity();
+      SHOULD_CHECK_MESSAGE_INTEGRITY = DEBUG_CONFIG.shouldCheckMessageIntegrity();
+    } catch (InstantiationException | ClassNotFoundException |
+      IllegalAccessException e) {
+      LOG.error("Could not create a new DebugConfig instance of " +
+        debugConfigClassName);
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
+    if (getWorkerContext().getMyWorkerIndex() == getWorkerContext()
+      .getWorkerCount() - 1) {
+      // last worker records jar signature if necessary
+      String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
+      if (jarSignature != null) {
+        Path jarSignaturePath = new Path(
+          DebuggerUtils.getTraceFileRoot(commonVertexMasterInterceptionUtil
+            .getJobId()) + "/" + "jar.signature");
+        LOG.info("Recording jar signature (" + jarSignature + ") at " +
+          jarSignaturePath);
+        FileSystem fs = commonVertexMasterInterceptionUtil.getFileSystem();
+        try {
+          if (!fs.exists(jarSignaturePath)) {
+            OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
+            IOUtils.write(jarSignature, f);
+            f.close();
           }
+        } catch (IOException e) {
+          // When multiple workers try to write the jar.signature, some of them
+          // may cause
+          // AlreadyBeingCreatedException to be thrown, which we ignore.
+          e.printStackTrace();
         }
       }
-      LOG.info("done initializing debugConfigClass: " + debugConfigClassName);
     }
+    LOG.info("done initializing debugConfigClass: " + debugConfigClassName);
   }
 
   /**
@@ -484,16 +493,16 @@ public abstract class AbstractInterceptingComputation<
       }
     }
     if (SHOULD_CHECK_MESSAGE_INTEGRITY) {
-      I vertexId = vertex.getId();
+      I senderId = vertex.getId();
       for (Edge<I, E> edge : vertex.getEdges()) {
         if (NUM_MESSAGE_VIOLATIONS_LOGGED >= NUM_VIOLATIONS_TO_LOG) {
           break;
         }
         I id = edge.getTargetVertexId();
-        if (DEBUG_CONFIG.isMessageCorrect(vertexId, id, message)) {
+        if (DEBUG_CONFIG.isMessageCorrect(senderId, id, message)) {
           continue;
         }
-        msgIntegrityViolationWrapper.addMsgWrapper(vertexId, id, message);
+        msgIntegrityViolationWrapper.addMsgWrapper(senderId, id, message);
         hasViolatedMsgValueConstraint = true;
         NUM_MESSAGE_VIOLATIONS_LOGGED++;
       }
