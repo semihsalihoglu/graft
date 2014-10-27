@@ -43,6 +43,11 @@ public class BottomInterceptingComputation<I extends WritableComparable,
   V extends Writable, E extends Writable, M1 extends Writable,
   M2 extends Writable> extends UserComputation<I, V, E, M1, M2> {
 
+  /**
+   * A flag to quickly decide whether to skip intercepting compute().
+   */
+  private boolean shouldStopInterceptingCompute;
+
   @Intercept
   @Override
   public void initialize(GraphState graphState,
@@ -55,35 +60,41 @@ public class BottomInterceptingComputation<I extends WritableComparable,
       super.initialize(graphState, workerClientRequestProcessor,
         graphTaskManager, workerAggregatorUsage, workerContext);
     } finally {
-      interceptInitializeEnd();
+      if (!AbstractInterceptingComputation.isInitialized) { // short circuit
+        initializeAbstractInterceptingComputation();
+      }
     }
+  }
+
+  @Intercept
+  @Override
+  public void preSuperstep() {
+    shouldStopInterceptingCompute = interceptPreSuperstepBegin();
+    super.preSuperstep();
   }
 
   @Intercept
   @Override
   public final void compute(Vertex<I, V, E> vertex, Iterable<M1> messages)
     throws IOException {
-    boolean shouldCatchException = interceptComputeBegin(vertex, messages);
-    if (shouldCatchException) {
-      // CHECKSTYLE: stop IllegalCatch
-      try {
-        super.compute(vertex, messages);
-      } catch (Exception e) {
-        interceptComputeException(vertex, messages, e);
-        throw e;
-      }
-      // CHECKSTYLE: resume IllegalCatch
-    } else {
+    if (shouldStopInterceptingCompute) {
       super.compute(vertex, messages);
+    } else {
+      interceptComputeBegin(vertex, messages);
+      if (AbstractInterceptingComputation.SHOULD_CATCH_EXCEPTIONS) {
+        // CHECKSTYLE: stop IllegalCatch
+        try {
+          super.compute(vertex, messages);
+        } catch (Throwable e) {
+          interceptComputeException(vertex, messages, e);
+          throw e;
+        }
+        // CHECKSTYLE: resume IllegalCatch
+      } else {
+        super.compute(vertex, messages);
+      }
+      shouldStopInterceptingCompute = interceptComputeEnd(vertex, messages);
     }
-    interceptComputeEnd(vertex, messages);
-  }
-
-  @Intercept
-  @Override
-  public void preSuperstep() {
-    interceptPreSuperstepBegin();
-    super.preSuperstep();
   }
 
   @Intercept

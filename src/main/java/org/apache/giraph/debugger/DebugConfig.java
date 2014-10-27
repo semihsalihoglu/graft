@@ -229,7 +229,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     numVerticesToLog = config.getInt(NUM_VERTICES_TO_LOG, 3);
     numViolationsToLog = config.getInt(NUM_VIOLATIONS_TO_LOG, 3);
 
-    LOG.debug("DebugConfig" + this);
+    // LOG.debug("DebugConfig" + this);
   }
 
   /**
