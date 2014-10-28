@@ -207,6 +207,7 @@ public abstract class AbstractInterceptingComputation<
    * Initializes this class to start debugging.
    */
   protected final synchronized void initializeAbstractInterceptingComputation() {
+    previousVertexValue = getConf().createVertexValue();
     if (isInitialized) {
       return; // don't initialize twice
     }
