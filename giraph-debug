@@ -17,6 +17,7 @@
 #     -S SUPERSTEP_NO   To debug only the given supersteps
 #     -V VERTEX_ID      To debug only the given vertices
 #     -N                To also debug the neighbors of the given vertices
+#     -E                To disable the exceptions from being captured
 #     -m #              To limit the maximum number of captured vertices
 #     -M #              To limit the maximum number of captured violations
 #     -C CLASS          Name of Computation classes to debug
@@ -180,15 +181,17 @@ SuperstepsToDebug=()
 VerticesToDebug=()
 ComputationClasses=()
 NoDebugNeighbors=true
+CaptureExceptions=true
 UseCachedJars=true
 NumVerticesToLog=
 NumViolationsToLog=
-while getopts "S:V:C:Nm:M:f" o; do
+while getopts "S:V:C:NEm:M:f" o; do
     case $o in
         S) SuperstepsToDebug+=("$OPTARG") ;;
         V) VerticesToDebug+=("$OPTARG") ;;
         C) ComputationClasses+=("$OPTARG") ;;
         N) NoDebugNeighbors=false ;;
+        E) CaptureExceptions=false ;;
         f) UseCachedJars=false ;;
         m) NumVerticesToLog=$OPTARG ;;
         M) NumViolationsToLog=$OPTARG ;;
@@ -270,6 +273,9 @@ fi
 #  debugNeighbors
 $NoDebugNeighbors ||
     set -- "$@" -ca "giraph.debugger.debugNeighbors=true"
+#  don't capture exceptions
+$CaptureExceptions ||
+    set -- "$@" -ca "giraph.debugger.captureExceptions=false"
 #  limit number of captures
 [ -z "$NumVerticesToLog" ] ||
     set -- "$@" -ca "giraph.debugger.numVerticesToLog=$NumVerticesToLog"

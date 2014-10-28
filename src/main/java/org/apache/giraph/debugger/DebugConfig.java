@@ -111,6 +111,11 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   private static final String SUPERSTEPS_TO_DEBUG_FLAG =
     "giraph.debugger.superstepsToDebug";
   /**
+   * String constant for specifying whether exceptions should be captured.
+   */
+  private static final String CATCH_EXCEPTIONS_FLAG =
+    "giraph.debugger.catchExceptions";
+  /**
    * String constant for specifying whether all vertices should be debugged.
    */
   private static final String DEBUG_ALL_VERTICES_FLAG =
@@ -160,6 +165,10 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * Maximum number of violations to capture by each thread of every worker.
    */
   private int numViolationsToLog;
+  /**
+   * Whether to capture exceptions or not.
+   */
+  private boolean shouldCatchExceptions;
 
   /**
    * Default public constructor. Configures not to debug any vertex in
@@ -170,6 +179,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     verticesToDebugSet = null;
     debugAllVertices = false;
     debugNeighborsOfVerticesToDebug = false;
+    shouldCatchExceptions = false;
     superstepsToDebugSet = null;
     numVerticesToLog = 3;
     numViolationsToLog = 3;
@@ -184,6 +194,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   public final void readConfig(GiraphConfiguration config) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(
       DEBUG_NEIGHBORS_FLAG, false);
+
+    this.shouldCatchExceptions = config.getBoolean(CATCH_EXCEPTIONS_FLAG, true);
 
     String superstepsToDebugStr = config.get(SUPERSTEPS_TO_DEBUG_FLAG, null);
     if (superstepsToDebugStr == null) {
@@ -289,7 +301,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * @return whether exceptions should be caught.
    */
   public boolean shouldCatchExceptions() {
-    return true;
+    return shouldCatchExceptions;
   }
 
   /**
