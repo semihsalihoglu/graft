@@ -21,7 +21,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -92,6 +91,7 @@ public abstract class BaseWrapper {
     }
   }
 
+
   /**
    * Saves this wrapper object to a file in HDFS.
    * @param fs {@link FileSystem} to use for saving to HDFS.
@@ -99,10 +99,7 @@ public abstract class BaseWrapper {
    * @throws IOException thrown when there is an exception during the writing.
    */
   public void saveToHDFS(FileSystem fs, String fileName) throws IOException {
-    Path pt = new Path(fileName);
-    OutputStream wrappedStream = fs.create(pt, true).getWrappedStream();
-    buildProtoObject().writeTo(wrappedStream);
-    wrappedStream.close();
+    AsyncHDFSWriteService.writeToHDFS(buildProtoObject(), fs, fileName);
   }
 
   /**

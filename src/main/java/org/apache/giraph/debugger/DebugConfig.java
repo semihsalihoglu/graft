@@ -30,7 +30,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.log4j.Logger;
 
 /**
  * This class is used by programmers to configure what they want to be debugged.
@@ -130,11 +129,6 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    */
   private static final String NUM_VIOLATIONS_TO_LOG =
     "giraph.debugger.numViolationsToLog";
-
-  /**
-   * Logger for this class.
-   */
-  private static final Logger LOG = Logger.getLogger(DebugConfig.class);
 
   /**
    * Stores the set of specified vertices to debug, when VERTICES_TO_DEBUG_FLAG
