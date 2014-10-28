@@ -21,9 +21,9 @@ public class RandomWalkComputation extends
   private static final int DEFAULT_NUM_WALKERS = 10;
   private static final int DEFAULT_LENGTH_OF_WALK = 6;
 
-  private int[] messagesToNeighbors = new int[2];
-  private int initialNumWalkers;
-  private int lengthOfWalk;
+  private short[] messagesToNeighbors = new short[2];
+  private short initialNumWalkers;
+  private short lengthOfWalk;
 
   @Override
   public void initialize(
@@ -34,10 +34,10 @@ public class RandomWalkComputation extends
     super.initialize(graphState, workerClientRequestProcessor,
       graphTaskManager, workerAggregatorUsage, workerContext);
 
-    initialNumWalkers = getConf().getInt(
+    initialNumWalkers = (short) getConf().getInt(
       getClass().getName() + ".initialNumWalkers", DEFAULT_NUM_WALKERS);
-    lengthOfWalk = getConf().getInt(getClass().getName() + ".walkLength",
-      DEFAULT_LENGTH_OF_WALK);
+    lengthOfWalk = (short) getConf().getInt(
+      getClass().getName() + ".walkLength", DEFAULT_LENGTH_OF_WALK);
   }
 
   @Override
@@ -67,7 +67,7 @@ public class RandomWalkComputation extends
     Iterable<Edge<LongWritable, NullWritable>> edges = vertex.getEdges();
     int neighborsLength = vertex.getNumEdges();
     if (messagesToNeighbors.length < neighborsLength) {
-      messagesToNeighbors = new int[neighborsLength];
+      messagesToNeighbors = new short[neighborsLength];
     } else {
       for (int i = 0; i < neighborsLength; ++i) {
         messagesToNeighbors[i] = 0;
