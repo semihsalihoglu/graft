@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.giraph.debugger.examples.bipartitematching;
+package org.apache.giraph.debugger.examples;
 
 import java.io.IOException;
 import java.util.List;

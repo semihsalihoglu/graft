@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.giraph.debugger.examples.bipartitematching;
+package org.apache.giraph.debugger.examples;
 
 import java.io.IOException;
 
+import org.apache.giraph.debugger.examples.bipartitematching.VertexValue;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.io.formats.TextVertexOutputFormat;
