@@ -28,7 +28,7 @@ public class RandomWalkMessageConstraintDebugConfig
 
   @Override
   public boolean isMessageCorrect(LongWritable srcId, LongWritable dstId,
-    IntWritable message) {
+    IntWritable message, long superstepNo) {
     return message.get() > 0;
   }
 
