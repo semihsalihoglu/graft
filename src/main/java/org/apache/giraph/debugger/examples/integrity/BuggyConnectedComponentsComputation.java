@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.Vertex;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
@@ -42,7 +42,7 @@ import org.apache.hadoop.io.NullWritable;
  * http://www.cs.cmu.edu/~ukang/papers/PegasusKAIS.pdf
  */
 public class BuggyConnectedComponentsComputation extends
-  BasicComputation<IntWritable, IntWritable, NullWritable, IntWritable> {
+  BasicComputation<LongWritable, LongWritable, NullWritable, LongWritable> {
 
   /**
    * Propagates the smallest vertex id to all neighbors. Will always choose to
@@ -55,13 +55,13 @@ public class BuggyConnectedComponentsComputation extends
    * @throws IOException
    */
   @Override
-  public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex,
-    Iterable<IntWritable> messages) throws IOException {
-    int currentComponent = vertex.getValue().get();
+  public void compute(Vertex<LongWritable, LongWritable, NullWritable> vertex,
+    Iterable<LongWritable> messages) throws IOException {
+    long currentComponent = vertex.getValue().get();
 
     if (getSuperstep() == 0) {
-      vertex.setValue(new IntWritable(currentComponent));
-      for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
+      vertex.setValue(new LongWritable(currentComponent));
+      for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
         sendMessage(edge.getTargetVertexId(), vertex.getValue());
       }
       vertex.voteToHalt();
@@ -70,8 +70,8 @@ public class BuggyConnectedComponentsComputation extends
 
     boolean changed = false;
     // did we get a smaller id ?
-    for (IntWritable message : messages) {
-      int candidateComponent = message.get();
+    for (LongWritable message : messages) {
+      long candidateComponent = message.get();
       // INTENTIONAL BUG: in the original algorithm the value of the comparison
       // sign should be <.
       // We note that this algorithm will end up finding the components
@@ -89,8 +89,8 @@ public class BuggyConnectedComponentsComputation extends
 
     // propagate new component id to the neighbors
     if (changed) {
-      vertex.setValue(new IntWritable(currentComponent));
-      for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
+      vertex.setValue(new LongWritable(currentComponent));
+      for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
         sendMessage(edge.getTargetVertexId(), vertex.getValue());
       }
     }
