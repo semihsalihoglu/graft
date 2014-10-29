@@ -15,29 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.giraph.debugger.examples.simpledebug;
-
-import org.apache.giraph.debugger.DebugConfig;
-import org.apache.giraph.graph.Vertex;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.LongWritable;
 
 /**
- * Debug configuration file for SimpleShortestPathDebugComputation.
+ * This is the Giraph implementation of an approximate maximum weight matching
+ * algorithm. It is used to demonstrate that Graft can help users find problems
+ * in their input graphs. In this case, if there are asymmetric weigths on
+ * the weights of the input graph, then this algorithm will get into an
+ * infinite loop.
  */
-public class SimpleShortestPathsDebugConfig extends DebugConfig<LongWritable,
-  DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
-
-  @Override
-  public boolean shouldDebugSuperstep(long superstepNo) {
-    return true;
-  }
-
-  @Override
-  public boolean shouldDebugVertex(
-    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
-    long superstepNo) {
-    return true;
-  }
-}
+package org.apache.giraph.debugger.examples.mwm;

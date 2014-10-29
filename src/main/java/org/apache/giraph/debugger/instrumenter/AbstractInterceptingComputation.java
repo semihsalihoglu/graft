@@ -219,7 +219,8 @@ public abstract class AbstractInterceptingComputation<
     try {
       clazz = Class.forName(debugConfigClassName);
       DEBUG_CONFIG = (DebugConfig<I, V, E, M1, M2>) clazz.newInstance();
-      DEBUG_CONFIG.readConfig(getConf());
+      DEBUG_CONFIG.readConfig(getConf(), getTotalNumVertices(),
+        getContext().getJobID().getId());
       VERTEX_ID_CLASS = getConf().getVertexIdClass();
       VERTEX_VALUE_CLASS = getConf().getVertexValueClass();
       EDGE_VALUE_CLASS = getConf().getEdgeValueClass();
@@ -308,7 +309,6 @@ public abstract class AbstractInterceptingComputation<
       shouldStopInterceptingVertex = true;
       return true;
     }
-
     if (SHOULD_CHECK_VERTEX_VALUE_INTEGRITY) {
       LOG.info("creating a vertexValueViolationWrapper. superstepNo: " +
         getSuperstep());
@@ -355,7 +355,7 @@ public abstract class AbstractInterceptingComputation<
     // 3) we have already debugged less than a threshold of vertices in this
     // superstep.
     shouldDebugVertex = NUM_VERTICES_LOGGED < NUM_VERTICES_TO_LOG &&
-      DEBUG_CONFIG.shouldDebugVertex(vertex);
+      DEBUG_CONFIG.shouldDebugVertex(vertex, getSuperstep());
     if (shouldDebugVertex) {
       giraphVertexScenarioWrapperForRegularTraces = getGiraphVertexScenario(
         vertex, vertex.getValue(), messages);
