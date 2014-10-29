@@ -207,7 +207,6 @@ public abstract class AbstractInterceptingComputation<
    * Initializes this class to start debugging.
    */
   protected final synchronized void initializeAbstractInterceptingComputation() {
-    previousVertexValue = getConf().createVertexValue();
     if (isInitialized) {
       return; // don't initialize twice
     }
@@ -281,6 +280,9 @@ public abstract class AbstractInterceptingComputation<
     previousVertexValueInputBuffer.reset(
       previousVertexValueOutputBuffer.getData(),
       previousVertexValueOutputBuffer.getLength());
+    if (previousVertexValue == null) {
+      previousVertexValue = getConf().createVertexValue();
+    }
     previousVertexValue.readFields(previousVertexValueInputBuffer);
     return previousVertexValue;
   }
