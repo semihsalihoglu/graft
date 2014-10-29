@@ -60,7 +60,7 @@ public class BuggyConnectedComponentsComputation extends
     long currentComponent = vertex.getValue().get();
 
     if (getSuperstep() == 0) {
-      vertex.setValue(new LongWritable(currentComponent));
+      vertex.setValue(vertex.getId());
       for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
         sendMessage(edge.getTargetVertexId(), vertex.getValue());
       }
