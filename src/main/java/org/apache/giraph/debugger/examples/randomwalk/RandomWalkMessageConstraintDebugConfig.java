@@ -17,7 +17,7 @@ public class RandomWalkMessageConstraintDebugConfig
 
   @Override
   public boolean shouldDebugVertex(
-    Vertex<LongWritable, IntWritable, NullWritable> vertex) {
+    Vertex<LongWritable, IntWritable, NullWritable> vertex, long superstepNo) {
     return false;
   }
   

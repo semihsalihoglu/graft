@@ -15,29 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.giraph.debugger.examples.simpledebug;
+package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
-import org.apache.giraph.graph.Vertex;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 
 /**
- * Debug configuration file for SimpleShortestPathDebugComputation.
+ * Debug configuration file for ConnectedComponents, that is configured to
+ * capture a random set of 10 vertices.
  */
-public class SimpleShortestPathsDebugConfig extends DebugConfig<LongWritable,
-  DoubleWritable, FloatWritable, DoubleWritable, DoubleWritable> {
+public class ConnectedComponentsRandomVerticesDebugConfig extends DebugConfig<
+  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
-  @Override
-  public boolean shouldDebugSuperstep(long superstepNo) {
-    return true;
-  }
-
-  @Override
-  public boolean shouldDebugVertex(
-    Vertex<LongWritable, DoubleWritable, FloatWritable> vertex,
-    long superstepNo) {
-    return true;
+  /**
+   * @return the number of random vertices that Graft should capture, which is
+   *         set to 10 in our case.
+   */
+  public int numberOfRandomVerticesToCapture() {
+    return 10;
   }
 }

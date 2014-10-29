@@ -19,6 +19,7 @@ package org.apache.giraph.debugger;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.giraph.conf.GiraphConfiguration;
@@ -135,6 +136,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * is specified.
    */
   private Set<I> verticesToDebugSet;
+
   /**
    * Stores the set of specified supersteps to debug in, when
    * SUPERSTEPS_TO_DEBUG_FLAG is specified.
@@ -183,9 +185,13 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * Configures this class through a {@link GiraphConfiguration}, which may
    * contain some flags passed in by the user.
    * @param config a {@link GiraphConfiguration} object.
+   * @param totalNumberOfVertices in the graph to use when picking a random
+   *        number of vertices to capture.
+   * @param jobId id of the job to use as seed, when generating a number.
    */
   @SuppressWarnings("unchecked")
-  public final void readConfig(GiraphConfiguration config) {
+  public final void readConfig(GiraphConfiguration config,
+    long totalNumberOfVertices, int jobId) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(
       DEBUG_NEIGHBORS_FLAG, false);
 
@@ -216,18 +222,21 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
           .split(VERTEX_ID_DELIMITER);
         this.verticesToDebugSet = new HashSet<>();
         for (String idString : verticesToDebugArray) {
-          if (LongWritable.class.isAssignableFrom(idType)) {
-            verticesToDebugSet
-              .add((I) new LongWritable(Long.valueOf(idString)));
-          } else if (IntWritable.class.isAssignableFrom(idType)) {
-            verticesToDebugSet.add((I) new IntWritable(Integer
-              .valueOf(idString)));
-          } else {
-            throw new IllegalArgumentException(
-              "When using the giraph.debugger.verticesToDebug argument, the " +
-                "vertex IDs of the computation class needs to be LongWritable" +
-                " or IntWritable.");
+          insertIDIntoVerticesToDebugSetIfLongOrInt(idType, idString);
+        }
+      }
+      if (numberOfRandomVerticesToCapture() > 0) {
+        if (this.verticesToDebugSet == null) {
+          this.verticesToDebugSet = new HashSet<>();
+        }
+        Random random = new Random(jobId);
+        for (int i = 0; i < numberOfRandomVerticesToCapture(); ++i) {
+          int totalNumberOfVerticesInInt = (int) totalNumberOfVertices;
+          if (totalNumberOfVerticesInInt < 0) {
+            totalNumberOfVerticesInInt = Integer.MAX_VALUE;
           }
+          insertIDIntoVerticesToDebugSetIfLongOrInt(idType, 
+            "" + random.nextInt(totalNumberOfVerticesInInt));
         }
       }
     }
@@ -236,6 +245,22 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     numViolationsToLog = config.getInt(NUM_VIOLATIONS_TO_LOG, 3);
 
     // LOG.debug("DebugConfig" + this);
+  }
+
+  private void insertIDIntoVerticesToDebugSetIfLongOrInt(Class<?> idType,
+    String idString) {
+    if (LongWritable.class.isAssignableFrom(idType)) {
+      verticesToDebugSet
+        .add((I) new LongWritable(Long.valueOf(idString)));
+    } else if (IntWritable.class.isAssignableFrom(idType)) {
+      verticesToDebugSet.add((I) new IntWritable(Integer
+        .valueOf(idString)));
+    } else {
+      throw new IllegalArgumentException(
+        "When using the giraph.debugger.verticesToDebug argument, the " +
+          "vertex IDs of the computation class needs to be LongWritable" +
+          " or IntWritable.");
+    }
   }
 
   /**
@@ -249,11 +274,18 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   }
 
   /**
+   * @return the number of random vertices that Graft should capture.
+   */
+  public int numberOfRandomVerticesToCapture() {
+    return 0;
+  }
+
+  /**
    * Whether the specified vertex should be debugged.
    * @param vertex a vertex.
    * @return whether the vertex should be debugged.
    */
-  public boolean shouldDebugVertex(Vertex<I, V, E> vertex) {
+  public boolean shouldDebugVertex(Vertex<I, V, E> vertex, long superstepNo) {
     if (vertex.isHalted()) {
       // If vertex has already halted before a superstep, we probably won't
       // want to debug it.
@@ -266,9 +298,14 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     if (verticesToDebugSet == null) {
       return false;
     } else {
-      return verticesToDebugSet.contains(vertex.getId()) ||
-        debugNeighborsOfVerticesToDebug &&
-        isVertexANeighborOfAVertexToDebug(vertex);
+      if (superstepNo == 0 && debugNeighborsOfVerticesToDebug ) {
+        // If it's the first superstep and we should capture neighbors
+        // of vertices, then we check if this vertex is a neighbor of a vertex
+        // that is already specified (or randomly picked). If so we add the
+        // vertex to the verticesToDebugSet.
+        addVertexToVerticesToDebugSetIfNeighbor(vertex);
+      }
+      return verticesToDebugSet.contains(vertex.getId());
     }
   }
 
@@ -280,15 +317,13 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * @return whether the vertex is a neighbor of vertex that should be
    * debugged.
    */
-  private boolean isVertexANeighborOfAVertexToDebug(Vertex<I, V, E> vertex) {
+  private void addVertexToVerticesToDebugSetIfNeighbor(Vertex<I, V, E> vertex) {
     for (Edge<I, E> edge : vertex.getEdges()) {
       if (verticesToDebugSet.contains(edge.getTargetVertexId())) {
         // Add the vertex to the set to avoid scanning all edges multiple times.
-//        verticesToDebugSet.add(vertex.getId());
-        return true;
+        verticesToDebugSet.add(vertex.getId());
       }
     }
-    return false;
   }
 
   /**
@@ -354,6 +389,15 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   public int getNumberOfViolationsToLog() {
     return numViolationsToLog;
   }
+  
+  /**
+   * Warning: This function should not be called by classes outside of
+   * org.apache.giraph.debugger package.
+   * @return verticesToDebugSet maintained by this DebugConfig.
+   */
+  public Set<I> getVerticesToDebugSet() {
+    return verticesToDebugSet;
+  }
 
   @Override
   public String toString() {
@@ -373,5 +417,4 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
       shouldCheckVertexValueIntegrity());
     return stringBuilder.toString();
   }
-
 }
