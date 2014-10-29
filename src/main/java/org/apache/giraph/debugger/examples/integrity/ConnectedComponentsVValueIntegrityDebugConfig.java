@@ -27,8 +27,8 @@ import org.apache.hadoop.io.NullWritable;
  * the integrity of the vertex values: The current check is that the vertex
  * value is less than or equal to the id of the vertex.
  */
-public class ConnectedComponentsVValueIntegrityDebugConfig extends
-  DebugConfig<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+public class ConnectedComponentsVValueIntegrityDebugConfig extends DebugConfig<
+  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
   @Override
   public boolean shouldCatchExceptions() {
@@ -37,7 +37,7 @@ public class ConnectedComponentsVValueIntegrityDebugConfig extends
 
   @Override
   public boolean shouldDebugVertex(
-    Vertex<IntWritable, IntWritable, NullWritable> vertex) {
+    Vertex<IntWritable, IntWritable, NullWritable> vertex, long superstepNo) {
     return false;
   };
 
@@ -49,16 +49,5 @@ public class ConnectedComponentsVValueIntegrityDebugConfig extends
   @Override
   public boolean isVertexValueCorrect(IntWritable vertexId, IntWritable value) {
     return value.get() <= vertexId.get();
-  }
-
-  @Override
-  public boolean shouldCheckMessageIntegrity() {
-    return true;
-  }
-
-  @Override
-  public boolean isMessageCorrect(IntWritable srcId, IntWritable dstId,
-    IntWritable message, long superstepNo) {
-    return message.get() <= srcId.get();
   }
 }

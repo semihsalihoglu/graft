@@ -37,7 +37,7 @@ public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
 
   @Override
   public boolean shouldDebugVertex(
-    Vertex<IntWritable, IntWritable, NullWritable> vertex) {
+    Vertex<IntWritable, IntWritable, NullWritable> vertex, long superstepNo) {
     return false;
   }
 

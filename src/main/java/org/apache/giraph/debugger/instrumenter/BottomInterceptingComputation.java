@@ -18,7 +18,6 @@
 package org.apache.giraph.debugger.instrumenter;
 
 import java.io.IOException;
-import java.util.Random;
 
 import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.graph.GraphState;
