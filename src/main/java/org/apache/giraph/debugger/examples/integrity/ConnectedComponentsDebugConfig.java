@@ -18,7 +18,6 @@
 package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
-import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
@@ -27,19 +26,8 @@ import org.apache.hadoop.io.NullWritable;
  * the integrity of the vertex values: The current check is that the vertex
  * value is less than or equal to the id of the vertex.
  */
-public class ConnectedComponentsVValueIntegrityDebugConfig extends
+public class ConnectedComponentsDebugConfig extends
   DebugConfig<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
-
-  @Override
-  public boolean shouldCatchExceptions() {
-    return false;
-  }
-
-  @Override
-  public boolean shouldDebugVertex(
-    Vertex<IntWritable, IntWritable, NullWritable> vertex) {
-    return false;
-  };
 
   @Override
   public boolean shouldCheckVertexValueIntegrity() {
@@ -61,4 +49,5 @@ public class ConnectedComponentsVValueIntegrityDebugConfig extends
     IntWritable message, long superstepNo) {
     return message.get() <= srcId.get();
   }
+
 }
