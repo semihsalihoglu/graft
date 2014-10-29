@@ -16,6 +16,7 @@
 # DEBUG_OPTIONS can be a set of the following options:
 #     -S SUPERSTEP_NO   To debug only the given supersteps
 #     -V VERTEX_ID      To debug only the given vertices
+#     -R #              To debug a certain number of random vertices
 #     -N                To also debug the neighbors of the given vertices
 #     -E                To disable the exceptions from being captured
 #     -m #              To limit the maximum number of captured vertices
@@ -185,7 +186,8 @@ CaptureExceptions=true
 UseCachedJars=true
 NumVerticesToLog=
 NumViolationsToLog=
-while getopts "S:V:C:NEm:M:f" o; do
+NumRandomVerticesToDebug=
+while getopts "S:V:C:NEm:M:R:f" o; do
     case $o in
         S) SuperstepsToDebug+=("$OPTARG") ;;
         V) VerticesToDebug+=("$OPTARG") ;;
@@ -195,6 +197,7 @@ while getopts "S:V:C:NEm:M:f" o; do
         f) UseCachedJars=false ;;
         m) NumVerticesToLog=$OPTARG ;;
         M) NumViolationsToLog=$OPTARG ;;
+        R) NumRandomVerticesToDebug=$OPTARG ;;
         *)
             error "$o: Unrecognized option"
     esac
@@ -270,6 +273,9 @@ elif [ x"$debugConfigClassName" = x"$DEFAULT_DEBUG_CONFIG" ]; then
     # debug all vertices if none were specified and default DebugConfig is being used
     set -- "$@" -ca "giraph.debugger.debugAllVertices=true"
 fi
+[ -z "$NumRandomVerticesToDebug" ] ||
+    set -- "$@" -ca "giraph.debugger.debugAllVertices=false" \
+        -ca "giraph.debugger.numRandomVerticesToDebug=$NumRandomVerticesToDebug"
 #  debugNeighbors
 $NoDebugNeighbors ||
     set -- "$@" -ca "giraph.debugger.debugNeighbors=true"
