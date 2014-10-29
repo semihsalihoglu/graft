@@ -18,8 +18,8 @@ import org.apache.hadoop.io.NullWritable;
 public class RandomWalkComputation extends
   BasicComputation<LongWritable, IntWritable, NullWritable, IntWritable> {
 
-  private static final int DEFAULT_NUM_WALKERS = 10;
-  private static final int DEFAULT_LENGTH_OF_WALK = 6;
+  private static final int DEFAULT_NUM_WALKERS = 100;
+  private static final int DEFAULT_LENGTH_OF_WALK = 20;
 
   private short[] messagesToNeighbors = new short[2];
   private short initialNumWalkers;

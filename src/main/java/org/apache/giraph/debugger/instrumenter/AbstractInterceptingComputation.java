@@ -280,6 +280,9 @@ public abstract class AbstractInterceptingComputation<
     previousVertexValueInputBuffer.reset(
       previousVertexValueOutputBuffer.getData(),
       previousVertexValueOutputBuffer.getLength());
+    if (previousVertexValue == null) {
+      previousVertexValue = getConf().createVertexValue();
+    }
     previousVertexValue.readFields(previousVertexValueInputBuffer);
     return previousVertexValue;
   }
