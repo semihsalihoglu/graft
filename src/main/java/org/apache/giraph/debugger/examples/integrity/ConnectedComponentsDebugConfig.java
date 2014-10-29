@@ -18,27 +18,25 @@
 package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
-import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
  * Debug configuration file for ConnectedComponents, that is configured to check
- * the integrity of the messages sent: The current check is that the message
- * value is less than or equal to the id of the source vertex.
+ * the integrity of the vertex values: The current check is that the vertex
+ * value is less than or equal to the id of the vertex.
  */
-public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
-  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+public class ConnectedComponentsDebugConfig extends
+  DebugConfig<IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
   @Override
-  public boolean shouldCatchExceptions() {
-    return false;
+  public boolean shouldCheckVertexValueIntegrity() {
+    return true;
   }
 
   @Override
-  public boolean shouldDebugVertex(
-    Vertex<IntWritable, IntWritable, NullWritable> vertex, long superstepNo) {
-    return false;
+  public boolean isVertexValueCorrect(IntWritable vertexId, IntWritable value) {
+    return value.get() <= vertexId.get();
   }
 
   @Override
@@ -51,4 +49,5 @@ public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
     IntWritable message, long superstepNo) {
     return message.get() <= srcId.get();
   }
+
 }

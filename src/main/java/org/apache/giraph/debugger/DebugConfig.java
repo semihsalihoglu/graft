@@ -130,12 +130,22 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    */
   private static final String NUM_VIOLATIONS_TO_LOG =
     "giraph.debugger.numViolationsToLog";
+  /**
+   * String constant for specifying the number of vertices to randomly capture.
+   */
+  private static final String NUM_RANDOM_VERTICES_TO_DEBUG =
+    "giraph.debugger.numRandomVerticesToDebug";
 
   /**
    * Stores the set of specified vertices to debug, when VERTICES_TO_DEBUG_FLAG
    * is specified.
    */
   private Set<I> verticesToDebugSet;
+
+  /**
+   * The number of vertices to randomly capture for debugging. 
+   */
+  private int numRandomVerticesToDebug;
 
   /**
    * Stores the set of specified supersteps to debug in, when
@@ -179,6 +189,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     superstepsToDebugSet = null;
     numVerticesToLog = 3;
     numViolationsToLog = 3;
+    numRandomVerticesToDebug = 0;
   }
 
   /**
@@ -189,11 +200,11 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    *        number of vertices to capture.
    * @param jobId id of the job to use as seed, when generating a number.
    */
-  @SuppressWarnings("unchecked")
   public final void readConfig(GiraphConfiguration config,
     long totalNumberOfVertices, int jobId) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(
       DEBUG_NEIGHBORS_FLAG, false);
+    this.numRandomVerticesToDebug = config.getInt(NUM_RANDOM_VERTICES_TO_DEBUG, 0);
 
     this.shouldCatchExceptions = config.getBoolean(CATCH_EXCEPTIONS_FLAG, true);
 
@@ -247,6 +258,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     // LOG.debug("DebugConfig" + this);
   }
 
+  @SuppressWarnings("unchecked")
   private void insertIDIntoVerticesToDebugSetIfLongOrInt(Class<?> idType,
     String idString) {
     if (LongWritable.class.isAssignableFrom(idType)) {
@@ -277,7 +289,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * @return the number of random vertices that Graft should capture.
    */
   public int numberOfRandomVerticesToCapture() {
-    return 0;
+    return numRandomVerticesToDebug;
   }
 
   /**

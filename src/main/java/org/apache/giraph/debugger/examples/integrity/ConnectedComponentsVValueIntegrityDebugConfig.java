@@ -18,6 +18,7 @@
 package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
+import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 
@@ -28,6 +29,17 @@ import org.apache.hadoop.io.NullWritable;
  */
 public class ConnectedComponentsVValueIntegrityDebugConfig extends DebugConfig<
   IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+
+  @Override
+  public boolean shouldCatchExceptions() {
+    return false;
+  }
+
+  @Override
+  public boolean shouldDebugVertex(
+    Vertex<IntWritable, IntWritable, NullWritable> vertex, long superstepNo) {
+    return false;
+  };
 
   @Override
   public boolean shouldCheckVertexValueIntegrity() {
