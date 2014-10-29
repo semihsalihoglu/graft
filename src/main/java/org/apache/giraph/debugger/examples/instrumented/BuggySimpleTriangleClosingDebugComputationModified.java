@@ -36,7 +36,7 @@ import com.google.common.collect.Sets;
  * WARNING: This class is should be used only for development. It is put in the
  * Graft source tree to demonstrate to users the two classes that Graft
  * generates at runtime when instrumenting a {@link Computation} class. This is
- * the example for {@link BuggySimpleTriangleClosingComputation}. The other
+ * the example for {@link ConnectedComponentsComputation}. The other
  * class Graft generates is
  * {@link BuggySimpleTriangleClosingDebugComputationToRun}. Please see the Graft
  * documentation for more details on how Graft instruments {@link Computation}

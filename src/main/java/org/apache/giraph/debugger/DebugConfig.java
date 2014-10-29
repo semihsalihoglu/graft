@@ -311,10 +311,12 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * @param srcId source id of the message.
    * @param dstId destination id of the message.
    * @param message message sent between srcId and dstId.
+   * @param superstepNo executing superstep number.
    * @return whether this message is correct, i.e, does not violate a
    * constraint.
    */
-  public boolean isMessageCorrect(I srcId, I dstId, M1 message) {
+  public boolean isMessageCorrect(I srcId, I dstId, M1 message,
+    long superstepNo) {
     return true;
   }
 
