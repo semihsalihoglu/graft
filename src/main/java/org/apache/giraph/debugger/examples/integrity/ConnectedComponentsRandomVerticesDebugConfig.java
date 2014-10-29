@@ -18,7 +18,7 @@
 package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
@@ -26,7 +26,7 @@ import org.apache.hadoop.io.NullWritable;
  * capture a random set of 10 vertices.
  */
 public class ConnectedComponentsRandomVerticesDebugConfig extends DebugConfig<
-  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+  LongWritable, LongWritable, NullWritable, LongWritable, LongWritable> {
 
   /**
    * @return the number of random vertices that Graft should capture, which is

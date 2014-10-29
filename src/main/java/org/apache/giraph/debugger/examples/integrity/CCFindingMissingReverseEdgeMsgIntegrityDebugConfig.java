@@ -18,7 +18,7 @@
 package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
@@ -27,7 +27,7 @@ import org.apache.hadoop.io.NullWritable;
  * has to be greater than or equal to v's ID.
  */
 public class CCFindingMissingReverseEdgeMsgIntegrityDebugConfig extends DebugConfig<
-  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+  LongWritable, LongWritable, NullWritable, LongWritable, LongWritable> {
 
   @Override
   public boolean shouldCheckMessageIntegrity() {
@@ -35,8 +35,8 @@ public class CCFindingMissingReverseEdgeMsgIntegrityDebugConfig extends DebugCon
   }
 
   @Override
-  public boolean isMessageCorrect(IntWritable srcId, IntWritable dstId,
-    IntWritable message, long superstepNo) {
+  public boolean isMessageCorrect(LongWritable srcId, LongWritable dstId,
+    LongWritable message, long superstepNo) {
     if (superstepNo == 1) {
       return message.get() >= dstId.get();
     } else {

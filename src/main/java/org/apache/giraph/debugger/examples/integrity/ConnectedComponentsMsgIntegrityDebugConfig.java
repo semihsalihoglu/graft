@@ -19,7 +19,7 @@ package org.apache.giraph.debugger.examples.integrity;
 
 import org.apache.giraph.debugger.DebugConfig;
 import org.apache.giraph.graph.Vertex;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
@@ -28,7 +28,7 @@ import org.apache.hadoop.io.NullWritable;
  * value is less than or equal to the id of the source vertex.
  */
 public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
-  IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
+  LongWritable, LongWritable, NullWritable, LongWritable, LongWritable> {
 
   @Override
   public boolean shouldCatchExceptions() {
@@ -37,7 +37,7 @@ public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
 
   @Override
   public boolean shouldDebugVertex(
-    Vertex<IntWritable, IntWritable, NullWritable> vertex, long superstepNo) {
+    Vertex<LongWritable, LongWritable, NullWritable> vertex, long superstepNo) {
     return false;
   }
 
@@ -47,8 +47,8 @@ public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
   }
 
   @Override
-  public boolean isMessageCorrect(IntWritable srcId, IntWritable dstId,
-    IntWritable message, long superstepNo) {
+  public boolean isMessageCorrect(LongWritable srcId, LongWritable dstId,
+    LongWritable message, long superstepNo) {
     return message.get() <= srcId.get();
   }
 }
