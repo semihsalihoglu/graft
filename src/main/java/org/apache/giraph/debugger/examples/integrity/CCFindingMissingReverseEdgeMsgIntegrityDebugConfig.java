@@ -23,10 +23,10 @@ import org.apache.hadoop.io.NullWritable;
 
 /**
  * Debug configuration file for ConnectedComponents, that is configured to check
- * the integrity of the messages sent: The current check is that the message
- * value is less than or equal to the id of the source vertex.
+ * that in the second superstep, the value of a message sent from vertex u to v
+ * has to be greater than or equal to v's ID.
  */
-public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
+public class CCFindingMissingReverseEdgeMsgIntegrityDebugConfig extends DebugConfig<
   IntWritable, IntWritable, NullWritable, IntWritable, IntWritable> {
 
   @Override
@@ -37,6 +37,10 @@ public class ConnectedComponentsMsgIntegrityDebugConfig extends DebugConfig<
   @Override
   public boolean isMessageCorrect(IntWritable srcId, IntWritable dstId,
     IntWritable message, long superstepNo) {
-    return message.get() <= srcId.get();
+    if (superstepNo == 1) {
+      return message.get() >= dstId.get();
+    } else {
+      return true;
+    }
   }
 }

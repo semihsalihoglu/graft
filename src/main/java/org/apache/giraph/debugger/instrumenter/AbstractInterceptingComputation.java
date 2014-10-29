@@ -544,7 +544,8 @@ public abstract class AbstractInterceptingComputation<
       if (SHOULD_CHECK_MESSAGE_INTEGRITY &&
         NUM_MESSAGE_VIOLATIONS_LOGGED < NUM_VIOLATIONS_TO_LOG) {
         I senderId = currentVertexUnderCompute.getId();
-        if (!DEBUG_CONFIG.isMessageCorrect(senderId, id, message)) {
+        if (!DEBUG_CONFIG.isMessageCorrect(senderId, id, message,
+          getSuperstep())) {
           msgIntegrityViolationWrapper.addMsgWrapper(
             currentVertexUnderCompute.getId(), id, message);
           NUM_MESSAGE_VIOLATIONS_LOGGED++;
@@ -580,7 +581,8 @@ public abstract class AbstractInterceptingComputation<
             break;
           }
           I id = edge.getTargetVertexId();
-          if (DEBUG_CONFIG.isMessageCorrect(senderId, id, message)) {
+          if (DEBUG_CONFIG.isMessageCorrect(senderId, id, message, 
+            getSuperstep())) {
             continue;
           }
           msgIntegrityViolationWrapper.addMsgWrapper(senderId, id, message);
