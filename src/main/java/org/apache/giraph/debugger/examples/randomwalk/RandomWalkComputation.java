@@ -22,8 +22,8 @@ public class RandomWalkComputation extends
   private static final int DEFAULT_LENGTH_OF_WALK = 20;
 
   private short[] messagesToNeighbors = new short[2];
-  private short initialNumWalkers;
-  private short lengthOfWalk;
+  private int initialNumWalkers;
+  private int lengthOfWalk;
 
   @Override
   public void initialize(
@@ -34,10 +34,10 @@ public class RandomWalkComputation extends
     super.initialize(graphState, workerClientRequestProcessor,
       graphTaskManager, workerAggregatorUsage, workerContext);
 
-    initialNumWalkers = (short) getConf().getInt(
+    initialNumWalkers = getConf().getInt(
       getClass().getName() + ".initialNumWalkers", DEFAULT_NUM_WALKERS);
-    lengthOfWalk = (short) getConf().getInt(
-      getClass().getName() + ".walkLength", DEFAULT_LENGTH_OF_WALK);
+    lengthOfWalk = getConf().getInt(getClass().getName() + ".walkLength",
+      DEFAULT_LENGTH_OF_WALK);
   }
 
   @Override
@@ -48,10 +48,10 @@ public class RandomWalkComputation extends
       vertex.voteToHalt();
       return;
     }
-    int numWalkersHere = 0;
+    short numWalkersHere = 0;
     if (getSuperstep() == 0) {
       // At the first superstep, start from an initial number of walkers.
-      numWalkersHere = initialNumWalkers;
+      numWalkersHere += initialNumWalkers;
     } else {
       // Otherwise, count the number of walkers arrived at this vertex.
       for (IntWritable messageValue : messages) {
@@ -91,7 +91,7 @@ public class RandomWalkComputation extends
       // Then, send out messages containing the number of walkers.
       int i = 0;
       for (Edge<LongWritable, NullWritable> edge : edges) {
-        if (messagesToNeighbors[i] > 0) {
+        if (messagesToNeighbors[i] != 0) {
           sendMessage(edge.getTargetVertexId(), new IntWritable(
             messagesToNeighbors[i]));
         }
