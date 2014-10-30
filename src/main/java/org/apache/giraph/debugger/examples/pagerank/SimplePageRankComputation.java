@@ -9,6 +9,7 @@ import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -34,11 +35,11 @@ public class SimplePageRankComputation extends
     GraphState graphState,
     WorkerClientRequestProcessor<LongWritable, DoubleWritable, NullWritable> workerClientRequestProcessor,
     GraphTaskManager<LongWritable, DoubleWritable, NullWritable> graphTaskManager,
-    WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+    WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
     MAX_SUPERSTEPS = workerContext.getConf().getInt(
       getClass().getName() + ".maxSupersteps", 10);
     super.initialize(graphState, workerClientRequestProcessor,
-      graphTaskManager, workerAggregatorUsage, workerContext);
+      graphTaskManager, workerGlobalCommUsage, workerContext);
   }
 
   @Override

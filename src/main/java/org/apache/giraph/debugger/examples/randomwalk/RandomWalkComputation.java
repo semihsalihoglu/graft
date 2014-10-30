@@ -9,8 +9,8 @@ import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -30,9 +30,9 @@ public class RandomWalkComputation extends
     GraphState graphState,
     WorkerClientRequestProcessor<LongWritable, IntWritable, NullWritable> workerClientRequestProcessor,
     GraphTaskManager<LongWritable, IntWritable, NullWritable> graphTaskManager,
-    WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+    WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
     super.initialize(graphState, workerClientRequestProcessor,
-      graphTaskManager, workerAggregatorUsage, workerContext);
+      graphTaskManager, workerGlobalCommUsage, workerContext);
 
     initialNumWalkers = getConf().getInt(
       getClass().getName() + ".initialNumWalkers", DEFAULT_NUM_WALKERS);

@@ -23,8 +23,8 @@ import org.apache.giraph.comm.WorkerClientRequestProcessor;
 import org.apache.giraph.graph.GraphState;
 import org.apache.giraph.graph.GraphTaskManager;
 import org.apache.giraph.graph.Vertex;
-import org.apache.giraph.worker.WorkerAggregatorUsage;
 import org.apache.giraph.worker.WorkerContext;
+import org.apache.giraph.worker.WorkerGlobalCommUsage;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -53,12 +53,12 @@ public class BottomInterceptingComputation<I extends WritableComparable,
   public void initialize(GraphState graphState,
     WorkerClientRequestProcessor<I, V, E> workerClientRequestProcessor,
     GraphTaskManager<I, V, E> graphTaskManager,
-    WorkerAggregatorUsage workerAggregatorUsage, WorkerContext workerContext) {
+    WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
     try {
       // We first call super.initialize so that the getConf() call below
       // returns a non-null value.
       super.initialize(graphState, workerClientRequestProcessor,
-        graphTaskManager, workerAggregatorUsage, workerContext);
+        graphTaskManager, workerGlobalCommUsage, workerContext);
     } finally {
       if (!AbstractInterceptingComputation.isInitialized) { // short circuit
         initializeAbstractInterceptingComputation();
