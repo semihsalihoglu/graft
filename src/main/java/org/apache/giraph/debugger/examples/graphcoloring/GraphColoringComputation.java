@@ -48,14 +48,6 @@ public class GraphColoringComputation extends
   @Override
   public void compute(Vertex<LongWritable, VertexValue, NullWritable> vertex,
     Iterable<Message> messages) throws IOException {
-    // XXX presentation purpose
-    getAggregatedValue(GraphColoringMaster.TOTAL_NUM_EDGES);
-    getAggregatedValue(GraphColoringMaster.TOTAL_NUM_VERTICES);
-    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_COLORED);
-    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_UNKNOWN);
-    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_TENTATIVELY_IN_SET);
-    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_IN_SET);
-    getAggregatedValue(GraphColoringMaster.NUM_VERTICES_NOT_IN_SET);
 
     // Treat already colored vertices as if it didn't exist in the graph.
     if (vertex.getValue().isColored()) {

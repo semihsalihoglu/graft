@@ -9,8 +9,6 @@ import org.apache.hadoop.io.LongWritable;
 
 public class GraphColoringMaster extends DefaultMasterCompute {
 
-  public static final String TOTAL_NUM_VERTICES = "totalNumVertices";
-  public static final String TOTAL_NUM_EDGES = "totalNumEdges";
   public static final String PHASE = "phase";
   public static final String COLOR_TO_ASSIGN = "colorToAssign";
   public static final String NUM_VERTICES_COLORED = "numVerticesColored";
@@ -39,18 +37,10 @@ public class GraphColoringMaster extends DefaultMasterCompute {
     registerAggregator(NUM_VERTICES_TENTATIVELY_IN_SET, LongSumAggregator.class);
     registerAggregator(NUM_VERTICES_NOT_IN_SET, LongSumAggregator.class);
     registerAggregator(NUM_VERTICES_IN_SET, LongSumAggregator.class);
-
-    // XXX presentation purpose
-    registerPersistentAggregator(TOTAL_NUM_EDGES, IntSumAggregator.class);
-    registerPersistentAggregator(TOTAL_NUM_VERTICES, IntSumAggregator.class);
   }
 
   @Override
   public void compute() {
-    // XXX presentation purpose
-    setAggregatedValue(TOTAL_NUM_EDGES, new IntWritable((int)getTotalNumEdges()));
-    setAggregatedValue(TOTAL_NUM_VERTICES, new IntWritable((int)getTotalNumVertices()));
-
     if (phase != null) {
       switch (phase) {
       case LOTTERY:
