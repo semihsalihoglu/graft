@@ -27,22 +27,31 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
+/**
+ * (Buggy) Giraph implementation of a randomized graph coloring algorithm.
+ */
 public class GraphColoringComputation extends
   BasicComputation<LongWritable, VertexValue, NullWritable, Message> {
 
+  /**
+   * Cached LongWritable for value one.
+   */
   private static final LongWritable ONE = new LongWritable(1);
+  /**
+   * The current phase.
+   */
   private Phase phase;
+  /**
+   * The current color to assign.
+   */
   private int colorToAssign;
 
   @Override
   public void preSuperstep() {
-    phase = Phase.values()[((IntWritable) getAggregatedValue(GraphColoringMaster.PHASE))
-      .get()];
-    colorToAssign = ((IntWritable) getAggregatedValue(GraphColoringMaster.COLOR_TO_ASSIGN))
-      .get();
-
-    System.out.println(getSuperstep() + ": " + phase + ", color " +
-      colorToAssign);
+    phase = Phase.values()[((IntWritable) getAggregatedValue(
+        GraphColoringMaster.PHASE)).get()];
+    colorToAssign = ((IntWritable) getAggregatedValue(
+        GraphColoringMaster.COLOR_TO_ASSIGN)).get();
   }
 
   @Override
@@ -154,6 +163,7 @@ public class GraphColoringComputation extends
 //        // XXX INTENTIONAL BUG: NOT_IN_SET vertices that did not receive any
 //        // IS_IN_SET message will also go back to UNKNOWN state, which is
 //        // undesired.
+        break;
       }
       break;
 
@@ -192,9 +202,17 @@ public class GraphColoringComputation extends
       aggregate(GraphColoringMaster.NUM_VERTICES_IN_SET, ONE);
       break;
 
+    default:
+      break;
     }
   }
 
+  /**
+   * Set the vertex color.
+   *
+   * @param vertex the vertex
+   * @param colorToAssign the color
+   */
   protected void setVertexColor(
     Vertex<LongWritable, VertexValue, NullWritable> vertex, int colorToAssign) {
     VertexValue value = vertex.getValue();
@@ -202,6 +220,12 @@ public class GraphColoringComputation extends
     vertex.setValue(value);
   }
 
+  /**
+   * Set the vertex state.
+   *
+   * @param vertex the vertex
+   * @param newState the new state
+   */
   protected void setVertexState(
     Vertex<LongWritable, VertexValue, NullWritable> vertex, State newState) {
     VertexValue value = vertex.getValue();

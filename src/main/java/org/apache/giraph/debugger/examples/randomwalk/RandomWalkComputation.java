@@ -1,3 +1,20 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.giraph.debugger.examples.randomwalk;
 
 import java.io.IOException;
@@ -15,20 +32,39 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
+/**
+ * Random walk implementation in Giraph with short-overflow bugs.
+ */
 public class RandomWalkComputation extends
   BasicComputation<LongWritable, IntWritable, NullWritable, IntWritable> {
 
+  /**
+   * Default number of initial walkers.
+   */
   private static final int DEFAULT_NUM_WALKERS = 100;
+  /**
+   * Default length of the random walk.
+   */
   private static final int DEFAULT_LENGTH_OF_WALK = 20;
 
+  /**
+   * Array for storing the number of walkers for each neighbor of a vertex.
+   */
   private short[] messagesToNeighbors = new short[2];
+  /**
+   * Initial number of walkers.
+   */
   private int initialNumWalkers;
+  /**
+   * Length of the random walk.
+   */
   private int lengthOfWalk;
 
   @Override
   public void initialize(
     GraphState graphState,
-    WorkerClientRequestProcessor<LongWritable, IntWritable, NullWritable> workerClientRequestProcessor,
+    WorkerClientRequestProcessor<LongWritable, IntWritable, NullWritable>
+    workerClientRequestProcessor,
     GraphTaskManager<LongWritable, IntWritable, NullWritable> graphTaskManager,
     WorkerGlobalCommUsage workerGlobalCommUsage, WorkerContext workerContext) {
     super.initialize(graphState, workerClientRequestProcessor,
@@ -62,6 +98,12 @@ public class RandomWalkComputation extends
     moveWalkersToNeighbors(numWalkersHere, vertex);
   }
 
+  /**
+   * Move walkers to neighbors by sending messages.
+   *
+   * @param numMessagesToSend total number of walkers to send out
+   * @param vertex the vertex sending messages
+   */
   private void moveWalkersToNeighbors(int numMessagesToSend,
     Vertex<LongWritable, IntWritable, NullWritable> vertex) {
     Iterable<Edge<LongWritable, NullWritable>> edges = vertex.getEdges();

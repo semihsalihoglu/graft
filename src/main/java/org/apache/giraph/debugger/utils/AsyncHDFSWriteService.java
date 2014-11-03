@@ -41,16 +41,10 @@ public class AsyncHDFSWriteService {
     .getLogger(AsyncHDFSWriteService.class);
 
   /**
-   * Not for instantiation.
-   */
-  private AsyncHDFSWriteService() {
-  }
-
-  /**
    * The thread pool that will handle the synchronous writing, and hide the
    * latency from the callers.
    */
-  private static ExecutorService hdfsAsyncWriteService = Executors
+  private static ExecutorService HDFS_ASYNC_WRITE_SERVICE = Executors
     .newFixedThreadPool(2);
   static {
     // Make sure we finish writing everything before shuting down the VM.
@@ -58,10 +52,10 @@ public class AsyncHDFSWriteService {
       @Override
       public void run() {
         LOG.info("Shutting down writer");
-        hdfsAsyncWriteService.shutdown();
+        HDFS_ASYNC_WRITE_SERVICE.shutdown();
         LOG.info("Waiting until finishes all writes");
         try {
-          hdfsAsyncWriteService.awaitTermination(Long.MAX_VALUE,
+          HDFS_ASYNC_WRITE_SERVICE.awaitTermination(Long.MAX_VALUE,
             TimeUnit.NANOSECONDS);
           LOG.info("Finished all writes");
         } catch (InterruptedException e) {
@@ -73,10 +67,16 @@ public class AsyncHDFSWriteService {
   }
 
   /**
+   * Not for instantiation.
+   */
+  private AsyncHDFSWriteService() {
+  }
+
+  /**
    * Writes given protobuf message to the given filesystem path in the
    * background.
    *
-   * @param msg
+   * @param message
    *          The proto message to write.
    * @param fs
    *          The HDFS filesystem to write to.
@@ -85,7 +85,7 @@ public class AsyncHDFSWriteService {
    */
   public static void writeToHDFS(final GeneratedMessage message,
     final FileSystem fs, final String fileName) {
-    hdfsAsyncWriteService.submit(new Runnable() {
+    HDFS_ASYNC_WRITE_SERVICE.submit(new Runnable() {
       @Override
       public void run() {
         Path pt = new Path(fileName);

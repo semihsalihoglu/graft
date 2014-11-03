@@ -33,32 +33,57 @@ public class VertexValue implements Writable {
    */
   public static final long NOT_MATCHED_ID = -1;
 
-  public long matchedID;
-  public boolean isMatched;
+  /**
+   * Id of the matched vertex with this.
+   */
+  private long matchedID;
+  /**
+   * Whether the vertex has been already matched.
+   */
+  private boolean isMatched;
 
+  /**
+   * Default constructor.
+   */
   public VertexValue() {
-    this.matchedID = NOT_MATCHED_ID;
-    this.isMatched = false;
+    this.setMatchedID(NOT_MATCHED_ID);
+    this.setMatched(false);
   }
 
+  public long getMatchedID() {
+    return matchedID;
+  }
+
+  public void setMatchedID(long matchedID) {
+    this.matchedID = matchedID;
+  }
+
+  public boolean isMatched() {
+    return isMatched;
+  }
+
+  public void setMatched(boolean isMatched) {
+    this.isMatched = isMatched;
+  }
   @Override
   public void readFields(DataInput in) throws IOException {
-    matchedID = in.readLong();
-    isMatched = in.readBoolean();
+    setMatchedID(in.readLong());
+    setMatched(in.readBoolean());
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeLong(matchedID);
-    out.writeBoolean(isMatched);
+    out.writeLong(getMatchedID());
+    out.writeBoolean(isMatched());
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("matchedID=");
-    sb.append(matchedID == NOT_MATCHED_ID ? "?" : matchedID);
-    sb.append("\tisMatched=" + isMatched);
+    sb.append(getMatchedID() == NOT_MATCHED_ID ? "?" : getMatchedID());
+    sb.append("\tisMatched=" + isMatched());
     return sb.toString();
   }
+
 }

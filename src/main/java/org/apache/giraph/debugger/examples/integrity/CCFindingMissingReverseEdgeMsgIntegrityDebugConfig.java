@@ -26,8 +26,9 @@ import org.apache.hadoop.io.NullWritable;
  * that in the second superstep, the value of a message sent from vertex u to v
  * has to be greater than or equal to v's ID.
  */
-public class CCFindingMissingReverseEdgeMsgIntegrityDebugConfig extends DebugConfig<
-  LongWritable, LongWritable, NullWritable, LongWritable, LongWritable> {
+public class CCFindingMissingReverseEdgeMsgIntegrityDebugConfig extends
+  DebugConfig<LongWritable, LongWritable, NullWritable, LongWritable,
+  LongWritable> {
 
   @Override
   public boolean shouldCheckMessageIntegrity() {

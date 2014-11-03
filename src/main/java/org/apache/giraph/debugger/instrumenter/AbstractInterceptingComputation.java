@@ -86,6 +86,23 @@ public abstract class AbstractInterceptingComputation<
     .getLogger(AbstractInterceptingComputation.class);
 
   /**
+   * A flag to indicate whether this Computation class was already initialized.
+   */
+  protected static boolean IS_INITIALIZED;
+  /**
+   * Whether DEBUG_CONFIG tells to check message constraints.
+   */
+  protected static boolean SHOULD_CHECK_MESSAGE_INTEGRITY;
+  /**
+   * Whether DEBUG_CONFIG tells to check vertex value constraints.
+   */
+  protected static boolean SHOULD_CHECK_VERTEX_VALUE_INTEGRITY;
+  /**
+   * Whether DEBUG_CONFIG tells to catch exceptions.
+   */
+  protected static boolean SHOULD_CATCH_EXCEPTIONS;
+
+  /**
    * Configuration key for the path to the jar signature.
    */
   private static final String JAR_SIGNATURE_KEY =
@@ -113,17 +130,9 @@ public abstract class AbstractInterceptingComputation<
   private static int NUM_MESSAGE_VIOLATIONS_LOGGED = -1;
 
   /**
-   * A flag to indicate whether this Computation class was already initialized. 
-   */
-  protected static boolean isInitialized;
-  
-  /**
    * DebugConfig instance to be used for debugging.
    */
   private static DebugConfig DEBUG_CONFIG;
-  protected static boolean SHOULD_CHECK_MESSAGE_INTEGRITY;
-  protected static boolean SHOULD_CHECK_VERTEX_VALUE_INTEGRITY;
-  protected static boolean SHOULD_CATCH_EXCEPTIONS;
 
   /**
    * The vertex id type as in the I of Giraph's Computation&lt;I,V,E,M1,M2>.
@@ -147,12 +156,25 @@ public abstract class AbstractInterceptingComputation<
    * Computation&lt;I,V,E,M1,M2>.
    */
   private static Type OUTGOING_MESSAGE_CLASS;
-  
+
+  /**
+   * Contains previous aggregators that are available in the beginning of the
+   * superstep.In Giraph, these aggregators are immutable. NOTE: We currently
+   * only capture aggregators that are read by at least one vertex. If we want
+   * to capture all aggregators we need to change Giraph code to be get access
+   * to them.
+   */
+  private static CommonVertexMasterInterceptionUtil
+  COMMON_VERTEX_MASTER_INTERCEPTING_UTIL;
+
   /**
    * Whether or not this vertex was configured to be debugged. If so we will
    * intercept its outgoing messages.
    */
   private boolean shouldDebugVertex;
+  /**
+   * Whether to stop intercepting compute() for the remaining vertices.
+   */
   private boolean shouldStopInterceptingVertex;
 
   /**
@@ -162,7 +184,7 @@ public abstract class AbstractInterceptingComputation<
    */
   private GiraphVertexScenarioWrapper<I, V, E, M1, M2>
   giraphVertexScenarioWrapperForRegularTraces;
-  
+
   /**
    * If a vertex has violated a message value constraint when it was sending a
    * message we set this to true so that at the inside interceptComputeEnd()
@@ -176,25 +198,25 @@ public abstract class AbstractInterceptingComputation<
    * save a vertexScenario trace for it.
    */
   private V previousVertexValue;
-  private DataOutputBuffer previousVertexValueOutputBuffer = new DataOutputBuffer();
-  private DataInputBuffer previousVertexValueInputBuffer = new DataInputBuffer();
   /**
-   * We keep the vertex under compute in case some functions need it, e.g., sendMessage().
+   * DataOutputBuffer for holding the previous vertex value.
+   */
+  private DataOutputBuffer previousVertexValueOutputBuffer =
+    new DataOutputBuffer();
+  /**
+   * DataInputBuffer for cloning what was preserved for previous vertex value.
+   */
+  private DataInputBuffer previousVertexValueInputBuffer =
+    new DataInputBuffer();
+  /**
+   * We keep the vertex under compute in case some functions need it, e.g.,
+   * sendMessage().
    */
   private Vertex<I, V, E> currentVertexUnderCompute;
   /**
    * The wrapped instance of message integrity violation.
    */
   private MsgIntegrityViolationWrapper<I, M2> msgIntegrityViolationWrapper;
-
-  /**
-   * Contains previous aggregators that are available in the beginning of the
-   * superstep.In Giraph, these aggregators are immutable. NOTE: We currently
-   * only capture aggregators that are read by at least one vertex. If we want
-   * to capture all aggregators we need to change Giraph code to be get access
-   * to them.
-   */
-  private static CommonVertexMasterInterceptionUtil commonVertexMasterInterceptionUtil;
 
   /**
    * Provides a way to access the actual Computation class.
@@ -206,13 +228,15 @@ public abstract class AbstractInterceptingComputation<
   /**
    * Initializes this class to start debugging.
    */
-  protected final synchronized void initializeAbstractInterceptingComputation() {
-    if (isInitialized) {
+  protected final synchronized void
+  initializeAbstractInterceptingComputation() {
+    if (IS_INITIALIZED) {
       return; // don't initialize twice
     }
-    isInitialized = true;
-    commonVertexMasterInterceptionUtil = new CommonVertexMasterInterceptionUtil(
-      getContext().getJobID().toString());
+    IS_INITIALIZED = true;
+    COMMON_VERTEX_MASTER_INTERCEPTING_UTIL =
+      new CommonVertexMasterInterceptionUtil(
+        getContext().getJobID().toString());
     String debugConfigClassName = DEBUG_CONFIG_CLASS.get(getConf());
     LOG.info("initializing debugConfigClass: " + debugConfigClassName);
     Class<?> clazz;
@@ -235,8 +259,10 @@ public abstract class AbstractInterceptingComputation<
       NUM_VERTICES_LOGGED = 0;
       // Cache DebugConfig flags
       SHOULD_CATCH_EXCEPTIONS = DEBUG_CONFIG.shouldCatchExceptions();
-      SHOULD_CHECK_VERTEX_VALUE_INTEGRITY = DEBUG_CONFIG.shouldCheckVertexValueIntegrity();
-      SHOULD_CHECK_MESSAGE_INTEGRITY = DEBUG_CONFIG.shouldCheckMessageIntegrity();
+      SHOULD_CHECK_VERTEX_VALUE_INTEGRITY =
+        DEBUG_CONFIG.shouldCheckVertexValueIntegrity();
+      SHOULD_CHECK_MESSAGE_INTEGRITY =
+        DEBUG_CONFIG.shouldCheckMessageIntegrity();
     } catch (InstantiationException | ClassNotFoundException |
       IllegalAccessException e) {
       LOG.error("Could not create a new DebugConfig instance of " +
@@ -250,14 +276,15 @@ public abstract class AbstractInterceptingComputation<
       String jarSignature = getConf().get(JAR_SIGNATURE_KEY);
       if (jarSignature != null) {
         Path jarSignaturePath = new Path(
-          DebuggerUtils.getTraceFileRoot(commonVertexMasterInterceptionUtil
+          DebuggerUtils.getTraceFileRoot(COMMON_VERTEX_MASTER_INTERCEPTING_UTIL
             .getJobId()) + "/" + "jar.signature");
         LOG.info("Recording jar signature (" + jarSignature + ") at " +
           jarSignaturePath);
-        FileSystem fs = commonVertexMasterInterceptionUtil.getFileSystem();
+        FileSystem fs = COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.getFileSystem();
         try {
           if (!fs.exists(jarSignaturePath)) {
-            OutputStream f = fs.create(jarSignaturePath, true).getWrappedStream();
+            OutputStream f = fs.create(jarSignaturePath,
+              true).getWrappedStream();
             IOUtils.write(jarSignature, f);
             f.close();
           }
@@ -272,11 +299,25 @@ public abstract class AbstractInterceptingComputation<
     LOG.info("done initializing debugConfigClass: " + debugConfigClassName);
   }
 
-  private void keepPreviousVertexValue(Vertex<I,V,E> vertex) throws IOException {
+  /**
+   * Keep the vertex value as the previous one.
+   *
+   * @param vertex the vertex
+   * @throws IOException
+   */
+  private void keepPreviousVertexValue(Vertex<I, V, E> vertex) throws
+  IOException {
     previousVertexValueOutputBuffer.reset();
     vertex.getValue().write(previousVertexValueOutputBuffer);
   }
 
+  /**
+   * Clone the kept previous vertex value.
+   *
+   * @return Copy of previous vertex value.
+   *   Same instance will be reused across multiple calls.
+   * @throws IOException
+   */
   private V getPreviousVertexValue() throws IOException {
     previousVertexValueInputBuffer.reset(
       previousVertexValueOutputBuffer.getData(),
@@ -288,6 +329,9 @@ public abstract class AbstractInterceptingComputation<
     return previousVertexValue;
   }
 
+  /**
+   * @return whether captured enough number of info for debugging.
+   */
   private boolean hasInterceptedEnough() {
     return NUM_VERTICES_LOGGED >= NUM_VERTICES_TO_LOG ||
       NUM_VERTEX_VIOLATIONS_LOGGED >= NUM_VIOLATIONS_TO_LOG ||
@@ -297,7 +341,8 @@ public abstract class AbstractInterceptingComputation<
   /**
    * Called before {@link Computation#preSuperstep()} to prepare a message
    * integrity violation wrapper.
-   * @return true if compute() does not need to be intercepted for this superstep.
+   * @return true if compute() does not need to be intercepted for this
+   *  superstep.
    */
   protected final boolean interceptPreSuperstepBegin() {
     // LOG.info("before preSuperstep");
@@ -334,12 +379,11 @@ public abstract class AbstractInterceptingComputation<
    *
    * @param vertex The vertex that's about to be computed.
    * @param messages The incoming messages for the vertex.
-   * @return whether the user has specified catching exceptions.
    * @throws IOException
    */
   protected final void interceptComputeBegin(Vertex<I, V, E> vertex,
     Iterable<M1> messages) throws IOException {
-    if (!isInitialized) {
+    if (!IS_INITIALIZED) {
       // TODO: Sometimes Giraph doesn't call initialize() and directly calls
       // compute(). Here we
       // guard against things not being initiliazed, which was causing null
@@ -395,10 +439,10 @@ public abstract class AbstractInterceptingComputation<
       ExceptionUtils.getStackTrace(e));
     giraphVertexScenarioWrapperForExceptionTrace
       .setExceptionWrapper(exceptionWrapper);
-    commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+    COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.saveScenarioWrapper(
       giraphVertexScenarioWrapperForExceptionTrace, DebuggerUtils
         .getFullTraceFileName(DebugTrace.VERTEX_EXCEPTION,
-          commonVertexMasterInterceptionUtil.getJobId(), getSuperstep(),
+          COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.getJobId(), getSuperstep(),
           vertex.getId().toString()));
   }
 
@@ -408,7 +452,7 @@ public abstract class AbstractInterceptingComputation<
    *
    * @param vertex The vertex that was computed.
    * @param messages The incoming messages for the vertex.
-   * @return whether compute() needs to be intercepted more. 
+   * @return whether compute() needs to be intercepted more.
    * @throws IOException
    */
   protected final boolean interceptComputeEnd(Vertex<I, V, E> vertex,
@@ -418,10 +462,10 @@ public abstract class AbstractInterceptingComputation<
       giraphVertexScenarioWrapperForRegularTraces.getContextWrapper()
         .setVertexValueAfterWrapper(vertex.getValue());
       // Save vertex scenario.
-      commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+      COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.saveScenarioWrapper(
         giraphVertexScenarioWrapperForRegularTraces, DebuggerUtils
           .getFullTraceFileName(DebugTrace.VERTEX_REGULAR,
-            commonVertexMasterInterceptionUtil.getJobId(), getSuperstep(),
+            COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.getJobId(), getSuperstep(),
             vertex.getId().toString()));
       NUM_VERTICES_LOGGED++;
     }
@@ -450,10 +494,10 @@ public abstract class AbstractInterceptingComputation<
     // LOG.info("after postSuperstep");
     if (SHOULD_CHECK_MESSAGE_INTEGRITY &&
       msgIntegrityViolationWrapper.numMsgWrappers() > 0) {
-      commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+      COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.saveScenarioWrapper(
         msgIntegrityViolationWrapper, DebuggerUtils
           .getMessageIntegrityAllTraceFullFileName(getSuperstep(),
-            commonVertexMasterInterceptionUtil.getJobId(), UUID.randomUUID()
+            COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.getJobId(), UUID.randomUUID()
               .toString()));
     }
     // LOG.info("after postSuperstep done");
@@ -472,9 +516,9 @@ public abstract class AbstractInterceptingComputation<
     GiraphVertexScenarioWrapper<I, V, E, M1, M2>
     giraphVertexScenarioWrapper = getGiraphVertexScenario(
       vertex, getPreviousVertexValue(), messages);
-    commonVertexMasterInterceptionUtil.saveScenarioWrapper(
+    COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.saveScenarioWrapper(
       giraphVertexScenarioWrapper, DebuggerUtils.getFullTraceFileName(
-        debugTrace, commonVertexMasterInterceptionUtil.getJobId(),
+        debugTrace, COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.getJobId(),
         getSuperstep(), vertex.getId().toString()));
   }
 
@@ -504,10 +548,11 @@ public abstract class AbstractInterceptingComputation<
     giraphVertexScenarioWrapper.setContextWrapper(contextWrapper);
     giraphVertexScenarioWrapper.getContextWrapper()
       .setVertexValueBeforeWrapper(previousVertexValueToAssign);
-    commonVertexMasterInterceptionUtil.initCommonVertexMasterContextWrapper(
+    COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.initCommonVertexMasterContextWrapper(
       getConf(), getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
     contextWrapper
-      .setCommonVertexMasterContextWrapper(commonVertexMasterInterceptionUtil
+      .setCommonVertexMasterContextWrapper(
+        COMMON_VERTEX_MASTER_INTERCEPTING_UTIL
         .getCommonVertexMasterContextWrapper());
     giraphVertexScenarioWrapper.getContextWrapper().setVertexIdWrapper(
       vertex.getId());
@@ -539,7 +584,7 @@ public abstract class AbstractInterceptingComputation<
     if (!shouldStopInterceptingVertex) {
       if (shouldDebugVertex) {
         giraphVertexScenarioWrapperForRegularTraces.getContextWrapper()
-        .addOutgoingMessageWrapper(id, message);
+          .addOutgoingMessageWrapper(id, message);
       }
       if (SHOULD_CHECK_MESSAGE_INTEGRITY &&
         NUM_MESSAGE_VIOLATIONS_LOGGED < NUM_VIOLATIONS_TO_LOG) {
@@ -571,7 +616,7 @@ public abstract class AbstractInterceptingComputation<
       if (shouldDebugVertex) {
         for (Edge<I, E> edge : vertex.getEdges()) {
           giraphVertexScenarioWrapperForRegularTraces.getContextWrapper()
-          .addOutgoingMessageWrapper(edge.getTargetVertexId(), message);
+            .addOutgoingMessageWrapper(edge.getTargetVertexId(), message);
         }
       }
       if (SHOULD_CHECK_MESSAGE_INTEGRITY) {
@@ -581,7 +626,7 @@ public abstract class AbstractInterceptingComputation<
             break;
           }
           I id = edge.getTargetVertexId();
-          if (DEBUG_CONFIG.isMessageCorrect(senderId, id, message, 
+          if (DEBUG_CONFIG.isMessageCorrect(senderId, id, message,
             getSuperstep())) {
             continue;
           }
@@ -598,7 +643,7 @@ public abstract class AbstractInterceptingComputation<
   public <A extends Writable> A getAggregatedValue(String name) {
     A retVal = super.<A>getAggregatedValue(name);
     if (!shouldStopInterceptingVertex) {
-      commonVertexMasterInterceptionUtil.addAggregatedValueIfNotExists(name,
+      COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.addAggregatedValueIfNotExists(name,
         retVal);
     }
     return retVal;

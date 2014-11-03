@@ -47,7 +47,8 @@ public class ConnectedComponentsVValueIntegrityDebugConfig extends DebugConfig<
   }
 
   @Override
-  public boolean isVertexValueCorrect(LongWritable vertexId, LongWritable value) {
+  public boolean isVertexValueCorrect(LongWritable vertexId, LongWritable
+    value) {
     return value.get() <= vertexId.get();
   }
 }

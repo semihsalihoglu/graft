@@ -60,7 +60,7 @@ public class BottomInterceptingComputation<I extends WritableComparable,
       super.initialize(graphState, workerClientRequestProcessor,
         graphTaskManager, workerGlobalCommUsage, workerContext);
     } finally {
-      if (!AbstractInterceptingComputation.isInitialized) { // short circuit
+      if (!AbstractInterceptingComputation.IS_INITIALIZED) { // short circuit
         initializeAbstractInterceptingComputation();
       }
     }

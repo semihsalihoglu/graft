@@ -33,7 +33,7 @@ import org.apache.hadoop.io.LongWritable;
  */
 public class MWMComputation extends
   BasicComputation<LongWritable, VertexValue, DoubleWritable, LongWritable> {
-  
+
   @Override
   public void compute(Vertex<LongWritable, VertexValue, DoubleWritable> vertex,
     Iterable<LongWritable> messages) throws IOException {
@@ -41,7 +41,7 @@ public class MWMComputation extends
       vertex.voteToHalt();
     }
     long phase = getSuperstep() % 2;
-    if (vertex.getValue().isMatched || vertex.getNumEdges() == 0) {
+    if (vertex.getValue().isMatched() || vertex.getNumEdges() == 0) {
       vertex.voteToHalt();
       return;
     }
@@ -52,11 +52,11 @@ public class MWMComputation extends
         return;
       }
       long maxValueVertexID = pickMaxValueVertex(vertex);
-      vertex.getValue().matchedID = maxValueVertexID;
+      vertex.getValue().setMatchedID(maxValueVertexID);
       vertex.setValue(vertex.getValue());
       sendMessage(new LongWritable(maxValueVertexID), vertex.getId());
     } else if (phase == 1) {
-      long matchedID = vertex.getValue().matchedID;
+      long matchedID = vertex.getValue().getMatchedID();
       boolean isMatched = false;
       for (LongWritable matchingVertexID : messages) {
         if (matchingVertexID.get() == matchedID) {
@@ -65,7 +65,7 @@ public class MWMComputation extends
         }
       }
       if (isMatched) {
-        vertex.getValue().isMatched = true;
+        vertex.getValue().setMatched(true);
         vertex.setValue(vertex.getValue());
         sendMessageToAllEdges(vertex, vertex.getId());
         vertex.voteToHalt();
@@ -73,6 +73,12 @@ public class MWMComputation extends
     }
   }
 
+  /**
+   * Remove edges.
+   *
+   * @param vertex the vertex
+   * @param messages the incoming messages
+   */
   private void removeEdges(
     Vertex<LongWritable, VertexValue, DoubleWritable> vertex,
     Iterable<LongWritable> messages) {
@@ -81,6 +87,10 @@ public class MWMComputation extends
     }
   }
 
+  /**
+   * @param vertex the vertex
+   * @return the max id among neighbor vertices
+   */
   private long pickMaxValueVertex(
     Vertex<LongWritable, VertexValue, DoubleWritable> vertex) {
     long maxWeightNbrID = -1;
@@ -97,5 +107,5 @@ public class MWMComputation extends
       }
     }
     return maxWeightNbrID;
-  }  
+  }
 }

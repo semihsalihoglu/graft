@@ -27,7 +27,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 
 /**
- * Message for bipartite matching.
+ * Message for graph coloring.
  */
 public class Message implements Writable {
 
@@ -41,11 +41,11 @@ public class Message implements Writable {
    */
   public enum Type {
     /**
-     * 
+     * The sending vertex is tentatively in the set now.
      */
     WANTS_TO_BE_IN_SET,
     /**
-     * Grant reply message sent by right and left vertices.
+     * The sending vertex is in the independent set now.
      */
     IS_IN_SET,
   }
@@ -80,15 +80,16 @@ public class Message implements Writable {
    * @param type
    *          The type of this message
    */
-  public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex, Type type) {
+  public Message(Vertex<LongWritable, VertexValue, NullWritable> vertex,
+    Type type) {
     this.senderVertex = vertex.getId().get();
-    this.type = type; 
+    this.type = type;
   }
 
   public long getSenderVertex() {
     return senderVertex;
   }
-  
+
   public Type getType() {
     return type;
   }

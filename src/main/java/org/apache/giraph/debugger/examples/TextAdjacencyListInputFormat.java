@@ -38,6 +38,8 @@ import com.google.common.collect.Lists;
  * unweighted graphs with long ids.
  *
  * Each line consists of: vertex neighbor1 neighbor2 ...
+ *
+ * @param <V>
  */
 public class TextAdjacencyListInputFormat<V extends Writable> extends
     TextVertexInputFormat<LongWritable, V, NullWritable> {

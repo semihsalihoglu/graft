@@ -28,24 +28,59 @@ import org.apache.hadoop.io.Writable;
  */
 public class VertexValue implements Writable {
 
-  public final static int NO_COLOR = -1;
+  /**
+   * Value for an invalid color.
+   */
+  public static final int NO_COLOR = -1;
 
+  /**
+   * Color of the vertex.
+   */
   private int color = NO_COLOR;
 
+  /**
+   * State of the vertex.
+   */
   public enum State {
-    UNKNOWN("U"), TENTATIVELY_IN_SET("T"), NOT_IN_SET("N"), IN_SET("I"), ;
+    /**
+     * Unknown state.
+     */
+    UNKNOWN("U"),
+    /**
+     * State of tentatively in the independent set.
+     */
+    TENTATIVELY_IN_SET("T"),
+    /**
+     * State of not in the independent set.
+     */
+    NOT_IN_SET("N"),
+    /**
+     * State of being in the independent set.
+     */
+    IN_SET("I");
 
+    /**
+     * Abbreviation string of the state.
+     */
     private final String abbreviation;
+
+    /**
+     * Constructor with abbreviation string.
+     * @param abbreviation shorthand string for the state.
+     */
+    private State(String abbreviation) {
+      this.abbreviation = abbreviation;
+    }
 
     public String getAbbreviation() {
       return abbreviation;
     }
 
-    private State(String abbreviation) {
-      this.abbreviation = abbreviation;
-    }
   }
 
+  /**
+   * State of the vertex.
+   */
   private State state = State.UNKNOWN;
 
   public State getState() {

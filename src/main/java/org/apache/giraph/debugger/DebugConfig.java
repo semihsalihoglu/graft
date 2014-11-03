@@ -143,7 +143,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   private Set<I> verticesToDebugSet;
 
   /**
-   * The number of vertices to randomly capture for debugging. 
+   * The number of vertices to randomly capture for debugging.
    */
   private int numRandomVerticesToDebug;
 
@@ -204,7 +204,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     long totalNumberOfVertices, int jobId) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(
       DEBUG_NEIGHBORS_FLAG, false);
-    this.numRandomVerticesToDebug = config.getInt(NUM_RANDOM_VERTICES_TO_DEBUG, 0);
+    this.numRandomVerticesToDebug = config.getInt(
+      NUM_RANDOM_VERTICES_TO_DEBUG, 0);
 
     this.shouldCatchExceptions = config.getBoolean(CATCH_EXCEPTIONS_FLAG, true);
 
@@ -246,7 +247,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
           if (totalNumberOfVerticesInInt < 0) {
             totalNumberOfVerticesInInt = Integer.MAX_VALUE;
           }
-          insertIDIntoVerticesToDebugSetIfLongOrInt(idType, 
+          insertIDIntoVerticesToDebugSetIfLongOrInt(idType,
             "" + random.nextInt(totalNumberOfVerticesInInt));
         }
       }
@@ -258,6 +259,12 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     // LOG.debug("DebugConfig" + this);
   }
 
+  /**
+   * Add given string to the vertex set for debugging.
+   *
+   * @param idType type of vertex id
+   * @param idString string representation of the vertex to add
+   */
   @SuppressWarnings("unchecked")
   private void insertIDIntoVerticesToDebugSetIfLongOrInt(Class<?> idType,
     String idString) {
@@ -295,6 +302,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   /**
    * Whether the specified vertex should be debugged.
    * @param vertex a vertex.
+   * @param superstepNo the superstep number.
    * @return whether the vertex should be debugged.
    */
   public boolean shouldDebugVertex(Vertex<I, V, E> vertex, long superstepNo) {
@@ -310,7 +318,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     if (verticesToDebugSet == null) {
       return false;
     } else {
-      if (superstepNo == 0 && debugNeighborsOfVerticesToDebug ) {
+      if (superstepNo == 0 && debugNeighborsOfVerticesToDebug) {
         // If it's the first superstep and we should capture neighbors
         // of vertices, then we check if this vertex is a neighbor of a vertex
         // that is already specified (or randomly picked). If so we add the
@@ -326,8 +334,6 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
    * configured to be debugged. If so then the given vertex will also
    * be debugged.
    * @param vertex a vertex.
-   * @return whether the vertex is a neighbor of vertex that should be
-   * debugged.
    */
   private void addVertexToVerticesToDebugSetIfNeighbor(Vertex<I, V, E> vertex) {
     for (Edge<I, E> edge : vertex.getEdges()) {
@@ -401,7 +407,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   public int getNumberOfViolationsToLog() {
     return numViolationsToLog;
   }
-  
+
   /**
    * Warning: This function should not be called by classes outside of
    * org.apache.giraph.debugger package.

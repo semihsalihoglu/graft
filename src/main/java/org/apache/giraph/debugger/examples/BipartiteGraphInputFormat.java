@@ -38,6 +38,8 @@ import com.google.common.collect.Lists;
  * Input format that loads the Bipartite graph for matching where each vertex
  * is a JSON array with three elements: vertex id, vertex value (ignored), and
  * an array of neighbor vertex ids.
+ *
+ * @param <V>
  */
 public class BipartiteGraphInputFormat<V extends Writable>
   extends

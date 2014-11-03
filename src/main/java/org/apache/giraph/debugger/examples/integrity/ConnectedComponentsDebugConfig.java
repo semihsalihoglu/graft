@@ -27,7 +27,8 @@ import org.apache.hadoop.io.NullWritable;
  * value is less than or equal to the id of the vertex.
  */
 public class ConnectedComponentsDebugConfig extends
-  DebugConfig<LongWritable, LongWritable, NullWritable, LongWritable, LongWritable> {
+  DebugConfig<LongWritable, LongWritable, NullWritable, LongWritable,
+  LongWritable> {
 
   @Override
   public boolean shouldCheckVertexValueIntegrity() {
@@ -35,7 +36,8 @@ public class ConnectedComponentsDebugConfig extends
   }
 
   @Override
-  public boolean isVertexValueCorrect(LongWritable vertexId, LongWritable value) {
+  public boolean isVertexValueCorrect(LongWritable vertexId,
+    LongWritable value) {
     return value.get() <= vertexId.get();
   }
 

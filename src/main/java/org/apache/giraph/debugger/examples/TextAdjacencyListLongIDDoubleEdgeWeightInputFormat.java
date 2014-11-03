@@ -38,6 +38,8 @@ import com.google.common.collect.Lists;
  * double weighted graphs with long ids.
  *
  * Each line consists of: vertex neighbor1 weight1 neighbor2 weight2 ...
+ *
+ * @param <V>
  */
 public class TextAdjacencyListLongIDDoubleEdgeWeightInputFormat<
   V extends Writable> extends TextVertexInputFormat<
@@ -82,11 +84,11 @@ public class TextAdjacencyListLongIDDoubleEdgeWeightInputFormat<
     protected Iterable<Edge<LongWritable, DoubleWritable>> getEdges(
         String[] tokens) throws IOException {
       List<Edge<LongWritable, DoubleWritable>> edges =
-          Lists.newArrayListWithCapacity((tokens.length - 1)/2);
+          Lists.newArrayListWithCapacity((tokens.length - 1) / 2);
       for (int n = 1; n < tokens.length;) {
         edges.add(EdgeFactory.create(
           new LongWritable(Long.parseLong(tokens[n])),
-            new DoubleWritable(Double.parseDouble(tokens[n+1]))));
+            new DoubleWritable(Double.parseDouble(tokens[n + 1]))));
         n += 2;
       }
       return edges;
