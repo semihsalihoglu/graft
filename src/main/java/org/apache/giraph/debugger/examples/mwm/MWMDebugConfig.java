@@ -37,7 +37,7 @@ public class MWMDebugConfig
   @Override
   public boolean isVertexValueCorrect(LongWritable vertexId,
     VertexValue value) {
-    return value.matchedID != vertexId.get();
+    return value.getMatchedID() != vertexId.get();
   }
 
   @Override
