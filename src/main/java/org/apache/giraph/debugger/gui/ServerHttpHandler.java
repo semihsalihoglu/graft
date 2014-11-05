@@ -147,13 +147,13 @@ public abstract class ServerHttpHandler implements HttpHandler {
   protected void handleException(Exception e, String illegalArgumentMessage) {
     e.printStackTrace();
     LOG.error(e);
-    if (e instanceof IllegalArgumentException) {
-      this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
-      this.response = illegalArgumentMessage;
-    } else if (e instanceof NumberFormatException) {
+    if (e instanceof NumberFormatException) {
       this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
       this.response = String.format("%s must be an integer >= -1.",
         ServerUtils.SUPERSTEP_ID_KEY);
+    } else if (e instanceof IllegalArgumentException) {
+      this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
+      this.response = illegalArgumentMessage;
     } else if (e instanceof FileNotFoundException) {
       this.statusCode = HttpURLConnection.HTTP_NOT_FOUND;
       this.response = "File not found on the server. Please ensure this " +

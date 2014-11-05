@@ -73,7 +73,6 @@ public class Server {
     HttpServer server = HttpServer
       .create(new InetSocketAddress(SERVER_PORT), 0);
     // Attach JobHandler instance to handle /job GET call.
-    server.createContext("/job", new GetJob());
     server.createContext("/vertices", new GetVertices());
     server.createContext("/supersteps", new GetSupersteps());
     server.createContext("/scenario", new GetScenario());
@@ -138,60 +137,9 @@ public class Server {
   }
 
   /**
-   * Handles /job HTTP GET call. Returns the details of the given jobId.
-   *
-   * @URLparams -{jobId}
-   */
-  static class GetJob extends ServerHttpHandler {
-    @Override
-    public void processRequest(HttpExchange httpExchange,
-      Map<String, String> paramMap) {
-      String jobId = paramMap.get(ServerUtils.JOB_ID_KEY);
-      if (jobId != null) {
-        this.statusCode = HttpURLConnection.HTTP_OK;
-        this.response = getSuperstepData(jobId);
-      } else {
-        this.statusCode = HttpURLConnection.HTTP_BAD_REQUEST;
-        this.response = String.format(
-          "Invalid parameters. %s is mandatory parameter.",
-          ServerUtils.JOB_ID_KEY);
-      }
-    }
-
-    /**
-     * Returns superstep data of the job in JSON format. TODO(vikesh):
-     * Sample/Demo method for now. Will remove after modifying the front-end
-     * with the new API.
-     * @param jobId id of the job.
-     * @return the default sample/demo data for the beginning.
-     */
-    private String getSuperstepData(String jobId) {
-      return "[{'PR1' : {neighbors: [{ 'neighborId' : 'PR2'}, " +
-        "{ 'neighborId' : 'PR3'}], vertexValues : [0.244], " +
-        "outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', " +
-        "'PR3' : 'msgFrom1To3.step-1'}}, " +
-        "'PR2' : {neighbors: [{ neighborId : 'PR3'}], vertexValues: [0.455]," +
-        " outgoingMessages: {'PR3': 'msgTo3From2.step-1'}}, " +
-        "'PR4' : {neighbors: [ { neighborId : 'PR1'}], " +
-        "vertexValues : [0.78]}},  {'PR1' : {vertexValues:[0.44], " +
-        "outgoingMessages:{ 'PR2' : 'msgFrom1To2.step0', " +
-        "'PR3' : 'msgFrom1To3.step0'}}, 'PR2' : {vertexValues:[0.889]," +
-        " outgoingMessages: {'PR3': 'msgTo3From2.step0'}}, " +
-        "'PR4' : {vertexValues:[0.98]}}, {'PR1' : {vertexValues:[0.001]," +
-        " outgoingMessages:{ 'PR2' : 'msgFrom1To2.step1', " +
-        "'PR3' : 'msgFrom1To3.step1'}}, 'PR2' : {vertexValues:[0.667], " +
-        "outgoingMessages: {'PR3': 'msgTo3From2.step1'}}}, " +
-        "{'PR1' : {vertexValues:[0.232], outgoingMessages:{ 'PR2' : " +
-        "'msgFrom1To2.step2', 'PR3' : 'msgFrom1To3.step2'}}, 'PR2' : " +
-        "{vertexValues:[0.787], outgoingMessages: " +
-        "{'PR3': 'msgTo3From2.step2'}}}]";
-    }
-  }
-
-  /**
    * Returns the list of vertices debugged in a given Superstep for a given job.
    *
-   * @URLParams: {jobId, superstepId}
+   * URL parameters: {jobId, superstepId}
    */
   static class GetVertices extends ServerHttpHandler {
     @Override
@@ -258,8 +206,8 @@ public class Server {
   /**
    * Returns the scenario for a given superstep of a given job.
    *
-   * @URLParams - {jobId, superstepId, [vertexId], [raw]}
-   * @desc vertexId - vertexId is optional. It can be a single value or a comma
+   * URL Params: {jobId, superstepId, [vertexId], [raw]}
+   * vertexId: vertexId is optional. It can be a single value or a comma
    *       separated list. If it is not supplied, returns the scenario for all
    *       vertices. If 'raw' parameter is specified, returns the raw protocol
    *       buffer.
@@ -322,8 +270,8 @@ public class Server {
   /**
    * Returns the JAVA code for vertex scenario.
    *
-   * @URLParams : {jobId, superstepId, vertexId, traceType}
-   * @desc traceType : Can be one of reg, err, msg or vv
+   * URL Params: {jobId, superstepId, vertexId, traceType}
+   * traceType: Can be one of reg, err, msg or vv
    */
   static class GetVertexTest extends ServerHttpHandler {
     @Override
@@ -429,7 +377,7 @@ public class Server {
    * Returns the integrity violations based on the requested parameter. The
    * requested parameter (type) may be one of M, E or V.
    *
-   * @URLParams : jobId, superstepId, violiationType It is an optional parameter
+   * URL Params: jobId, superstepId, violiationType It is an optional parameter
    *            and is only used when violationType = V
    */
   static class GetIntegrity extends ServerHttpHandler {
@@ -536,7 +484,7 @@ public class Server {
   /**
    * Returns the TestGraph JAVA code.
    *
-   * @URLParam adjList - Adjacency list of the graph
+   * URL Param: adjList - Adjacency list of the graph
    */
   static class GetTestGraph extends ServerHttpHandler {
     @Override

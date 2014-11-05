@@ -37,7 +37,6 @@ package org.apache.giraph.debugger.instrumenter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Collection;
 
 import javassist.CannotCompileException;
@@ -145,8 +144,7 @@ public class InstrumentGiraphClasses {
       // Finally, write the modified classes so that a new jar can be
       // created or an existing one can be updated.
       String jarRoot = outputDir != null ? outputDir : Files
-        .createTempDirectory(TMP_DIR_NAME_PREFIX,
-          new FileAttribute[0]).toString();
+        .createTempDirectory(TMP_DIR_NAME_PREFIX).toString();
       LOG.info("Writing " + classesModified.size() +
         " instrumented classes to " + jarRoot);
       for (CtClass c : classesModified) {
@@ -163,6 +161,7 @@ public class InstrumentGiraphClasses {
       }
       System.exit(0);
     } catch (NotFoundException e) {
+      e.printStackTrace();
       System.err
         .println("Some Giraph Computation or MasterCompute classes " +
           "were not found");
@@ -198,8 +197,7 @@ public class InstrumentGiraphClasses {
     CtClass computationClass = classPool.get(Computation.class.getName());
     CtClass rootMasterComputeClass = classPool.get(MasterCompute.class
       .getName());
-    CtClass masterComputeClass = classPool.get(masterComputeClassName);
-    CtClass mc = masterComputeClass;
+    CtClass mc = classPool.get(masterComputeClassName);
     while (mc != null && !mc.equals(rootMasterComputeClass)) {
       // find all class names appearing in the master compute class
       @SuppressWarnings("unchecked")
@@ -296,7 +294,7 @@ public class InstrumentGiraphClasses {
     LOG.debug("Looking for user's top class that extends " +
       getGenericsName(topClass.getSuperclass()));
     CtClass targetTopClass = targetClass;
-    while (!targetTopClass.equals(Object.class) &&
+    while (!targetTopClass.getName().equals(Object.class.getName()) &&
       !targetTopClass.getSuperclass().equals(topClass.getSuperclass())) {
       targetTopClass = targetTopClass.getSuperclass();
     }

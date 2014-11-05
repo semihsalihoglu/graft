@@ -189,7 +189,7 @@ public abstract class BaseWrapper {
         Method method = urlClass.getDeclaredMethod("addURL",
           new Class[] { URL.class });
         method.setAccessible(true);
-        method.invoke(urlClassLoader, new Object[] { u });
+        method.invoke(urlClassLoader, u);
       } catch (NoSuchMethodException | SecurityException |
         IllegalAccessException | IllegalArgumentException |
         InvocationTargetException e) {
