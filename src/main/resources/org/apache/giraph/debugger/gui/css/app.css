@@ -202,6 +202,10 @@ text.tid {
 	vertical-align: middle;
 }
 
+#txt-goto-step {
+  width: 50px;
+}
+
 .editor-aggregators-heading {
 	font: 16px sans-serif;
 }

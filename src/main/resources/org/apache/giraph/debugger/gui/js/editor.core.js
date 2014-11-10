@@ -531,10 +531,16 @@ Editor.prototype.addToGraph = function(scenario) {
 
 /*
  * Shows the preloader and hides all other elements.
+ * @param preloaderTitle : (optional) Prealoder title to use. Default is 'Loading'.
  */
-Editor.prototype.showPreloader = function() {
+Editor.prototype.showPreloader = function(preloaderTitle) {
     this.svg.selectAll('g').transition().style('opacity', 0);
     this.preloader.transition().style('opacity', 1);
+    if (preloaderTitle) {
+      this.preloader.select("text").text(preloaderTitle);
+    } else {
+      this.preloader.select("text").text("Loading");
+    }
 }
 
 /*

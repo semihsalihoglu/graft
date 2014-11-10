@@ -110,7 +110,7 @@ GiraphDebugger.prototype.resetVars = function() {
     // Node that is currently double clicked.
     this.selectedNodeId = null;
     // Initialize current superstep to -2 (Not in debug mode)
-    this.currentSuperstepNumber = -2;
+    this.currentSuperstepNumber = -1;
     // ID of the job currently being debugged.
     this.currentJobId = null;
     // Minimum value of superstepNumber
@@ -144,6 +144,8 @@ GiraphDebugger.prototype.initIds = function() {
         // IDs of elements in Superstep controls.
         _btnPrevStep : 'btn-prev-step',
         _btnNextStep : 'btn-next-step',
+        _btnGotoStep : 'btn-goto-step',
+        _txtGotoStep : 'txt-goto-step',
         _btnEditMode : 'btn-edit-mode',
         _btnFetchJob : 'btn-fetch-job',
         _btnCaptureVertexScenario : 'btn-capture-scenario',
@@ -325,7 +327,10 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .append(
             $('<span />')
             .attr('class', 'glyphicon glyphicon-chevron-left')
-            .html(' Previous')
+        )
+        .append(
+            $('<span />')
+              .html(' Previous')
         )
         .appendTo(formControls);
 
@@ -342,10 +347,31 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .append(
             $('<span />')
             .attr('class', 'glyphicon glyphicon-chevron-right')
-            .html(' Next')
+        )
+        .append(
+            $('<span />')
+              .html('Next')
         )
         .appendTo(formControls);
 
+    // Go to any superstep
+    this.btnGotoStep = $('<button />')
+      .attr('class', 'btn btn-default btn-step form-control')
+      .attr('id', this.ids._btnGotoStep)
+      .append(
+          $('<span />')
+      )
+      .append(
+          $('<span />')
+            .html(' Go to')
+      )
+      .appendTo(formControls);
+
+    this.txtGotoStep = $('<input type="text" />')
+      .attr('class', 'form-control')
+      .attr('id', this.ids._txtGotoStep)
+      .appendTo(formControls);
+    
     // Return to the edit mode - Exiting the debug mode.
     this.btnEditMode = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
@@ -353,20 +379,26 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .append(
             $('<span />')
             .attr('class', 'glyphicon glyphicon-pencil')
-            .html(' Edit Mode')
+        )
+        .append(
+            $('<span />')
+              .html(' Edit Mode')
         )
         .appendTo(formControls);
 
    // Change the text value of this span when toggling views.
    this.btnToggleViewSpan = $('<span />')
                 .attr('class', 'glyphicon glyphicon-cog')
-                .html(' Table View');
 
    // Toggle the editor between the table and graph view.
    this.btnToggleView = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
         .attr('id', this.ids._btnToggleView)
         .append(this.btnToggleViewSpan)
+        .append(
+            $('<span />')
+              .html(' Table View')
+        )
         .appendTo(formControls);
 
     // Capture Scenario group
@@ -409,8 +441,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     // Fetch the scenario for this job for superstep -1
     $(this.btnFetchJob).click((function(event) {
         this.currentJobId = $(this.fetchJobIdInput).val();
-        this.currentSuperstepNumber = 0;
-        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
+        this.changeSuperstep(this.currentJobId, 0);
         this.toggleMode();
     }).bind(this));
     // On clicking the edit mode button, hide the superstep controls and show fetch form.
@@ -420,13 +451,17 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
 
     // Handle the next and previous buttons on the superstep controls.
     $(this.btnNextStep).click((function(event) {
-        this.currentSuperstepNumber += 1;
-        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
+        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber + 1);
+    }).bind(this));
+
+    // Directly jump to the given super step
+    $(this.btnGotoStep).click((function(event) {
+      var targetSuperstepNumber = $(this.txtGotoStep).val();
+      this.changeSuperstep(this.currentJobId, parseInt(targetSuperstepNumber));
     }).bind(this));
 
     $(this.btnPrevStep).click((function(event) {
-        this.currentSuperstepNumber -= 1;
-        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber);
+        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber - 1);
     }).bind(this));
 
     // Handle the capture scenario button the superstep controls.
@@ -479,73 +514,122 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
  * and disables/enables the prev/next buttons.
  * @param {int} superstepNumber : Superstep to fetch the data for.
  */
-GiraphDebugger.prototype.changeSuperstep = function(jobId, superstepNumber) {
-    console.log("Changing Superstep to : " + superstepNumber);
-    $(this.superstepLabel).html(superstepNumber);
+GiraphDebugger.prototype.changeSuperstep = function(jobId, targetSuperstepNumber) {
+    console.log("<graft> Changing Superstep to {0}. Current value is {1}".format(targetSuperstepNumber, this.currentSuperstepNumber));
+
+    if (!(targetSuperstepNumber >= this.minSuperstepNumber && targetSuperstepNumber <= this.maxSuperstepNumber)) {
+      noty({text :'Invalid superstep number. You can only go from superstep -1 to ' + this.maxSuperstepNumber , type : 'warning'});
+      return;
+    }
+
+    $(this.superstepLabel).html(targetSuperstepNumber);
     // Update data of the valpanel
-    this.valpanel.setData(jobId, superstepNumber);
+    this.valpanel.setData(jobId, targetSuperstepNumber);
 
     // Fetch the max number of supersteps again. (Online case)
     $.ajax({
-            url : this.debuggerServerRoot + "/supersteps",
-            data : {'jobId' : this.currentJobId}
+        url : this.debuggerServerRoot + "/supersteps",
+        data : {'jobId' : this.currentJobId}
     })
-    
     .done((function(response) {
         this.maxSuperstepNumber = Math.max.apply(Math, response);
-    }).bind(this))
-    .fail(function(response) {
-    });
+    }).bind(this));
 
-    // If scenario is already cached, don't fetch again.
-    if (superstepNumber in this.stateCache) {
-        this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
-    } else {
-        // Show preloader while AJAX request is in progress.
-        this.editor.showPreloader();
-        // Fetch from the debugger server.
-        $.ajax({
-            url : this.debuggerServerRoot + '/scenario',
-            dataType : 'json',
-            data: { 'jobId' : jobId, 'superstepId' : superstepNumber }
-        })
-        .retry({
-            times : 5, 
-            timeout : 2000,
-            retryCallback : function(remainingTimes) {
-                // Failed intermediately. Will be retried. 
-                noty({text : 'Failed to fetch job. Retrying ' + remainingTimes + ' more times...', type : 'warning', timeout : 1000});
-            }
-        })
-        .done((function(data) {
-            console.log(data);
-            // Add data to the state cache. 
-            // This method will only be called if this superstepNumber was not
-            // in the cache already. This method just overwrites without check.
-            // If this is the first time the graph is being generated, (count = 1)
-            // start from scratch - build from adjList.
-            if (Utils.count(this.stateCache) === 1) {
-                this.stateCache[superstepNumber] = $.extend({}, data);
-                this.editor.buildGraphFromAdjList(data);
-            } else {
-                // Merge this data onto superstepNumber - 1's data 
-                this.stateCache[superstepNumber] = this.mergeStates(this.stateCache[superstepNumber - 1], data);
-                this.modifyEditorOnScenario(this.stateCache[superstepNumber]);
-            }
-        }).bind(this))
-        .fail(function(error) {
-            noty({text : 'Failed to fetch job. Please check your network and debugger server.', type : 'error'});
-        })
-        .always((function() {
-            // Hide Editor's preloader.
-            this.editor.hidePreloader();
-        }).bind(this));
+    // If we are going backwards, we have already cached this state. 
+    if (targetSuperstepNumber <= this.currentSuperstepNumber) {
+        this.handleSuperstepChange(targetSuperstepNumber);
+        return;
     }
-    // Superstep changed. Enable/Disable the prev/next buttons.
-    $(this.btnNextStep).attr('disabled', superstepNumber === this.maxSuperstepNumber);
-    $(this.btnPrevStep).attr('disabled', superstepNumber === this.minSuperstepNumber);
+
+    // If we are going forward, we must cache all intermediate steps to understand the state of the graph.
+    var superstepNumber = this.currentSuperstepNumber + 1;
+
+    while (superstepNumber <= targetSuperstepNumber && (superstepNumber in this.stateCache)) {
+        superstepNumber += 1;
+    }
+
+    if (superstepNumber === targetSuperstepNumber + 1) {
+        this.handleSuperstepChange(targetSuperstepNumber);
+        return;
+    }
+
+    // Disable all control buttons.
+    $(this.btnNextStep).attr('disabled', true);
+    $(this.btnPrevStep).attr('disabled', true);
+    $(this.btnGotoStep).attr('disabled', true);
+
+    // Send serialized async AJAX requests for each superstep till we reach the target superstep.
+    // Every AJAX request builds a local cache when it finished.
+    // The last request modifies the editor after merging the local cache with the stateCache serially
+    var stepsToTarget = targetSuperstepNumber - superstepNumber + 1;
+    var statesFetched = 0;
+    var localDataCache = {};
+    var superstepIndex = superstepNumber;
+    this.editor.showPreloader();
+
+    while (superstepIndex <= targetSuperstepNumber) {
+        // Create a function closure to track this superstep number
+        (function(_superstepIndex) {
+          // Fetch from the debugger server.
+          $.ajax({
+              url : this.debuggerServerRoot + '/scenario',
+              dataType : 'json',
+              data: { 'jobId' : jobId, 'superstepId' : _superstepIndex }
+          })
+          .retry({
+              times : 5, 
+              timeout : 2000,
+              retryCallback : function(remainingTimes) {
+                  // Failed intermediately. Will be retried. 
+                  noty({text : 'Failed to fetch job. Retrying ' + remainingTimes + ' more times...', type : 'warning', timeout : 1000});
+              }
+          })
+          .done((function(data) {
+              console.log(data);
+              localDataCache[_superstepIndex] = data;
+              statesFetched += 1;
+              this.editor.showPreloader("Loading {0}/{1}".format(statesFetched, stepsToTarget));
+              // Add data to the state cache. 
+              // This method will only be called if this superstepNumber was not
+              // in the cache already. This method just overwrites without check.
+              // When all AJAX requests are finished (this is the last one), merge
+              // states serially.
+              if (statesFetched === stepsToTarget) {
+                for (var i = superstepNumber; i <= targetSuperstepNumber; i++) {
+                  this.stateCache[i] = this.mergeStates(this.stateCache[i - 1], localDataCache[i]);
+                }
+                this.handleSuperstepChange(targetSuperstepNumber);
+              }
+          }).bind(this))
+          .fail(function(error) {
+              noty({text : 'Failed to fetch job. Please check your network and debugger server.', type : 'error'});
+          });
+        }).bind(this)(superstepIndex);
+        superstepIndex += 1;
+    }
 }
 
+GiraphDebugger.prototype.handleSuperstepChange = function(targetSuperstepNumber) {
+  if (!(targetSuperstepNumber in this.stateCache)) {
+    throw (targetSuperstepNumber + " not found in state cache");
+  }
+
+  var scenario = this.stateCache[targetSuperstepNumber];
+  
+  // If this is the first superstep (0), build the graph.
+  if (targetSuperstepNumber === 0 && Utils.count(this.stateCache) === 1) {
+    this.editor.buildGraphFromAdjList(scenario);
+  } else {
+    this.modifyEditorOnScenario(scenario);
+  }
+  this.currentSuperstepNumber = targetSuperstepNumber;
+  this.editor.hidePreloader();
+
+  // Superstep changed. Enable/Disable the prev/next buttons.
+  $(this.btnNextStep).attr('disabled', targetSuperstepNumber === this.maxSuperstepNumber);
+  $(this.btnPrevStep).attr('disabled', targetSuperstepNumber === this.minSuperstepNumber);
+  $(this.btnGotoStep).attr('disabled', false);
+}
 
 /*
  * Modifies the editor for a given scenario.
@@ -827,6 +911,12 @@ GiraphDebugger.prototype.showEdgeValues = function() {
  * has them too. If deltaState has some vertices not in baseState, add them.
  */
 GiraphDebugger.prototype.mergeStates = function(baseState, deltaState) {
+    // If the baseState is -1, deltaState should be the actual scenario object for superstep 0
+    if (baseState === -1) {
+      this.stateCache[deltaState] = $.extend({}, deltaState);
+      return;
+    }
+    
     var newState = $.extend(true, {}, baseState);
     // Start with marking all nodes in baseState as not debugged.
     // Only nodes debugged in deltaState will be marked as debugged.
