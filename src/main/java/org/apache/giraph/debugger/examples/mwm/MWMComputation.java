@@ -37,7 +37,7 @@ public class MWMComputation extends
   @Override
   public void compute(Vertex<LongWritable, VertexValue, DoubleWritable> vertex,
     Iterable<LongWritable> messages) throws IOException {
-    if (getSuperstep() > 500) {
+    if (getSuperstep() > 100) {
       vertex.voteToHalt();
     }
     long phase = getSuperstep() % 2;
