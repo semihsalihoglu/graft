@@ -57,9 +57,9 @@ GiraphDebugger.prototype.init = function(options) {
     // Add toggle view event handler.
     this.editor.onToggleView((function(editorView) {
         if (editorView === Editor.ViewEnum.TABLET) {
-            this.btnToggleViewSpan.html(' Graph View');
+            this.toggleViewTextSpan.html(' Graph View');
         } else {
-            this.btnToggleViewSpan.html(' Table View');
+            this.toggleViewTextSpan.html(' Table View');
         }
     }).bind(this));
 
@@ -144,8 +144,6 @@ GiraphDebugger.prototype.initIds = function() {
         // IDs of elements in Superstep controls.
         _btnPrevStep : 'btn-prev-step',
         _btnNextStep : 'btn-next-step',
-        _btnGotoStep : 'btn-goto-step',
-        _txtGotoStep : 'txt-goto-step',
         _btnEditMode : 'btn-edit-mode',
         _btnFetchJob : 'btn-fetch-job',
         _btnCaptureVertexScenario : 'btn-capture-scenario',
@@ -334,12 +332,12 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         )
         .appendTo(formControls);
 
-    var superstepLabel = $('<h2><span id="superstep">-1</span>' +
+    var superstepLabel = $('<h2><input type="text" id="txt-superstep" class="form-control" placeholder="#" value="-1"></input>' +
         '<small> Superstep</small></h2>')
         .appendTo(formControls);
 
-    // Set this.superstepLabel to the actual label that will be updated.
-    this.superstepLabel = $('#superstep');
+    // Set this.txtSuperstep to the actual text box that will be updated.
+    this.txtSuperstep = $('#txt-superstep');
 
     this.btnNextStep = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
@@ -354,24 +352,6 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         )
         .appendTo(formControls);
 
-    // Go to any superstep
-    this.btnGotoStep = $('<button />')
-      .attr('class', 'btn btn-default btn-step form-control')
-      .attr('id', this.ids._btnGotoStep)
-      .append(
-          $('<span />')
-      )
-      .append(
-          $('<span />')
-            .html(' Go to')
-      )
-      .appendTo(formControls);
-
-    this.txtGotoStep = $('<input type="text" />')
-      .attr('class', 'form-control')
-      .attr('id', this.ids._txtGotoStep)
-      .appendTo(formControls);
-    
     // Return to the edit mode - Exiting the debug mode.
     this.btnEditMode = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
@@ -387,18 +367,18 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .appendTo(formControls);
 
    // Change the text value of this span when toggling views.
-   this.btnToggleViewSpan = $('<span />')
+   this.toggleViewIconSpan = $('<span />')
                 .attr('class', 'glyphicon glyphicon-cog')
+
+   this.toggleViewTextSpan = $('<span />')
+                .html(' Table View');
 
    // Toggle the editor between the table and graph view.
    this.btnToggleView = $('<button />')
         .attr('class', 'btn btn-default btn-step form-control')
         .attr('id', this.ids._btnToggleView)
-        .append(this.btnToggleViewSpan)
-        .append(
-            $('<span />')
-              .html(' Table View')
-        )
+        .append(this.toggleViewIconSpan)
+        .append(this.toggleViewTextSpan)
         .appendTo(formControls);
 
     // Capture Scenario group
@@ -441,7 +421,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
     // Fetch the scenario for this job for superstep -1
     $(this.btnFetchJob).click((function(event) {
         this.currentJobId = $(this.fetchJobIdInput).val();
-        this.changeSuperstep(this.currentJobId, 0);
+        this.changeSuperstep(0);
         this.toggleMode();
     }).bind(this));
     // On clicking the edit mode button, hide the superstep controls and show fetch form.
@@ -451,17 +431,19 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
 
     // Handle the next and previous buttons on the superstep controls.
     $(this.btnNextStep).click((function(event) {
-        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber + 1);
-    }).bind(this));
-
-    // Directly jump to the given super step
-    $(this.btnGotoStep).click((function(event) {
-      var targetSuperstepNumber = $(this.txtGotoStep).val();
-      this.changeSuperstep(this.currentJobId, parseInt(targetSuperstepNumber));
+        this.changeSuperstep(this.currentSuperstepNumber + 1);
     }).bind(this));
 
     $(this.btnPrevStep).click((function(event) {
-        this.changeSuperstep(this.currentJobId, this.currentSuperstepNumber - 1);
+        this.changeSuperstep(this.currentSuperstepNumber - 1);
+    }).bind(this));
+
+    // Handle jumping to custtom superstep
+    $(this.txtSuperstep).keyup((function(event) {
+      if (event.which === 13) {
+        var targetSuperstepNumber = $(this.txtSuperstep).val();
+        this.changeSuperstep(targetSuperstepNumber);
+      }
     }).bind(this));
 
     // Handle the capture scenario button the superstep controls.
@@ -477,6 +459,7 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
             this.onCaptureVertex.fail(response.responseText);
         }).bind(this))
     }).bind(this));
+
     // Handle the master capture scenario button the superstep controls.
     $(this.btnCaptureMasterScenario).click((function(event){
         Utils.fetchMasterTest(this.debuggerServerRoot, this.currentJobId, this.currentSuperstepNumber)
@@ -514,17 +497,22 @@ GiraphDebugger.prototype.initSuperstepControlEvents = function() {
  * and disables/enables the prev/next buttons.
  * @param {int} superstepNumber : Superstep to fetch the data for.
  */
-GiraphDebugger.prototype.changeSuperstep = function(jobId, targetSuperstepNumber) {
+GiraphDebugger.prototype.changeSuperstep = function(targetSuperstepNumber) {
+    // Convert string to int just in case the input is not sloppy.
+    targetSuperstepNumber = parseInt(targetSuperstepNumber);
+
     console.log("<graft> Changing Superstep to {0}. Current value is {1}".format(targetSuperstepNumber, this.currentSuperstepNumber));
 
     if (!(targetSuperstepNumber >= this.minSuperstepNumber && targetSuperstepNumber <= this.maxSuperstepNumber)) {
       noty({text :'Invalid superstep number. You can only go from superstep -1 to ' + this.maxSuperstepNumber , type : 'warning'});
+      // Reset the label to the current superstep number in case the user manually entered the invalid superstep.
+      $(this.txtSuperstep).val(this.currentSuperstepNumber);
       return;
     }
 
-    $(this.superstepLabel).html(targetSuperstepNumber);
+    $(this.txtSuperstep).val(targetSuperstepNumber);
     // Update data of the valpanel
-    this.valpanel.setData(jobId, targetSuperstepNumber);
+    this.valpanel.setData(this.currentJobId, targetSuperstepNumber);
 
     // Fetch the max number of supersteps again. (Online case)
     $.ajax({
@@ -574,7 +562,7 @@ GiraphDebugger.prototype.changeSuperstep = function(jobId, targetSuperstepNumber
           $.ajax({
               url : this.debuggerServerRoot + '/scenario',
               dataType : 'json',
-              data: { 'jobId' : jobId, 'superstepId' : _superstepIndex }
+              data: { 'jobId' : this.currentJobId, 'superstepId' : _superstepIndex }
           })
           .retry({
               times : 5, 
