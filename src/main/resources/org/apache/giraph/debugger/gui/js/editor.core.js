@@ -49,6 +49,7 @@ function Editor(options) {
     this.lastKeyDown = -1;
     this.init();
     this.buildSample();
+    this.hidePreloader();
     return this;
 }
 
@@ -534,6 +535,7 @@ Editor.prototype.addToGraph = function(scenario) {
  * @param preloaderTitle : (optional) Prealoder title to use. Default is 'Loading'.
  */
 Editor.prototype.showPreloader = function(preloaderTitle) {
+    this.preloader.style("display", "inline"); 
     this.svg.selectAll('g').transition().style('opacity', 0);
     this.preloader.transition().style('opacity', 1);
     if (preloaderTitle) {
@@ -548,7 +550,7 @@ Editor.prototype.showPreloader = function(preloaderTitle) {
  */
 Editor.prototype.hidePreloader = function() {
     this.svg.selectAll('g').transition().style('opacity', 1);
-    this.preloader.transition().style('opacity', 0);
+    this.preloader.transition().style('opacity', 0).each("end", (function() { this.preloader.style("display", "none"); }).bind(this));
     this.restartGraph();
 }
 

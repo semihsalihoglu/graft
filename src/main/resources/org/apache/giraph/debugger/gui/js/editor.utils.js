@@ -134,16 +134,17 @@ Editor.prototype.initElements = function() {
     var preloaderY = this.height / 2 - 64;
     this.preloader = this.svgRoot.append('svg:g')
                                  .attr('transform', 'translate(' + preloaderX + ',' + preloaderY + ')')
-                                 .attr('opacity', 0);
 
     this.preloader.append('svg:image')
                       .attr('xlink:href', 'img/preloader.gif')
                       .attr('width', '128')
+
                       .attr('height', '128');
     this.preloader.append('svg:text')
                       .text('Loading')
                       .attr('x', '40')
                       .attr('y', '128');
+   
     // Aggregators
     this.aggregatorsContainer = this.svg.append('svg:g');
     this.aggregatorsContainer.append('text')
