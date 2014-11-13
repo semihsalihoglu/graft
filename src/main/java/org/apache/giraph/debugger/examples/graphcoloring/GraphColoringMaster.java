@@ -41,6 +41,11 @@ public class GraphColoringMaster extends DefaultMasterCompute {
 
   @Override
   public void compute() {
+    // XXX Experiment measuring only up to 100 supersteps.
+    if (getSuperstep() > 100) {
+      haltComputation();
+    }
+    
     if (phase != null) {
       switch (phase) {
       case LOTTERY:

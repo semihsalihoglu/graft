@@ -18,6 +18,7 @@
 package org.apache.giraph.debugger.examples.graphcoloring;
 
 import java.io.IOException;
+import java.util.Random;
 
 import org.apache.giraph.debugger.examples.graphcoloring.GraphColoringMaster.Phase;
 import org.apache.giraph.debugger.examples.graphcoloring.VertexValue.State;
@@ -33,6 +34,13 @@ public class GraphColoringComputation extends
   private static final LongWritable ONE = new LongWritable(1);
   private Phase phase;
   private int colorToAssign;
+  
+  static Random rand;
+
+  public void initialize(org.apache.giraph.graph.GraphState graphState, org.apache.giraph.comm.WorkerClientRequestProcessor<LongWritable,VertexValue,NullWritable> workerClientRequestProcessor, org.apache.giraph.graph.GraphTaskManager<LongWritable,VertexValue,NullWritable> graphTaskManager, org.apache.giraph.worker.WorkerAggregatorUsage workerAggregatorUsage, org.apache.giraph.worker.WorkerContext workerContext) {
+    // Assigning the seed deterministically so the experiment can be reproduced.
+    rand = new Random(workerContext.getMyWorkerIndex());
+  };
 
   @Override
   public void preSuperstep() {
@@ -78,7 +86,7 @@ public class GraphColoringComputation extends
         // degree.
         if (vertex.getNumEdges() == 0) {
           setVertexState(vertex, State.IN_SET);
-        } else if (Math.random() * vertex.getNumEdges() <= 1.0) {
+        } else if (rand.nextDouble() * vertex.getNumEdges() <= 1.0) {
           setVertexState(vertex, State.TENTATIVELY_IN_SET);
           sendMessageToAllEdges(vertex, new Message(vertex,
             Message.Type.WANTS_TO_BE_IN_SET));
