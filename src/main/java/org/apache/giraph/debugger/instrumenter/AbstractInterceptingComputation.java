@@ -543,10 +543,9 @@ public abstract class AbstractInterceptingComputation<
         getActualTestedClass(), (Class<I>) VERTEX_ID_CLASS,
         (Class<V>) VERTEX_VALUE_CLASS, (Class<E>) EDGE_VALUE_CLASS,
         (Class<M1>) INCOMING_MESSAGE_CLASS, (Class<M2>) OUTGOING_MESSAGE_CLASS);
-    VertexContextWrapper contextWrapper = giraphVertexScenarioWrapper.new
-      VertexContextWrapper();
-    giraphVertexScenarioWrapper.setContextWrapper(contextWrapper);
-    giraphVertexScenarioWrapper.getContextWrapper()
+    VertexContextWrapper contextWrapper =
+      giraphVertexScenarioWrapper.getContextWrapper();
+    contextWrapper
       .setVertexValueBeforeWrapper(previousVertexValueToAssign);
     COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.initCommonVertexMasterContextWrapper(
       getConf(), getSuperstep(), getTotalNumVertices(), getTotalNumEdges());
