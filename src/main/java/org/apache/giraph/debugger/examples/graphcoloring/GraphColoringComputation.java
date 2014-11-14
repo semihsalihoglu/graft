@@ -31,14 +31,16 @@ import org.apache.hadoop.io.NullWritable;
 public class GraphColoringComputation extends
   BasicComputation<LongWritable, VertexValue, NullWritable, Message> {
 
+  private static Random rand;
+
   private static final LongWritable ONE = new LongWritable(1);
   private Phase phase;
   private int colorToAssign;
   
-  static Random rand;
 
   public void initialize(org.apache.giraph.graph.GraphState graphState, org.apache.giraph.comm.WorkerClientRequestProcessor<LongWritable,VertexValue,NullWritable> workerClientRequestProcessor, org.apache.giraph.graph.GraphTaskManager<LongWritable,VertexValue,NullWritable> graphTaskManager, org.apache.giraph.worker.WorkerAggregatorUsage workerAggregatorUsage, org.apache.giraph.worker.WorkerContext workerContext) {
-    // Assigning the seed deterministically so the experiment can be reproduced.
+    // XXX Assigning the seed deterministically so the experiment can be reproduced.
+    super.initialize(graphState, workerClientRequestProcessor, graphTaskManager, workerAggregatorUsage, workerContext);
     rand = new Random(workerContext.getMyWorkerIndex());
   };
 

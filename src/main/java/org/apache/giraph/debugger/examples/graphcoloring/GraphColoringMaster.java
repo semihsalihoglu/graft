@@ -45,7 +45,7 @@ public class GraphColoringMaster extends DefaultMasterCompute {
     if (getSuperstep() > 100) {
       haltComputation();
     }
-    
+
     if (phase != null) {
       switch (phase) {
       case LOTTERY:
