@@ -298,7 +298,7 @@ public class InstrumentGiraphClasses {
       !targetTopClass.getSuperclass().equals(topClass.getSuperclass())) {
       targetTopClass = targetTopClass.getSuperclass();
     }
-    if (targetTopClass.equals(Object.class)) {
+    if (targetTopClass.getName().equals(Object.class.getName())) {
       throw new NotFoundException(targetClass.getName() + " must extend " +
         topClass.getSuperclass().getName());
     }

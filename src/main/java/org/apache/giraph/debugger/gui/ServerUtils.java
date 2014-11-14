@@ -506,7 +506,7 @@ public class ServerUtils {
     }
     // Iterate through each file in this diFilerectory and match the regex.
     for (FileStatus fileStatus : fileStatuses) {
-      String fileName = new File(fileStatus.getPath().toString()).toString();
+      String fileName = fileStatus.getPath().getName();
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.
       if (m.find()) {
@@ -546,7 +546,7 @@ public class ServerUtils {
     }
     // Iterate through each file in this directory and match the regex.
     for (FileStatus fileStatus : fileStatuses) {
-      String fileName = new File(fileStatus.getPath().toString()).toString();
+      String fileName = fileStatus.getPath().getName();
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.
       if (m.find()) {
@@ -567,13 +567,12 @@ public class ServerUtils {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
     // Use this regex to match the file name and capture the vertex id.
-    String regex = String
-      .format("(reg|err|msg_intgrty|vv_intgrty)_stp_(.*?)_vid_(.*?).tr$");
+    String regex = "(reg|err|msg_intgrty|vv_intgrty)_stp_(.*?)_vid_(.*?).tr$";
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
     // Iterate through each file in this directory and match the regex.
     for (FileStatus fileStatus : fs.listStatus(pt)) {
-      String fileName = new File(fileStatus.getPath().toString()).toString();
+      String fileName = fileStatus.getPath().getName();
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.
       if (m.find()) {
@@ -594,12 +593,12 @@ public class ServerUtils {
     FileSystem fs = ServerUtils.getFileSystem();
     String traceFileRoot = DebuggerUtils.getTraceFileRoot(jobId);
     // Use this regex to match the file name and capture the vertex id.
-    String regex = String.format("master_.*_stp_(\\d+?).tr$");
+    String regex = "master_.*_stp_(\\d+?).tr$";
     Pattern p = Pattern.compile(regex);
     Path pt = new Path(traceFileRoot);
     // Iterate through each file in this directory and match the regex.
     for (FileStatus fileStatus : fs.listStatus(pt)) {
-      String fileName = new File(fileStatus.getPath().toString()).toString();
+      String fileName = fileStatus.getPath().getName();
       Matcher m = p.matcher(fileName);
       // Add this vertex id if there is a match.
       if (m.find()) {
