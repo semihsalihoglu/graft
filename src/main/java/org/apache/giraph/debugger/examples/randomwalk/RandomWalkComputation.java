@@ -24,6 +24,7 @@ public class RandomWalkComputation extends
   private short[] messagesToNeighbors = new short[2];
   private int initialNumWalkers;
   private int lengthOfWalk;
+  private Random random;
 
   @Override
   public void initialize(
@@ -38,6 +39,9 @@ public class RandomWalkComputation extends
       getClass().getName() + ".initialNumWalkers", DEFAULT_NUM_WALKERS);
     lengthOfWalk = getConf().getInt(getClass().getName() + ".walkLength",
       DEFAULT_LENGTH_OF_WALK);
+    
+    // XXX fixing random seed to produce reliable experiment results
+    random = new Random(workerContext.getMyWorkerIndex());
   }
 
   @Override
@@ -73,7 +77,6 @@ public class RandomWalkComputation extends
         messagesToNeighbors[i] = 0;
       }
     }
-    Random random = new Random();
     if (neighborsLength == 0) {
       // When there's no out-edge, let each walker jump to a random vertex in
       // the graph.
