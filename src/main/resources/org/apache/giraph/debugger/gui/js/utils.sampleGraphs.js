@@ -18,19 +18,30 @@ Utils.sampleGraphs = {
         }
         return simpleAdjList;
     },
+    
+    
+    
+    
     "Vertex Clique" : function(numNodes) {
         var simpleAdjList = { 0 : {} };
+        var list=[];
         for (var i = 0; i < numNodes; i++) 
-            for (var j = 0; j < numNodes ; j++){
-            simpleAdjList[i] = [j];
-        }
-        
+          {
+              list[list.length]=i;
+           }
+        for (var i = 0; i < numNodes; i++) 
+          {
+              simpleAdjList[i]=list;
+           }
         return simpleAdjList;
     },
+    
+    
+    
+    
     "Tailed Cycle Graph" : function(numNodes) {},
     "Star Graph" : function(numNodes) {
-        var simpleAdjList = { 0 : {} };
-        
+        var simpleAdjList = { 0 : {} };    
         for(var i=1 ; i<numNodes ; i++){
             simpleAdjList[i]=[0];
         }
