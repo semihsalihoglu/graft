@@ -625,12 +625,14 @@ GiraphDebugger.prototype.handleSuperstepChange = function(targetSuperstepNumber)
  */
 GiraphDebugger.prototype.modifyEditorOnScenario = function(scenario) {
     console.log(scenario); 
+
     // Add new nodes/links received in this scenario to graph.
     this.editor.addToGraph(scenario);
+
     // Disable the nodes that were not traced as part of this scenario.
     for (var i = 0; i < this.editor.nodes.length; i++) {
         var nodeId = this.editor.nodes[i].id;
-        if ((nodeId in scenario) && scenario[nodeId].debugged != false) {
+        if ((nodeId in scenario) && scenario[nodeId].enabled != false) {
             this.editor.nodes[i].enabled = true;
         } else {
             this.editor.nodes[i].enabled = false;
@@ -910,13 +912,13 @@ GiraphDebugger.prototype.mergeStates = function(baseState, deltaState) {
     // Start with marking all nodes in baseState as not debugged.
     // Only nodes debugged in deltaState will be marked as debugged.
     for (nodeId in baseState) {
-        newState[nodeId].debugged = false;    
+        newState[nodeId].enabled = false;    
     }
     for (nodeId in deltaState) {
         // Add this node's properties from deltaState
         newState[nodeId] = $.extend({}, deltaState[nodeId]);
         // If nodeId was in deltaState, mark as debugged.
-        newState[nodeId].debugged = true;
+        newState[nodeId].enabled = true;
     }
     return newState;
 }
