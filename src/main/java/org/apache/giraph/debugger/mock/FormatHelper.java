@@ -21,6 +21,9 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Set;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.giraph.aggregators.IntMaxAggregator;
+import org.apache.giraph.master.AggregatorBroadcast;
 import org.apache.giraph.utils.WritableUtils;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.ByteWritable;
@@ -110,6 +113,36 @@ public class FormatHelper {
       String str = toByteArrayString(WritableUtils.writeToByteArray(writable));
       return String.format("(%s)read%sFromByteArray(new byte[] {%s})", writable
         .getClass().getSimpleName(), writable.getClass().getSimpleName(), str);
+    }
+  }
+
+  
+  /**
+   * Generates the line that constructs the given {@link AggregatorBroadcast}.
+   * We only have access to the {@link Writable} object. Therefore we do not
+   * know exactly what type of aggregator it is. So, we default to max aggregators.
+   * For example, {@link IntWritable}, defaults to {@link IntMaxAggregator}. However
+   * note that this is fine because the user only sees the value, not the type of
+   * aggregator it came from.
+   * @param writable writable object to construct in the unit test.
+   * @return string generating the line that constructs the given writable.
+   */
+  public String formatAggregatorBroadcast(Writable writable) {
+     if (writable instanceof IntWritable) {
+      return String.format("new AggregatorBroadcast<IntWritable>(IntMaxAggregator.class, "
+        + "new IntWritable(%s))", format(((IntWritable) writable).get()));
+    } else if (writable instanceof LongWritable) { 
+      return String.format("new AggregatorBroadcast<LongWritable>(LongMaxAggregator.class, "
+        + "new LongWritable(%s))", format(((LongWritable) writable).get()));
+    } else if (writable instanceof DoubleWritable) { 
+      return String.format("new AggregatorBroadcast<DoubleWritable>(DoubleMaxAggregator.class, "
+        + "new DoubleWritable(%s))", format(((DoubleWritable) writable).get()));
+    } else if (writable instanceof Text) {
+      return String.format("new AggregatorBroadcast<Text>(TextAppendAggregator.class, "
+        + "new Text(\"%s\"))", format(((Text) writable).toString()));
+    } else {
+      throw new NotImplementedException("Formatting of aggregator for writable has" +
+        " not yet been implemented.");
     }
   }
 

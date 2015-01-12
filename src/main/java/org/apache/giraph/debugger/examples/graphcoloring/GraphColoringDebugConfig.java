@@ -17,40 +17,47 @@
  */
 package org.apache.giraph.debugger.examples.graphcoloring;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.giraph.debugger.DebugConfig;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 
 /**
- * DebugConfig for graph coloring.
+ * DebugConfig for graph coloring for demonstration purposes.
  */
 public class GraphColoringDebugConfig
-  extends
-  DebugConfig<LongWritable, VertexValue, NullWritable, Message, Message> {
+  extends DebugConfig<LongWritable, VertexValue, NullWritable, Message, Message> {
 
+  /**
+   * @return list of vertices to capture, specified by ID.
+   */
   @Override
-  public boolean shouldCheckVertexValueIntegrity() {
-    return true;
+  public List<LongWritable> verticesToCaptureByID() {
+    ArrayList<LongWritable> idsToCapture = new ArrayList<LongWritable>();
+    idsToCapture.add(new LongWritable(23));
+    return idsToCapture;
   }
+  
+  @Override
+  public int numberOfRandomVerticesToCapture() { return 5; }
+
+  /**
+   * @return whether neighbors of random or specified vertices should be captured.
+   */
+  @Override
+  public boolean shouldCaptureNeighborsOfVertices() { return true; }
 
   @Override
-  public boolean isVertexValueCorrect(LongWritable vertexId,
-    VertexValue value) {
+  public boolean isVertexValueCorrect(LongWritable vertexId, VertexValue value) {
     return value.isColored() &&
       value.getState().equals(VertexValue.State.IN_SET);
   }
 
   @Override
-  public boolean shouldCheckMessageIntegrity() {
-    return true;
-  }
-
-  @Override
   public boolean isMessageCorrect(LongWritable srcId, LongWritable dstId,
     Message message, long superstepNo) {
-    // TODO check message type validity based on phase
-    // TODO check message type validity based on sender and receiver's state
     return message.getType() != null && srcId.get() != dstId.get();
   }
-
 }

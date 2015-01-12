@@ -19,6 +19,7 @@ package org.apache.giraph.debugger;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -187,8 +188,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     debugNeighborsOfVerticesToDebug = false;
     shouldCatchExceptions = false;
     superstepsToDebugSet = null;
-    numVerticesToLog = 3;
-    numViolationsToLog = 3;
+    numVerticesToLog = 15;
+    numViolationsToLog = 15;
     numRandomVerticesToDebug = 0;
   }
 
@@ -204,9 +205,14 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
     long totalNumberOfVertices, int jobId) {
     this.debugNeighborsOfVerticesToDebug = config.getBoolean(
       DEBUG_NEIGHBORS_FLAG, false);
+    if (shouldCaptureNeighborsOfVertices()) {
+      this.debugNeighborsOfVerticesToDebug = true;
+    }
     this.numRandomVerticesToDebug = config.getInt(
       NUM_RANDOM_VERTICES_TO_DEBUG, 0);
-
+    if (numberOfRandomVerticesToCapture() > 0) {
+      this.numRandomVerticesToDebug = numberOfRandomVerticesToCapture();
+    }
     this.shouldCatchExceptions = config.getBoolean(CATCH_EXCEPTIONS_FLAG, true);
 
     String superstepsToDebugStr = config.get(SUPERSTEPS_TO_DEBUG_FLAG, null);
@@ -241,7 +247,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
         if (this.verticesToDebugSet == null) {
           this.verticesToDebugSet = new HashSet<>();
         }
-        Random random = new Random(jobId);
+        // TODO(semih): Change back to new Random(jobId);
+        Random random = new Random(5);
         for (int i = 0; i < numberOfRandomVerticesToCapture(); ++i) {
           int totalNumberOfVerticesInInt = (int) totalNumberOfVertices;
           if (totalNumberOfVerticesInInt < 0) {
@@ -253,8 +260,8 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
       }
     }
 
-    numVerticesToLog = config.getInt(NUM_VERTICES_TO_LOG, 3);
-    numViolationsToLog = config.getInt(NUM_VIOLATIONS_TO_LOG, 3);
+    numVerticesToLog = config.getInt(NUM_VERTICES_TO_LOG, 12);
+    numViolationsToLog = config.getInt(NUM_VIOLATIONS_TO_LOG, 12);
 
     // LOG.debug("DebugConfig" + this);
   }
@@ -330,6 +337,20 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   }
 
   /**
+   * @return whether neighbors of random or specified vertices should be captured.
+   */
+  public boolean shouldCaptureNeighborsOfVertices() {
+    return false;
+  }
+  
+  /**
+   * @return list of vertices to capture, specified by ID.
+   */
+  public List<I> verticesToCaptureByID() {
+    return null;
+  }
+
+  /**
    * Whether the given vertex is a neighbor of a vertex that has been
    * configured to be debugged. If so then the given vertex will also
    * be debugged.
@@ -350,7 +371,7 @@ public class DebugConfig<I extends WritableComparable, V extends Writable,
   public boolean shouldCatchExceptions() {
     return shouldCatchExceptions;
   }
-
+  
   /**
    * @return whether message integrity constraints should be checked, i.e.,
    * whether Graft should call the {@link #isMessageCorrect(WritableComparable,

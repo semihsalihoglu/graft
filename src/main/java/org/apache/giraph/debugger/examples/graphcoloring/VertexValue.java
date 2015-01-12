@@ -31,12 +31,12 @@ public class VertexValue implements Writable {
   /**
    * Value for an invalid color.
    */
-  public static final int NO_COLOR = -1;
+  public static final String NO_COLOR = "--";
 
   /**
    * Color of the vertex.
    */
-  private int color = NO_COLOR;
+  private String color = NO_COLOR;
 
   /**
    * State of the vertex.
@@ -91,34 +91,54 @@ public class VertexValue implements Writable {
     this.state = state;
   }
 
-  public void setColor(int color) {
+  public void setColor(String color) {
     this.color = color;
   }
 
   public boolean isColored() {
-    return state == State.IN_SET && color != NO_COLOR;
+    return !NO_COLOR.equals(color);
   }
 
   @Override
   public void readFields(DataInput in) throws IOException {
     state = State.values()[in.readInt()];
-    color = in.readInt();
+    color = in.readUTF();
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeInt(state.ordinal());
-    out.writeInt(color);
+    out.writeUTF(color);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("color=");
-    sb.append(color == NO_COLOR ? "?" : color);
-    sb.append(" (");
-    sb.append(state.getAbbreviation());
-    sb.append(")");
+    if (NO_COLOR.equals(color)) {
+      sb.append("MIS: ");
+      switch (state) {
+      case UNKNOWN:
+      sb.append("U");
+//        sb.append("?");
+        break;
+      case IN_SET:
+      sb.append("I");
+//        sb.append("\u2713");
+        break;
+      case TENTATIVELY_IN_SET:
+      sb.append("T");
+//        sb.append("\u2713" + "?");
+        break;
+      case NOT_IN_SET:
+        sb.append("X");
+        break;
+      default:
+        break;
+      }
+    } else {
+      sb.append("COLOR: " + color);
+    }
+//    sb.append("col: " + color + " mis: " + state.abbreviation);
     return sb.toString();
   }
 

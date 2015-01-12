@@ -115,7 +115,7 @@ public abstract class AbstractInterceptingComputation<
   /**
    * A constant to limit the number of vertices to log.
    */
-  private static int NUM_VERTICES_TO_LOG = 5;
+  private static int NUM_VERTICES_TO_LOG = 1000;
   /**
    * A counter for number of vertices already logged.
    */
@@ -392,6 +392,8 @@ public abstract class AbstractInterceptingComputation<
       LOG.warn("interceptComputeBegin is called but debugConfig is null." +
         " Initializing AbstractInterceptingComputation again...");
       initializeAbstractInterceptingComputation();
+    } else {
+      COMMON_VERTEX_MASTER_INTERCEPTING_UTIL.getPreviousAggregatedValueWrappers().clear();
     }
     // A vertex should be debugged if:
     // 1) the user configures the superstep to be debugged;

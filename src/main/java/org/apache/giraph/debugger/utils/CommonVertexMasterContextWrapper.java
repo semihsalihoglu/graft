@@ -203,8 +203,8 @@ public class CommonVertexMasterContextWrapper extends BaseWrapper {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("\nconfig: " + immutableClassesConfig.toString());
     stringBuilder.append("superstepNo: " + getSuperstepNoWrapper());
-    stringBuilder.append("\ntotalNumVertices: " + totalNumVertices);
-    stringBuilder.append("\ntotalNumEdges: " + totalNumEdges);
+//    stringBuilder.append("\ntotalNumVertices: " + totalNumVertices);
+//    stringBuilder.append("\ntotalNumEdges: " + totalNumEdges);
     stringBuilder.append("\nnumAggregators: " +
       getPreviousAggregatedValues().size());
     for (AggregatedValueWrapper aggregatedValueWrapper :

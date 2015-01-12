@@ -398,7 +398,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('type', 'button')
         .attr('id', this.ids._btnCaptureVertexScenario)
         .attr('class', 'btn btn-primary form-control')
-        .html('Capture Vertex')
+        .html('Reproduce Vertex Context')
         .appendTo(captureScenarioForm);
 
     // Capture Master
@@ -406,7 +406,7 @@ GiraphDebugger.prototype.initSuperstepControls = function(superstepControlsConta
         .attr('type', 'button')
         .attr('id', this.ids._btnCaptureMasterScenario)
         .attr('class', 'btn btn-danger form-control')
-        .html('Capture Master')
+        .html('Reproduce Master Context')
         .appendTo(captureScenarioForm);
 
     // Initialize handlers for events

@@ -17,11 +17,11 @@
  */
 package org.apache.giraph.debugger.examples.graphcoloring;
 
-import org.apache.giraph.aggregators.IntMaxAggregator;
 import org.apache.giraph.aggregators.LongSumAggregator;
+import org.apache.giraph.aggregators.TextAppendAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 
 /**
  * MasterCompute for graph coloring algorithm.
@@ -58,6 +58,10 @@ public class GraphColoringMaster extends DefaultMasterCompute {
   public static final String NUM_VERTICES_TENTATIVELY_IN_SET =
     "numVerticesTentativelyInSet";
 
+  public static final String NUM_VERTICES = "numVertices";
+
+  public static final String NUM_EDGES = "numEdges";
+
   /**
    * Phases in the graph coloring algorithm.
    */
@@ -84,7 +88,7 @@ public class GraphColoringMaster extends DefaultMasterCompute {
   /**
    * Current color to assign.
    */
-  private int colorToAssign;
+  private String colorToAssign;
   /**
    * Current phase.
    */
@@ -93,11 +97,13 @@ public class GraphColoringMaster extends DefaultMasterCompute {
   @Override
   public void initialize() throws InstantiationException,
     IllegalAccessException {
-    registerPersistentAggregator(COLOR_TO_ASSIGN, IntMaxAggregator.class);
-    colorToAssign = VertexValue.NO_COLOR;
-    registerPersistentAggregator(PHASE, IntMaxAggregator.class);
+    registerPersistentAggregator(COLOR_TO_ASSIGN, TextAppendAggregator.class);
+    colorToAssign = "A";
+    registerPersistentAggregator(PHASE, TextAppendAggregator.class);
     phase = null;
-
+    registerPersistentAggregator(NUM_VERTICES, TextAppendAggregator.class);
+    registerPersistentAggregator(NUM_EDGES, TextAppendAggregator.class);
+    
     registerPersistentAggregator(NUM_VERTICES_COLORED, LongSumAggregator.class);
     registerAggregator(NUM_VERTICES_UNKNOWN, LongSumAggregator.class);
     registerAggregator(NUM_VERTICES_TENTATIVELY_IN_SET,
@@ -126,8 +132,8 @@ public class GraphColoringMaster extends DefaultMasterCompute {
         long numUnknown = ((LongWritable) getAggregatedValue(
             NUM_VERTICES_UNKNOWN)).get();
         if (numUnknown == 0) {
-          // Set an aggregator telling each IN_SET vertex what color to assign.
-          setAggregatedValue(COLOR_TO_ASSIGN, new IntWritable(++colorToAssign));
+          setAggregatedValue(COLOR_TO_ASSIGN, new Text(colorToAssign));
+          colorToAssign = String.valueOf( (char) (colorToAssign.charAt(0) + 1));
           phase = Phase.COLOR_ASSIGNMENT;
         } else {
           // Repeat finding independent sets after cleaning edges.
@@ -158,6 +164,8 @@ public class GraphColoringMaster extends DefaultMasterCompute {
     }
 
     // Set an aggregator to communicate what phase we're in to all vertices.
-    setAggregatedValue(PHASE, new IntWritable(phase.ordinal()));
+    setAggregatedValue(PHASE, new Text(phase.name()));
+    setAggregatedValue(NUM_VERTICES, new Text("15012200"));
+    setAggregatedValue(NUM_EDGES, new Text("82003004"));
   }
 }

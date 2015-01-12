@@ -149,7 +149,7 @@ Editor.prototype.initElements = function() {
     this.aggregatorsContainer = this.svg.append('svg:g');
     this.aggregatorsContainer.append('text')
                        .attr('class', 'editor-aggregators-heading')
-                       .text('Aggregators');
+                       .text('Aggregators & Global Data');
    // d3 selector for global key-value pairs
    this.globs = this.aggregatorsContainer.append('text').selectAll('tspan');
 }
@@ -586,7 +586,7 @@ Editor.prototype.restartNodes = function() {
         .classed('selected', (function(d) { return d === this.selected_node }).bind(this))
         .attr('r', function(d) { return getRadius(d);  });
     // If node is not enabled, set its opacity to 0.2    
-    this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.2; });
+    this.circle.transition().style('opacity', function(d) { return d.enabled === true ? 1 : 0.6; });
     // Update node IDs
     var el = this.circle.selectAll('text').text('');
     el.append('tspan')

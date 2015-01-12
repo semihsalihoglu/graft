@@ -18,6 +18,7 @@
 package org.apache.giraph.debugger.examples.graphcoloring;
 
 import java.io.IOException;
+import java.util.Random;
 
 import org.apache.giraph.debugger.examples.graphcoloring.GraphColoringMaster.Phase;
 import org.apache.giraph.debugger.examples.graphcoloring.VertexValue.State;
@@ -26,6 +27,7 @@ import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 
 /**
  * (Buggy) Giraph implementation of a randomized graph coloring algorithm.
@@ -33,30 +35,23 @@ import org.apache.hadoop.io.NullWritable;
 public class GraphColoringComputation extends
   BasicComputation<LongWritable, VertexValue, NullWritable, Message> {
 
+  private static Random random = new Random(1L);
+  private static boolean coloredOnce = false;
   /**
    * Cached LongWritable for value one.
    */
   private static final LongWritable ONE = new LongWritable(1);
-  /**
-   * The current phase.
-   */
-  private Phase phase;
-  /**
-   * The current color to assign.
-   */
-  private int colorToAssign;
 
   @Override
   public void preSuperstep() {
-    phase = Phase.values()[((IntWritable) getAggregatedValue(
-        GraphColoringMaster.PHASE)).get()];
-    colorToAssign = ((IntWritable) getAggregatedValue(
-        GraphColoringMaster.COLOR_TO_ASSIGN)).get();
   }
 
   @Override
   public void compute(Vertex<LongWritable, VertexValue, NullWritable> vertex,
     Iterable<Message> messages) throws IOException {
+    initializeIfNotInitialized();
+    Phase phase = Phase.valueOf(((Text) getAggregatedValue(
+      GraphColoringMaster.PHASE)).toString());
 
     // Treat already colored vertices as if it didn't exist in the graph.
     if (vertex.getValue().isColored()) {
@@ -71,13 +66,7 @@ public class GraphColoringComputation extends
       aggregate(GraphColoringMaster.NUM_VERTICES_IN_SET, ONE);
       return;
     }
-
-    // if (state == State.NOT_IN_SET && vertex.getNumEdges() == 0 && (phase ==
-    // Phase.EDGE_CLEANING || phase == Phase.CONFLICT_RESOLUTION)) {
-    // aggregate(GraphColoringMaster.NUM_VERTICES_NOT_IN_SET, ONE);
-    // return;
-    // }
-
+    
     switch (phase) {
     case LOTTERY:
       switch (state) {
@@ -87,7 +76,8 @@ public class GraphColoringComputation extends
         // degree.
         if (vertex.getNumEdges() == 0) {
           setVertexState(vertex, State.IN_SET);
-        } else if (Math.random() * vertex.getNumEdges() <= 1.0) {
+        } else if ((coloredOnce && random.nextDouble() < 0.7) 
+          || (!coloredOnce && random.nextDouble() * vertex.getNumEdges() <= 1.0)) { //if (random.nextDouble() * vertex.getNumEdges() <= 1.0) {        
           setVertexState(vertex, State.TENTATIVELY_IN_SET);
           sendMessageToAllEdges(vertex, new Message(vertex,
             Message.Type.WANTS_TO_BE_IN_SET));
@@ -117,15 +107,9 @@ public class GraphColoringComputation extends
                 minId = neighborId;
               }
             }
-            if (minId == myId) {
-              // Otherwise, it's unknown whether this vertex will be in the
-              // final
-              // independent set.
-              setVertexState(vertex, State.UNKNOWN);
-            } else {
-              // Put this vertex in the independent set if it has the minimum
-              // id.
-              setVertexState(vertex, State.IN_SET);
+            // Only the minId vertex should enter the independent set.
+            setVertexState(vertex, minId == myId ? State.UNKNOWN : State.IN_SET);
+            if (vertex.getValue().getState() == State.IN_SET) {
               sendMessageToAllEdges(vertex, new Message(vertex,
                 Message.Type.IS_IN_SET));
             }
@@ -156,19 +140,13 @@ public class GraphColoringComputation extends
         // At this phase, we know any vertex that received a notification from
         // its neighbor cannot belong to the set.
         setVertexState(vertex, State.NOT_IN_SET);
-      } else {
-        // Otherwise, we put the vertex back into unknown state, so they can go
-        // through another lottery.
-//        setVertexState(vertex, State.UNKNOWN);
-//        // XXX INTENTIONAL BUG: NOT_IN_SET vertices that did not receive any
-//        // IS_IN_SET message will also go back to UNKNOWN state, which is
-//        // undesired.
-        break;
       }
       break;
 
     case COLOR_ASSIGNMENT:
       if (state == State.IN_SET) {
+        String colorToAssign = ((Text) getAggregatedValue(
+          GraphColoringMaster.COLOR_TO_ASSIGN)).toString();
         // Assign current cycle's color to all IN_SET vertices.
         setVertexColor(vertex, colorToAssign);
         // Aggregate number of colored vertices.
@@ -178,6 +156,7 @@ public class GraphColoringComputation extends
         // go through another round of maximal independent set finding.
         setVertexState(vertex, State.UNKNOWN);
       }
+      coloredOnce = true;
       break;
 
     default:
@@ -214,7 +193,7 @@ public class GraphColoringComputation extends
    * @param colorToAssign the color
    */
   protected void setVertexColor(
-    Vertex<LongWritable, VertexValue, NullWritable> vertex, int colorToAssign) {
+    Vertex<LongWritable, VertexValue, NullWritable> vertex, String colorToAssign) {
     VertexValue value = vertex.getValue();
     value.setColor(colorToAssign);
     vertex.setValue(value);
@@ -232,5 +211,9 @@ public class GraphColoringComputation extends
     value.setState(newState);
     vertex.setValue(value);
   }
-
+  
+  protected void initializeIfNotInitialized() {
+    getAggregatedValue(GraphColoringMaster.NUM_VERTICES);
+    getAggregatedValue(GraphColoringMaster.NUM_EDGES);
+  }
 }

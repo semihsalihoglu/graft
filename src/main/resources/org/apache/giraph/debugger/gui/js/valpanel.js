@@ -210,7 +210,7 @@ ValidationPanel.prototype.showMessageViolations = function() {
         .appendTo(this.contentContainer);
 
     var btnCaptureScenario = 
-        $('<button type="button" class="btn btn-sm btn-primary btn-vp-M-capture">Capture Scenario</button>');
+        $('<button type="button" class="btn btn-sm btn-primary btn-vp-M-capture">Reproduce Vertex Context</button>');
 
     var dataTable = $(table).DataTable({
         'columns' : [
@@ -267,7 +267,7 @@ ValidationPanel.prototype.showVertexViolations = function() {
         .appendTo(this.contentContainer);
 
     var btnCaptureScenario = 
-        $('<button type="button" class="btn btn-sm btn-primary btn-vp-V-capture">Capture Scenario</button>');
+        $('<button type="button" class="btn btn-sm btn-primary btn-vp-V-capture">Reproduce Vertex Context</button>');
 
     var dataTable = $(table).DataTable({
         'columns' : [
@@ -324,7 +324,7 @@ ValidationPanel.prototype.showExceptions = function() {
         .appendTo(this.contentContainer);
 
     var btnCaptureScenario = 
-        $('<button type="button" class="btn btn-sm btn-primary btn-vp-E-capture">Capture Scenario</button>');
+        $('<button type="button" class="btn btn-sm btn-primary btn-vp-E-capture">Reproduce Vertex Context</button>');
 
     var dataTable = $(table).DataTable({
         'columns' : [

@@ -38,7 +38,7 @@ public class RandomWalkDebugConfig
   @Override
   public boolean isVertexValueCorrect(LongWritable vertexId,
     IntWritable value) {
-    return value.get() > 0;
+    return value.get() >= 0;
   }
 
   @Override

@@ -5,18 +5,18 @@
 
       GraphState graphState = mock(GraphState.class);
       when(graphState.getSuperstep()).thenReturn($superstepNo#[[l]]#);
-      when(graphState.getTotalNumVertices()).thenReturn($nVertices#[[l]]#);
-      when(graphState.getTotalNumEdges()).thenReturn($nEdges#[[l]]#);
+      when(graphState.getTotalNumVertices()).thenReturn(15012200L);
+      when(graphState.getTotalNumEdges()).thenReturn(82003004L);
 	
       WorkerClientRequestProcessor<$vertexIdType, $vertexValueType, $edgeValueType> processor = 
           mock(WorkerClientRequestProcessor.class);
 	
-      WorkerAggregatorUsage aggr = mock(WorkerAggregatorUsage.class);
+      WorkerGlobalCommUsage globalUsage = mock(WorkerGlobalCommUsage.class);
 #foreach ($aggr in $aggregators)
-      when(aggr.getAggregatedValue("$aggr.key")).thenReturn($helper.formatWritable($aggr.value));
+      when(globalUsage.getBroadcast("$aggr.key")).thenReturn($helper.formatAggregatorBroadcast($aggr.value));
 #end
 
-      classUnderTest.initialize(graphState, processor, null, aggr, null);
+      classUnderTest.initialize(graphState, processor, null, globalUsage, null);
     
       Vertex<$vertexIdType, $vertexValueType, $edgeValueType> vertex = conf.createVertex();
       vertex.initialize($helper.formatWritable($vertexId), $helper.formatWritable($vertexValue));
@@ -37,18 +37,7 @@
       inMsgs.add($helper.formatWritable($inMsg));   
 #end
 
-      classUnderTest.compute(vertex, inMsgs);
-
-#if ($vertexValueAfter)
-      // assertEquals($vertexValueAfter, vertex.getValue().get(), 0.001f);
-#end
-
-      // verifyZeroInteractions(processor);
-
-#foreach ($outMsg in $outMsgs)
-      // verify(processor, times($outMsg.times)).sendMessageRequest($helper.formatWritable($outMsg.msg.destinationId), $helper.formatWritable($outMsg.msg.Message));
-#end
-      
+      classUnderTest.compute(vertex, inMsgs);      
     } catch (IOException e) {
       e.printStackTrace();
     }

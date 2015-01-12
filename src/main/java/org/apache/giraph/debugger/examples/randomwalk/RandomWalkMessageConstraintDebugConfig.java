@@ -39,7 +39,9 @@ public class RandomWalkMessageConstraintDebugConfig
   @Override
   public boolean shouldDebugVertex(
     Vertex<LongWritable, IntWritable, NullWritable> vertex, long superstepNo) {
-    return false;
+    return (vertex.getId().get() == 74780L) || 
+      (vertex.getId().get() == 75686) || 
+      (vertex.getId().get() == 75685);
   }
 
   @Override
@@ -53,4 +55,14 @@ public class RandomWalkMessageConstraintDebugConfig
     return message.get() > 0;
   }
 
+  @Override
+  public boolean shouldCheckVertexValueIntegrity() {
+    return true;
+  }
+
+  @Override
+  public boolean isVertexValueCorrect(LongWritable vertexId, IntWritable
+    value) {
+    return value.get() >= 0;
+  }
 }
