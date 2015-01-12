@@ -604,8 +604,9 @@ GiraphDebugger.prototype.handleSuperstepChange = function(targetSuperstepNumber)
 
   var scenario = this.stateCache[targetSuperstepNumber];
   
-  // If this is the first superstep (0), build the graph.
-  if (targetSuperstepNumber === 0 && Utils.count(this.stateCache) === 1) {
+  // If this is the first superstep (0) => true only when targetSuperstep = 0 and stateCache = {-1, 0},
+  // build the graph.
+  if (targetSuperstepNumber === 0 && Utils.count(this.stateCache) === 2) {
     this.editor.buildGraphFromAdjList(scenario);
   } else {
     this.modifyEditorOnScenario(scenario);
