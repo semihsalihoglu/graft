@@ -128,6 +128,15 @@ Editor.prototype.initElements = function() {
                     .append('svg:path')
                         .attr('d', 'M10,-5L0,0L10,5')
                         .attr('fill', '#000');
+
+    // Aggregators
+    this.aggregatorsContainer = this.svgRoot.append('svg:g');
+    this.aggregatorsContainer.append('text')
+                       .attr('class', 'editor-aggregators-heading')
+                       .text('Aggregators');
+     // d3 selector for global key-value pairs
+     this.globs = this.aggregatorsContainer.append('text').selectAll('tspan');
+
     // Append the preloader
     // Dimensions of the image are 128x128
     var preloaderX = this.width / 2 - 64;
@@ -144,14 +153,6 @@ Editor.prototype.initElements = function() {
                       .text('Loading')
                       .attr('x', '40')
                       .attr('y', '128');
-   
-    // Aggregators
-    this.aggregatorsContainer = this.svg.append('svg:g');
-    this.aggregatorsContainer.append('text')
-                       .attr('class', 'editor-aggregators-heading')
-                       .text('Aggregators');
-   // d3 selector for global key-value pairs
-   this.globs = this.aggregatorsContainer.append('text').selectAll('tspan');
 }
 
 /*
@@ -628,7 +629,7 @@ Editor.prototype.restartAggregators = function() {
     this.globs.enter().append('tspan').classed('editor-aggregators-value', true)
         .attr('dy', '2.0em')
         .attr('x', 0)
-        .text(function(d) { return "{0} -> {1}".format(d[0], d[1]); });
+        .html(function(d) { return "<tspan class='editor-aggregators-key'>{0}</tspan> -> {1}".format(d[0], d[1]); });
 }
 
 /*
