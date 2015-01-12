@@ -212,6 +212,11 @@ text.tid {
 
 .editor-aggregators-heading {
 	font: 16px sans-serif;
+  font-weight: bold;
+}
+
+.editor-aggregators-key {
+  fill: red;
 }
 
 /* Graph Editor tabular view styles */

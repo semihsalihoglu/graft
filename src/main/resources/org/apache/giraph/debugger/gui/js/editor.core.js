@@ -456,6 +456,7 @@ Editor.prototype.updateGraphData = function(scenario) {
     this.currentScenario = scenario;
     // Clear the messages array. Unlike other fields, messages is cleared and reloaded for every scenario.
     this.messages.length = 0;
+    this.aggregators = {};
 
     // Scan every node in adj list to build the nodes array.
     for (var nodeId in scenario) {
@@ -495,11 +496,14 @@ Editor.prototype.updateGraphData = function(scenario) {
             }
           }
 
-        // Update aggregators
-        // NOTE: Later vertices ovewrite value for a given key
-        var aggregators = scenario[nodeId]['aggregators'];
-        for (var key in aggregators) {
-            this.aggregators[key] = aggregators[key];
+        // Aggregator is included in case enabled field is not present or it is true.
+        if (node.enabled != false) {
+          // Update aggregators
+          // NOTE: Later vertices ovewrite value for a given key
+          var aggregators = scenario[nodeId]['aggregators'];
+          for (var key in aggregators) {
+              this.aggregators[key] = aggregators[key];
+          }
         }
     }
     // Restart the graph and table to show new values.
