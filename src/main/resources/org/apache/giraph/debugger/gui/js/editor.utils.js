@@ -624,6 +624,9 @@ Editor.prototype.restartAggregators = function() {
     this.globs.exit().remove();
     // Convert JSON to array of 2-length arrays for d3
     var data = $.map(this.aggregators, function(value, key) { return [[key, value]]; });
+    // Sort the data by the key
+    data = data.sort(function(agg1, agg2) { return agg1[0] > agg2[0] });
+
     // Set new values
     this.globs = this.globs.data(data);
     this.globs.enter().append('tspan').classed('editor-aggregators-value', true)
